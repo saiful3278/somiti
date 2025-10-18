@@ -26,6 +26,23 @@ const MemberList = ({ userRole }) => {
     role: 'member' // Default role is member
   });
   const [memberFormErrors, setMemberFormErrors] = useState({});
+  const [showRoleInfo, setShowRoleInfo] = useState(false);
+
+  // Floating detail card states
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [showDetailCard, setShowDetailCard] = useState(false);
+
+  // Handle member card click
+  const handleMemberClick = (member) => {
+    setSelectedMember(member);
+    setShowDetailCard(true);
+  };
+
+  // Close detail card
+  const closeDetailCard = () => {
+    setShowDetailCard(false);
+    setSelectedMember(null);
+  };
 
   // Fetch members from Firebase
   const fetchMembers = async () => {
@@ -128,7 +145,6 @@ const MemberList = ({ userRole }) => {
         memberId,
         status: 'active',
         shareCount: Number(newMemberData.shareCount),
-        role: 'member',
         joinDate: newMemberData.joiningDate
       };
       
@@ -147,7 +163,8 @@ const MemberList = ({ userRole }) => {
           nomineeName: '',
           nomineePhone: '',
           nomineeRelation: '',
-          joiningDate: new Date().toISOString().split('T')[0]
+          joiningDate: new Date().toISOString().split('T')[0],
+          role: 'member' // Reset role to default
         });
         setMemberFormErrors({});
         setShowAddMemberModal(false);
@@ -300,7 +317,11 @@ const MemberList = ({ userRole }) => {
           const RoleIcon = roleInfo.icon;
 
           return (
-            <div key={member.id} className="member-card">
+            <div 
+              key={member.id} 
+              className="member-card member-card-minimal"
+              onClick={() => handleMemberClick(member)}
+            >
               {/* Main Content - Horizontal Layout */}
               <div className="member-card-content">
                 {/* Avatar */}
@@ -318,7 +339,7 @@ const MemberList = ({ userRole }) => {
                   )}
                 </div>
 
-                {/* Member Info */}
+                {/* Member Info - Minimal */}
                 <div className="member-info">
                   <div className="member-header">
                     <h3 className="member-name">
@@ -330,37 +351,16 @@ const MemberList = ({ userRole }) => {
                     </span>
                   </div>
                   
-                  {/* Info Grid */}
-                  <div className="member-details-grid">
-                    <div className="member-detail-item">
-                      <span className="member-detail-label">শেয়ার:</span>
-                      <span className="member-detail-value share-count">{member.shareCount} টি</span>
-                    </div>
-                    
-                    <div className="member-detail-item">
-                      <span className="member-detail-label">ফোন:</span>
-                      <span className="member-detail-value phone">{member.phone}</span>
-                    </div>
-                    
-                    <div className="member-detail-item">
-                      <span className="member-detail-label">যোগদান:</span>
-                      <span className="member-detail-value">{new Date(member.joinDate).toLocaleDateString('bn-BD')}</span>
-                    </div>
+                  {/* Minimal Info */}
+                  <div className="member-minimal-info">
+                    <span className="member-phone">{member.phone}</span>
+                    <span className="member-shares">{member.shareCount} শেয়ার</span>
                   </div>
+                </div>
 
-                  {/* Share Progress Bar */}
-                  <div className="member-progress-section">
-                    <div className="member-progress-header">
-                      <span>শেয়ার অগ্রগতি</span>
-                      <span className="member-progress-percentage">{Math.min(100, (member.shareCount / 200) * 100).toFixed(0)}%</span>
-                    </div>
-                    <div className="member-progress-bar">
-                      <div
-                        className="member-progress-fill"
-                        style={{ width: `${Math.min(100, (member.shareCount / 200) * 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
+                {/* Click Indicator */}
+                <div className="member-click-indicator">
+                  <Eye className="w-4 h-4" />
                 </div>
               </div>
             </div>
@@ -652,6 +652,115 @@ const MemberList = ({ userRole }) => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Member Detail Card */}
+      {showDetailCard && selectedMember && (
+        <div className="member-detail-overlay" onClick={closeDetailCard}>
+          <div className="member-detail-card" onClick={(e) => e.stopPropagation()}>
+            <div className="member-detail-header">
+              <div className="member-detail-avatar">
+                {selectedMember.avatar ? (
+                  <img
+                    src={selectedMember.avatar}
+                    alt={selectedMember.name}
+                    className="member-detail-avatar-img"
+                  />
+                ) : (
+                  <div className="member-detail-avatar-placeholder">
+                    {getInitials(selectedMember.name)}
+                  </div>
+                )}
+              </div>
+              <div className="member-detail-info">
+                <h3 className="member-detail-name">{selectedMember.name}</h3>
+                <span className={`member-detail-role-badge ${selectedMember.role}`}>
+                  {getRoleInfo(selectedMember.role).label}
+                </span>
+              </div>
+              <button className="member-detail-close" onClick={closeDetailCard}>
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="member-detail-content">
+              <div className="member-detail-section">
+                <h4 className="member-detail-section-title">
+                  <Phone className="w-4 h-4" />
+                  যোগাযোগের তথ্য
+                </h4>
+                <div className="member-detail-grid">
+                  <div className="member-detail-item">
+                    <span className="member-detail-label">ফোন:</span>
+                    <span className="member-detail-value">{selectedMember.phone}</span>
+                  </div>
+                  <div className="member-detail-item">
+                    <span className="member-detail-label">ঠিকানা:</span>
+                    <span className="member-detail-value">{selectedMember.address}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="member-detail-section">
+                <h4 className="member-detail-section-title">
+                  <DollarSign className="w-4 h-4" />
+                  শেয়ার তথ্য
+                </h4>
+                <div className="member-detail-grid">
+                  <div className="member-detail-item">
+                    <span className="member-detail-label">মোট শেয়ার:</span>
+                    <span className="member-detail-value">{selectedMember.shareCount} টি</span>
+                  </div>
+                  <div className="member-detail-item">
+                    <span className="member-detail-label">যোগদানের তারিখ:</span>
+                    <span className="member-detail-value">
+                      {new Date(selectedMember.joinDate).toLocaleDateString('bn-BD')}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* Share Progress Bar */}
+                <div className="member-detail-progress">
+                  <div className="member-detail-progress-header">
+                    <span>শেয়ার অগ্রগতি</span>
+                    <span className="member-detail-progress-percentage">
+                      {Math.min(100, (selectedMember.shareCount / 200) * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="member-detail-progress-bar">
+                    <div
+                      className="member-detail-progress-fill"
+                      style={{ width: `${Math.min(100, (selectedMember.shareCount / 200) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              {selectedMember.nomineeName && (
+                <div className="member-detail-section">
+                  <h4 className="member-detail-section-title">
+                    <Users className="w-4 h-4" />
+                    নমিনি তথ্য
+                  </h4>
+                  <div className="member-detail-grid">
+                    <div className="member-detail-item">
+                      <span className="member-detail-label">নমিনির নাম:</span>
+                      <span className="member-detail-value">{selectedMember.nomineeName}</span>
+                    </div>
+                    <div className="member-detail-item">
+                      <span className="member-detail-label">সম্পর্ক:</span>
+                      <span className="member-detail-value">{selectedMember.nomineeRelation}</span>
+                    </div>
+                    <div className="member-detail-item">
+                      <span className="member-detail-label">ফোন:</span>
+                      <span className="member-detail-value">{selectedMember.nomineePhone}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
