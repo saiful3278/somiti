@@ -9,6 +9,11 @@ import NoticeBoard from './components/NoticeBoard';
 import CashierDashboard from './components/CashierDashboard';
 import MemberDashboard from './components/MemberDashboard';
 import ProfileSettings from './components/ProfileSettings';
+import AdminSettings from './components/AdminSettings';
+import CashierSettings from './components/CashierSettings';
+import MemberSettings from './components/MemberSettings';
+import AddTransaction from './components/AddTransaction';
+import MemberList from './components/MemberList';
 import Layout from './components/Layout';
 
 function App() {
@@ -26,11 +31,12 @@ function App() {
                 <Route path="/" element={<AdminDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/members" element={<MemberManagement />} />
+                <Route path="/member-list" element={<MemberList userRole={userRole} />} />
                 <Route path="/shares" element={<ShareTracking />} />
                 <Route path="/investments" element={<InvestmentManagement />} />
-                <Route path="/profits" element={<ProfitDistribution />} />
+                <Route path="/profit" element={<ProfitDistribution />} />
                 <Route path="/notices" element={<NoticeBoard />} />
-                <Route path="/profile" element={<ProfileSettings />} />
+                <Route path="/admin-settings" element={<AdminSettings />} />
               </>
             )}
             
@@ -39,9 +45,11 @@ function App() {
               <>
                 <Route path="/" element={<CashierDashboard />} />
                 <Route path="/cashier" element={<CashierDashboard />} />
+                <Route path="/add-transaction" element={<AddTransaction />} />
+                <Route path="/member-list" element={<MemberList userRole={userRole} />} />
                 <Route path="/shares" element={<ShareTracking />} />
                 <Route path="/notices" element={<NoticeBoard />} />
-                <Route path="/profile" element={<ProfileSettings />} />
+                <Route path="/cashier-settings" element={<CashierSettings />} />
               </>
             )}
             
@@ -50,10 +58,25 @@ function App() {
               <>
                 <Route path="/" element={<MemberDashboard />} />
                 <Route path="/member" element={<MemberDashboard />} />
+                <Route path="/member-list" element={<MemberList userRole={userRole} />} />
+                <Route path="/shares" element={<ShareTracking />} />
+                <Route path="/investments" element={<InvestmentManagement />} />
                 <Route path="/notices" element={<NoticeBoard />} />
-                <Route path="/profile" element={<ProfileSettings />} />
+                <Route path="/member-settings" element={<MemberSettings />} />
               </>
             )}
+            
+            {/* Redirect old profile route to role-specific settings */}
+            <Route path="/profile" element={
+              <Navigate 
+                to={
+                  userRole === 'admin' ? '/admin-settings' :
+                  userRole === 'cashier' ? '/cashier-settings' :
+                  '/member-settings'
+                } 
+                replace 
+              />
+            } />
             
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

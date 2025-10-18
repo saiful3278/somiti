@@ -1,0 +1,152 @@
+// Firebase service for member management
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  where, 
+  orderBy,
+  serverTimestamp 
+} from 'firebase/firestore';
+import { db } from './config.js';
+
+const MEMBERS_COLLECTION = 'members';
+
+// Member service class
+export class MemberService {
+  
+  // Add new member
+  static async addMember(memberData) {
+    try {
+      const docRef = await addDoc(collection(db, MEMBERS_COLLECTION), {
+        ...memberData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        status: 'active'
+      });
+      return { success: true, id: docRef.id };
+    } catch (error) {
+      console.error('সদস্য যোগ করতে ত্রুটি:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get all members
+  static async getAllMembers() {
+    try {
+      const querySnapshot = await getDocs(collection(db, MEMBERS_COLLECTION));
+      const members = [];
+      querySnapshot.forEach((doc) => {
+        members.push({ id: doc.id, ...doc.data() });
+      });
+      
+      // Sort by createdAt in JavaScript instead of Firestore
+      members.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+        return dateB - dateA; // Descending order (newest first)
+      });
+      
+      return { success: true, data: members };
+    } catch (error) {
+      console.error('সদস্য তালিকা লোড করতে ত্রুটি:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get active members
+  static async getActiveMembers() {
+    try {
+      const q = query(
+        collection(db, MEMBERS_COLLECTION), 
+        where('status', '==', 'active')
+      );
+      const querySnapshot = await getDocs(q);
+      const members = [];
+      querySnapshot.forEach((doc) => {
+        members.push({ id: doc.id, ...doc.data() });
+      });
+      
+      // Sort by createdAt in JavaScript instead of Firestore
+      members.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+        return dateB - dateA; // Descending order (newest first)
+      });
+      
+      return { success: true, data: members };
+    } catch (error) {
+      console.error('সক্রিয় সদস্য তালিকা আনতে ত্রুটি:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Update member
+  static async updateMember(memberId, updateData) {
+    try {
+      const memberRef = doc(db, MEMBERS_COLLECTION, memberId);
+      await updateDoc(memberRef, {
+        ...updateData,
+        updatedAt: serverTimestamp()
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('সদস্য আপডেট করতে ত্রুটি:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Delete member
+  static async deleteMember(memberId) {
+    try {
+      await deleteDoc(doc(db, MEMBERS_COLLECTION, memberId));
+      return { success: true };
+    } catch (error) {
+      console.error('সদস্য মুছতে ত্রুটি:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Toggle member status
+  static async toggleMemberStatus(memberId, currentStatus) {
+    try {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      const memberRef = doc(db, MEMBERS_COLLECTION, memberId);
+      await updateDoc(memberRef, {
+        status: newStatus,
+        updatedAt: serverTimestamp()
+      });
+      return { success: true, newStatus };
+    } catch (error) {
+      console.error('সদস্যের অবস্থা পরিবর্তন করতে ত্রুটি:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Search members
+  static async searchMembers(searchTerm) {
+    try {
+      // Note: Firestore doesn't support full-text search natively
+      // This is a basic implementation - for production, consider using Algolia or similar
+      const querySnapshot = await getDocs(collection(db, MEMBERS_COLLECTION));
+      const members = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (
+          data.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          data.membershipId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          data.phone?.includes(searchTerm)
+        ) {
+          members.push({ id: doc.id, ...data });
+        }
+      });
+      return { success: true, data: members };
+    } catch (error) {
+      console.error('সদস্য খুঁজতে ত্রুটি:', error);
+      return { success: false, error: error.message };
+    }
+  }
+}
