@@ -21,16 +21,24 @@ export class MemberService {
   // Add new member
   static async addMember(memberData) {
     try {
+      console.log('MemberService.addMember called with:', memberData);
+      console.log('Database instance:', db);
+      console.log('Collection name:', MEMBERS_COLLECTION);
+      
       const docRef = await addDoc(collection(db, MEMBERS_COLLECTION), {
         ...memberData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         status: 'active'
       });
+      
+      console.log('Document added successfully with ID:', docRef.id);
       return { success: true, id: docRef.id };
     } catch (error) {
       console.error('সদস্য যোগ করতে ত্রুটি:', error);
-      return { success: false, error: error.message };
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      return { success: false, error: error.message, code: error.code };
     }
   }
 

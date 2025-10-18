@@ -45,16 +45,52 @@ const MemberManagement = () => {
     monthlyDeposit: '',
   });
 
+  // Test Firebase connectivity
+  const testFirebaseConnection = async () => {
+    console.log('Testing Firebase connection...');
+    try {
+      const testData = {
+        name: 'Test Member',
+        fatherName: 'Test Father',
+        phone: '01712345678',
+        address: 'Test Address',
+        membershipId: 'TEST-001',
+        joinDate: new Date().toISOString().split('T')[0],
+        totalShares: 0,
+        totalDeposit: 0,
+      };
+      
+      console.log('Attempting to add test member:', testData);
+      const result = await MemberService.addMember(testData);
+      console.log('Test result:', result);
+      
+      if (result.success) {
+        console.log('Firebase connection successful!');
+        alert('Firebase connection test successful!');
+      } else {
+        console.error('Firebase connection failed:', result.error);
+        alert('Firebase connection failed: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Firebase test error:', error);
+      alert('Firebase test error: ' + error.message);
+    }
+  };
+
   // Load members from Firebase on component mount
   useEffect(() => {
     loadMembers();
+    // testFirebaseConnection(); // Disabled for now
   }, []);
 
   const loadMembers = async () => {
+    console.log('loadMembers called');
     setLoading(true);
     try {
       const result = await MemberService.getAllMembers();
+      console.log('getAllMembers result:', result);
       if (result.success) {
+        console.log('Setting members data:', result.data);
         setMembers(result.data);
       } else {
         console.error('সদস্য তালিকা লোড করতে ত্রুটি:', result.error);
@@ -96,6 +132,29 @@ const MemberManagement = () => {
   });
 
   const handleAddMember = async () => {
+    alert('ফর্ম সাবমিট হচ্ছে...'); // Test alert
+    
+    console.log('handleAddMember called');
+    console.log('newMember data:', newMember);
+    
+    // Validate required fields
+    if (!newMember.name.trim()) {
+      alert('নাম প্রয়োজন!');
+      return;
+    }
+    if (!newMember.fatherName.trim()) {
+      alert('পিতার নাম প্রয়োজন!');
+      return;
+    }
+    if (!newMember.phone.trim()) {
+      alert('ফোন নম্বর প্রয়োজন!');
+      return;
+    }
+    if (!newMember.address.trim()) {
+      alert('ঠিকানা প্রয়োজন!');
+      return;
+    }
+    
     setSaving(true);
     try {
       const membershipId = `SM-${String(members.length + 1).padStart(3, '0')}`;
@@ -107,8 +166,13 @@ const MemberManagement = () => {
         totalDeposit: 0,
       };
       
+      console.log('Prepared member data:', newMemberData);
+      
       const result = await MemberService.addMember(newMemberData);
+      console.log('Firebase result:', result);
+      
       if (result.success) {
+        console.log('Member added successfully, reloading members...');
         await loadMembers(); // Reload members list
         setNewMember({
           name: '',
@@ -124,11 +188,22 @@ const MemberManagement = () => {
         setShowAddModal(false);
         alert('সদস্য সফলভাবে যোগ করা হয়েছে!');
       } else {
-        alert('সদস্য যোগ করতে ত্রুটি: ' + result.error);
+        console.error('Failed to add member:', result);
+        let errorMessage = 'সদস্য যোগ করতে ত্রুটি হয়েছে!';
+        
+        if (result.code === 'permission-denied') {
+          errorMessage = 'অনুমতি নেই! Firebase নিরাপত্তা নিয়ম পরীক্ষা করুন।';
+        } else if (result.code === 'unavailable') {
+          errorMessage = 'ইন্টারনেট সংযোগ পরীক্ষা করুন।';
+        } else if (result.error) {
+          errorMessage = `ত্রুটি: ${result.error}`;
+        }
+        
+        alert(errorMessage);
       }
     } catch (error) {
       console.error('সদস্য যোগ করতে ত্রুটি:', error);
-      alert('সদস্য যোগ করতে ত্রুটি হয়েছে!');
+      alert(`সদস্য যোগ করতে ত্রুটি হয়েছে: ${error.message}`);
     } finally {
       setSaving(false);
     }

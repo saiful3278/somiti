@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, UserPlus, Eye, X, Phone, Mail, MapPin, Save, Loader2, DollarSign, User, Users, Crown } from 'lucide-react';
+import { Search, Filter, UserPlus, Eye, X, Phone, Mail, MapPin, Save, Loader2, DollarSign, User, Users, Crown, Info } from 'lucide-react';
 import { MemberService } from '../firebase/memberService';
 import '../styles/components/member-list.css';
 
@@ -22,7 +22,8 @@ const MemberList = ({ userRole }) => {
     nomineeName: '',
     nomineePhone: '',
     nomineeRelation: '',
-    joiningDate: new Date().toISOString().split('T')[0]
+    joiningDate: new Date().toISOString().split('T')[0],
+    role: 'member' // Default role is member
   });
   const [memberFormErrors, setMemberFormErrors] = useState({});
 
@@ -455,6 +456,67 @@ const MemberList = ({ userRole }) => {
                   )}
                 </div>
               </div>
+
+              {/* Role Selection - Only visible to Admin */}
+              {userRole === 'admin' && (
+                <div className="form-section">
+                  <h3 className="form-section-title">
+                    <Crown size={18} />
+                    ভূমিকা নির্বাচন
+                  </h3>
+                  
+                  <div className="form-group">
+                    <label className="form-label">
+                      <Crown size={16} />
+                      সদস্যের ভূমিকা *
+                    </label>
+                    <select
+                      className={`form-select ${memberFormErrors.role ? 'error' : ''}`}
+                      value={newMemberData.role}
+                      onChange={(e) => handleInputChange('role', e.target.value)}
+                    >
+                      <option value="member">সদস্য</option>
+                      <option value="cashier">ক্যাশিয়ার</option>
+                      <option value="admin">অ্যাডমিন</option>
+                    </select>
+                    {memberFormErrors.role && (
+                      <span className="error-message">{memberFormErrors.role}</span>
+                    )}
+                    <div className="role-info-minimal">
+                       <div className="role-info-trigger">
+                         <span className="role-info-label">ভূমিকা সম্পর্কে জানুন</span>
+                         <button 
+                           type="button"
+                           className="role-info-toggle"
+                           onClick={() => setShowRoleInfo(!showRoleInfo)}
+                           aria-label="ভূমিকার বিস্তারিত তথ্য দেখুন"
+                         >
+                           <Info size={16} />
+                         </button>
+                       </div>
+                       
+                       {showRoleInfo && (
+                         <div className="role-info-details">
+                           <div className="role-descriptions">
+                             <div className="role-item">
+                               <span className="role-badge member">সদস্য</span>
+                               <span className="role-desc">সাধারণ অ্যাক্সেস ও তথ্য দেখার সুবিধা</span>
+                             </div>
+                             <div className="role-item">
+                               <span className="role-badge cashier">ক্যাশিয়ার</span>
+                               <span className="role-desc">লেনদেন ব্যবস্থাপনা ও আর্থিক কার্যক্রম</span>
+                             </div>
+                             <div className="role-item">
+                               <span className="role-badge admin">অ্যাডমিন</span>
+                               <span className="role-desc">সম্পূর্ণ নিয়ন্ত্রণ ও ব্যবস্থাপনা অধিকার</span>
+                             </div>
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                  </div>
+                </div>
+              )}
 
                 {/* Share Information */}
                 <div className="form-section">
