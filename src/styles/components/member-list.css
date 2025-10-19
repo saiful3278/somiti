@@ -664,15 +664,165 @@
   }
 }
 
-/* Minimal Member Card Styles */
+/* Improved Member Card Styles */
 .member-card-minimal {
   cursor: pointer;
   transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .member-card-minimal:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #3b82f6;
+}
+
+.member-card-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.member-avatar-section {
+  flex-shrink: 0;
+}
+
+.member-info-section {
+  flex: 1;
+  min-width: 0; /* Allows text truncation */
+}
+
+.member-first-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.member-name-primary {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-role-badge-compact {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.member-role-badge-compact.member {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.member-role-badge-compact.cashier {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.member-role-badge-compact.admin {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.member-second-line {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.member-share-info,
+.member-address-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.member-share-info {
+  font-weight: 600;
+  color: #059669;
+}
+
+.member-address-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-address-info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-click-indicator {
+  flex-shrink: 0;
+  color: #9ca3af;
+  transition: all 0.2s ease;
+}
+
+.member-card-minimal:hover .member-click-indicator {
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+/* Mobile Responsive for Member Cards */
+@media (max-width: 768px) {
+  .member-card-minimal {
+    padding: 12px;
+  }
+  
+  .member-card-content {
+    gap: 10px;
+  }
+  
+  .member-first-line {
+    margin-bottom: 6px;
+  }
+  
+  .member-name-primary {
+    font-size: 14px;
+  }
+  
+  .member-role-badge-compact {
+    font-size: 9px;
+    padding: 1px 6px;
+  }
+  
+  .member-second-line {
+    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .member-share-info,
+  .member-address-info {
+    font-size: 12px;
+  }
+  
+  .member-address-info {
+    width: 100%;
+  }
 }
 
 /* Floating Member Detail Card Styles */

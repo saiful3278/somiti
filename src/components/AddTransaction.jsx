@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   User, 
@@ -12,11 +12,14 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MemberService } from '../firebase/memberService';
 
 const AddTransaction = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(true);
   
   const [transactionData, setTransactionData] = useState({
     memberId: '',
@@ -31,17 +34,36 @@ const AddTransaction = () => {
     notes: ''
   });
 
-  // Sample member data - in real app this would come from API
-  const members = [
-    { id: 'SM-001', name: 'মোহাম্মদ রহিম উদ্দিন', currentShares: 5 },
-    { id: 'SM-002', name: 'ফাতেমা খাতুন', currentShares: 3 },
-    { id: 'SM-003', name: 'আব্দুল কাদের', currentShares: 7 },
-    { id: 'SM-004', name: 'নাসির উদ্দিন আহমেদ', currentShares: 4 },
-    { id: 'SM-005', name: 'সালমা বেগম', currentShares: 6 },
-    { id: 'SM-006', name: 'আব্দুর রহমান', currentShares: 2 },
-    { id: 'SM-007', name: 'রোকেয়া বেগম', currentShares: 8 },
-    { id: 'SM-008', name: 'মোহাম্মদ করিম', currentShares: 5 }
-  ];
+  // Fetch real member data from Firebase
+  useEffect(() => {
+    const fetchMembers = async () => {
+      setIsLoadingMembers(true);
+      try {
+        const result = await MemberService.getActiveMembers();
+        if (result.success) {
+          // Transform the data to match the expected format
+          const transformedMembers = result.data.map(member => ({
+            id: member.id,
+            name: member.name,
+            currentShares: member.shareCount || 0,
+            membershipId: member.membershipId || member.id
+          }));
+          setMembers(transformedMembers);
+        } else {
+          console.error('Failed to fetch members:', result.error);
+          // Fallback to empty array if fetch fails
+          setMembers([]);
+        }
+      } catch (error) {
+        console.error('Error fetching members:', error);
+        setMembers([]);
+      } finally {
+        setIsLoadingMembers(false);
+      }
+    };
+
+    fetchMembers();
+  }, []);
 
   const transactionTypes = [
     { value: 'monthly_deposit', label: 'মাসিক জমা' },
@@ -157,15 +179,26 @@ const AddTransaction = () => {
                   required
                   value={transactionData.memberId}
                   onChange={(e) => handleMemberSelect(e.target.value)}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  disabled={isLoadingMembers}
+                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
-                  <option value="">সদস্য নির্বাচন করুন</option>
-                  {members.map((member) => (
+                  <option value="">
+                    {isLoadingMembers ? 'সদস্য তালিকা লোড হচ্ছে...' : 
+                     members.length === 0 ? 'কোনো সক্রিয় সদস্য পাওয়া যায়নি' : 
+                     'সদস্য নির্বাচন করুন'}
+                  </option>
+                  {!isLoadingMembers && members.map((member) => (
                     <option key={member.id} value={member.id}>
-                      {member.id} - {member.name}
+                      {member.membershipId || member.id} - {member.name}
                     </option>
                   ))}
                 </select>
+                {isLoadingMembers && (
+                  <p className="text-sm text-gray-500 mt-1">সদস্য তালিকা ডাটাবেস থেকে লোড হচ্ছে...</p>
+                )}
+                {!isLoadingMembers && members.length === 0 && (
+                  <p className="text-sm text-red-500 mt-1">কোনো সক্রিয় সদস্য পাওয়া যায়নি। প্রথমে সদস্য যোগ করুন।</p>
+                )}
               </div>
 
               {selectedMember && (

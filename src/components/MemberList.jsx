@@ -322,10 +322,10 @@ const MemberList = ({ userRole }) => {
               className="member-card member-card-minimal"
               onClick={() => handleMemberClick(member)}
             >
-              {/* Main Content - Horizontal Layout */}
+              {/* Main Content - Improved Layout */}
               <div className="member-card-content">
                 {/* Avatar */}
-                <div className="flex-shrink-0">
+                <div className="member-avatar-section">
                   {member.avatar ? (
                     <img
                       src={member.avatar}
@@ -339,22 +339,29 @@ const MemberList = ({ userRole }) => {
                   )}
                 </div>
 
-                {/* Member Info - Minimal */}
-                <div className="member-info">
-                  <div className="member-header">
-                    <h3 className="member-name">
+                {/* Member Info - Well Organized */}
+                <div className="member-info-section">
+                  {/* First Line: Name and Role */}
+                  <div className="member-first-line">
+                    <h3 className="member-name-primary">
                       {member.name}
                     </h3>
-                    <span className={`member-role-badge ${member.role}`}>
-                      <RoleIcon className="w-3 h-3 mr-1" />
+                    <span className={`member-role-badge-compact ${member.role}`}>
+                      <RoleIcon className="w-3 h-3" />
                       {roleInfo.label}
                     </span>
                   </div>
                   
-                  {/* Minimal Info */}
-                  <div className="member-minimal-info">
-                    <span className="member-phone">{member.phone}</span>
-                    <span className="member-shares">{member.shareCount} শেয়ার</span>
+                  {/* Second Line: Share Count and Address */}
+                  <div className="member-second-line">
+                    <div className="member-share-info">
+                      <DollarSign className="w-3 h-3" />
+                      <span>{member.shareCount} শেয়ার</span>
+                    </div>
+                    <div className="member-address-info">
+                      <MapPin className="w-3 h-3" />
+                      <span>{member.address}</span>
+                    </div>
                   </div>
                 </div>
 
