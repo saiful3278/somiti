@@ -157,7 +157,7 @@ const MemberManagement = () => {
     
     setSaving(true);
     try {
-      const membershipId = `SM-${String(members.length + 1).padStart(3, '0')}`;
+      const membershipId = String(members.length + 1);
       const newMemberData = {
         ...newMember,
         membershipId,

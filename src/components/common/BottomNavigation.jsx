@@ -11,7 +11,7 @@ import {
   Plus
 } from 'lucide-react';
 
-const BottomNavigation = ({ userRole }) => {
+const BottomNavigation = ({ userRole, onOpenAddTransaction }) => {
   const location = useLocation();
 
   // Define navigation items based on user role
@@ -27,7 +27,7 @@ const BottomNavigation = ({ userRole }) => {
 
     const roleSpecificItems = {
       admin: [
-        { name: 'তহবিল', href: '/investments', icon: TrendingUp },
+        { name: 'কোষাগার', href: '/treasury', icon: TrendingUp },
         { name: 'সদস্য', href: '/member-list', icon: Users },
         { name: 'সেটিংস', href: '/admin-settings', icon: Settings }
       ],
@@ -39,7 +39,7 @@ const BottomNavigation = ({ userRole }) => {
       ],
       member: [
         { name: 'শেয়ার', href: '/shares', icon: PieChart },
-        { name: 'তহবিল', href: '/investments', icon: TrendingUp },
+        { name: 'কোষাগার', href: '/treasury', icon: TrendingUp },
         { name: 'সদস্য', href: '/member-list', icon: Users },
         { name: 'সেটিংস', href: '/member-settings', icon: Settings }
       ]
@@ -64,7 +64,81 @@ const BottomNavigation = ({ userRole }) => {
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.href;
+          const isAddTransaction = item.href === '/add-transaction';
           
+          // For Add Transaction, use button instead of Link
+          if (isAddTransaction) {
+            return (
+              <button
+                key={item.href}
+                onClick={onOpenAddTransaction}
+                className="relative flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 min-w-0 flex-1 group"
+                style={{
+                  color: '#6b7280',
+                  transform: 'translateY(0)',
+                }}
+                onTouchStart={(e) => {
+                  // Add ripple effect on touch
+                  const button = e.currentTarget;
+                  const ripple = document.createElement('div');
+                  const rect = button.getBoundingClientRect();
+                  const size = Math.max(rect.width, rect.height);
+                  const x = e.touches[0].clientX - rect.left - size / 2;
+                  const y = e.touches[0].clientY - rect.top - size / 2;
+                  
+                  ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: rgba(59, 130, 246, 0.2);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: ripple 0.3s ease-out;
+                    pointer-events: none;
+                    z-index: 1;
+                  `;
+                  
+                  button.appendChild(ripple);
+                  
+                  setTimeout(() => {
+                    if (ripple.parentNode) {
+                      ripple.parentNode.removeChild(ripple);
+                    }
+                  }, 300);
+                }}
+              >
+                {/* Icon container with background */}
+                <div 
+                  className="relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 group-hover:scale-105"
+                  style={{
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    border: '1px solid rgba(59, 130, 246, 0.2)'
+                  }}
+                >
+                  <Icon 
+                    size={20} 
+                    className="transition-all duration-200"
+                    style={{ strokeWidth: 2.5 }}
+                  />
+                </div>
+                
+                {/* Label */}
+                <span 
+                  className="text-xs font-medium mt-1 transition-all duration-200 truncate max-w-full"
+                  style={{ 
+                    fontSize: '11px',
+                    lineHeight: '1.2'
+                  }}
+                >
+                  {item.name}
+                </span>
+              </button>
+            );
+          }
+          
+          // For other items, use Link as before
           return (
             <Link
               key={item.href}

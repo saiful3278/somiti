@@ -137,8 +137,8 @@ const MemberList = ({ userRole }) => {
     try {
       setSaving(true);
       
-      // Generate member ID
-      const memberId = `SM-${String(members.length + 1).padStart(3, '0')}`;
+      // Generate member ID (simple sequential number)
+      const memberId = String(members.length + 1);
       
       const memberData = {
         ...newMemberData,

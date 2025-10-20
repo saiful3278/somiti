@@ -167,14 +167,88 @@ export class ExpenseService {
 // Fund service class
 export class FundService {
   
-  // Get fund summary
+  // Get fund summary with real-time calculation from transactions
   static async getFundSummary() {
     try {
+      // Get all transactions for real-time calculation
+      const transactionsResult = await TransactionService.getAllTransactions();
+      if (!transactionsResult.success) {
+        throw new Error('Failed to fetch transactions');
+      }
+      
+      const transactions = transactionsResult.data || [];
+      
+      // Calculate deposits (monthly_deposit, share_purchase, loan_repayment)
+      const depositTransactions = transactions
+        .filter(t => t.transactionType === 'monthly_deposit' || 
+                    t.transactionType === 'share_purchase' || 
+                    t.transactionType === 'loan_repayment');
+      
+      // Calculate withdrawals (loan_disbursement)
+      const withdrawalTransactions = transactions
+        .filter(t => t.transactionType === 'loan_disbursement');
+      
+      const totalDeposits = depositTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const totalWithdrawals = withdrawalTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const totalBalance = totalDeposits - totalWithdrawals;
+      
+      // Calculate monthly deposits for current month
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthlyDeposits = transactions
+        .filter(t => {
+          if (t.transactionType === 'monthly_deposit' && t.createdAt) {
+            const transactionDate = new Date(t.createdAt.seconds * 1000);
+            return transactionDate.getMonth() === currentMonth && 
+                   transactionDate.getFullYear() === currentYear;
+          }
+          return false;
+        })
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      
+      // Get static data from fund_summary collection for other metrics
       const querySnapshot = await getDocs(collection(db, FUND_COLLECTION));
-      let fundData = null;
+      let staticFundData = {};
       querySnapshot.forEach((doc) => {
-        fundData = { id: doc.id, ...doc.data() };
+        staticFundData = { id: doc.id, ...doc.data() };
       });
+      
+      // Combine real-time calculations with static data
+      const fundData = {
+        // Real-time calculated values
+        totalBalance,
+        totalAmount: totalBalance, // For AdminDashboard compatibility
+        totalDeposits,
+        totalWithdrawals,
+        monthlyDeposits,
+        availableCash: totalBalance - (staticFundData.investedAmount || 0),
+        
+        // Static values from database (or defaults)
+        investedAmount: staticFundData.investedAmount || 0,
+        monthlyProfit: staticFundData.monthlyProfit || 0,
+        monthlyProfits: staticFundData.monthlyProfit || 0, // For AdminDashboard compatibility
+        monthlyExpense: staticFundData.monthlyExpense || 0,
+        netProfit: (staticFundData.monthlyProfit || 0) - (staticFundData.monthlyExpense || 0),
+        profitMargin: staticFundData.profitMargin || 0,
+        investmentReturn: staticFundData.investmentReturn || 0,
+        
+        // Arrays for charts and breakdowns
+        cashFlow: staticFundData.cashFlow || [
+          { month: 'জানুয়ারি', income: 45600, expense: 23000, profit: 22600 },
+          { month: 'ফেব্রুয়ারি', income: 48200, expense: 25000, profit: 23200 },
+          { month: 'মার্চ', income: 52000, expense: 28000, profit: 24000 },
+          { month: 'এপ্রিল', income: 49800, expense: 26500, profit: 23300 },
+          { month: 'মে', income: 51200, expense: 24800, profit: 26400 },
+          { month: 'জুন', income: 53600, expense: 27200, profit: 26400 }
+        ],
+        investmentBreakdown: staticFundData.investmentBreakdown || [
+          { type: 'ব্যাংক ডিপোজিট', amount: 300000, percentage: 46.2, return: 4.5 },
+          { type: 'সরকারি বন্ড', amount: 200000, percentage: 30.8, return: 3.8 },
+          { type: 'ব্যবসায়িক বিনিয়োগ', amount: 100000, percentage: 15.4, return: 8.2 },
+          { type: 'রিয়েল এস্টেট', amount: 50000, percentage: 7.7, return: 6.5 }
+        ]
+      };
+      
       return { success: true, data: fundData };
     } catch (error) {
       console.error('তহবিলের সারসংক্ষেপ আনতে ত্রুটি:', error);

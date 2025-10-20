@@ -11,11 +11,12 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { MemberService } from '../firebase/memberService';
+import { TransactionService } from '../firebase/transactionService';
+import '../styles/components/add-transaction-modal.css';
 
-const AddTransaction = () => {
-  const navigate = useNavigate();
+const AddTransaction = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
   const [members, setMembers] = useState([]);
@@ -46,7 +47,7 @@ const AddTransaction = () => {
             id: member.id,
             name: member.name,
             currentShares: member.shareCount || 0,
-            membershipId: member.membershipId || member.id
+            membershipId: member.membershipId || member.memberId || member.id
           }));
           setMembers(transformedMembers);
         } else {
@@ -106,32 +107,52 @@ const AddTransaction = () => {
     setSubmitStatus(null);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Prepare transaction data for Firebase
+      const transactionToSave = {
+        memberId: transactionData.memberId,
+        memberName: transactionData.memberName,
+        transactionType: transactionData.transactionType,
+        amount: parseFloat(transactionData.amount),
+        shareAmount: transactionData.shareAmount ? parseInt(transactionData.shareAmount) : null,
+        paymentMethod: transactionData.paymentMethod,
+        paymentReference: transactionData.paymentReference || null,
+        description: transactionData.description || '',
+        date: transactionData.date,
+        notes: transactionData.notes || '',
+        status: 'completed'
+      };
+
+      // Save transaction to Firebase
+      const result = await TransactionService.addTransaction(transactionToSave);
       
-      // In real app, this would be an API call
-      console.log('Transaction Data:', transactionData);
-      
-      setSubmitStatus('success');
-      
-      // Reset form after successful submission
-      setTimeout(() => {
-        setTransactionData({
-          memberId: '',
-          memberName: '',
-          transactionType: 'monthly_deposit',
-          amount: '',
-          shareAmount: '',
-          paymentMethod: 'cash',
-          paymentReference: '',
-          description: '',
-          date: new Date().toISOString().split('T')[0],
-          notes: ''
-        });
-        setSubmitStatus(null);
-      }, 2000);
+      if (result.success) {
+        console.log('Transaction saved successfully with ID:', result.id);
+        setSubmitStatus('success');
+        
+        // Reset form and close modal after successful submission
+        setTimeout(() => {
+          setTransactionData({
+            memberId: '',
+            memberName: '',
+            transactionType: 'monthly_deposit',
+            amount: '',
+            shareAmount: '',
+            paymentMethod: 'cash',
+            paymentReference: '',
+            description: '',
+            date: new Date().toISOString().split('T')[0],
+            notes: ''
+          });
+          setSubmitStatus(null);
+          onClose(); // Close the modal
+        }, 2000);
+      } else {
+        console.error('Failed to save transaction:', result.error);
+        setSubmitStatus('error');
+      }
       
     } catch (error) {
+      console.error('Error submitting transaction:', error);
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -141,46 +162,43 @@ const AddTransaction = () => {
   const selectedMember = members.find(member => member.id === transactionData.memberId);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <button
-                onClick={() => navigate('/cashier')}
-                className="mr-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5 text-gray-600" />
-              </button>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">নতুন লেনদেন যোগ করুন</h1>
-                <p className="text-sm text-gray-600">সদস্যের লেনদেনের বিস্তারিত তথ্য প্রদান করুন</p>
-              </div>
+    <div className="add-transaction-backdrop" onClick={onClose}>
+      <div className="add-transaction-modal" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="add-transaction-header">
+          <div className="add-transaction-header-content">
+            <div>
+              <h1 className="add-transaction-title">নতুন লেনদেন যোগ করুন</h1>
+              <p className="add-transaction-subtitle">সদস্যের লেনদেনের বিস্তারিত তথ্য প্রদান করুন</p>
             </div>
+            <button
+              onClick={onClose}
+              className="add-transaction-close-btn"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Form */}
-      <div className="p-4">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Form */}
+        <div className="add-transaction-body">
+        <form onSubmit={handleSubmit}>
           {/* Member Selection Card */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center mb-4">
-              <User className="h-5 w-5 text-blue-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-900">সদস্য নির্বাচন</h3>
+          <div className="add-transaction-section">
+            <div className="add-transaction-section-header">
+              <User className="add-transaction-section-icon" />
+              <h3 className="add-transaction-section-title">সদস্য নির্বাচন</h3>
             </div>
             
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">সদস্য নির্বাচন করুন *</label>
+            <div>
+              <div className="add-transaction-form-group">
+                <label className="add-transaction-label">সদস্য নির্বাচন করুন *</label>
                 <select
                   required
                   value={transactionData.memberId}
                   onChange={(e) => handleMemberSelect(e.target.value)}
                   disabled={isLoadingMembers}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="add-transaction-select"
                 >
                   <option value="">
                     {isLoadingMembers ? 'সদস্য তালিকা লোড হচ্ছে...' : 
@@ -202,16 +220,18 @@ const AddTransaction = () => {
               </div>
 
               {selectedMember && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-blue-900">{selectedMember.name}</p>
-                      <p className="text-sm text-blue-700">সদস্য আইডি: {selectedMember.id}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-blue-700">বর্তমান শেয়ার</p>
-                      <p className="font-bold text-blue-900">{selectedMember.currentShares} টি</p>
-                    </div>
+                <div className="add-transaction-member-info">
+                  <div className="add-transaction-member-info-row">
+                    <span className="add-transaction-member-info-label">সদস্যের নাম:</span>
+                    <span className="add-transaction-member-info-value">{selectedMember.name}</span>
+                  </div>
+                  <div className="add-transaction-member-info-row">
+                    <span className="add-transaction-member-info-label">সদস্য আইডি:</span>
+                    <span className="add-transaction-member-info-value">{selectedMember.membershipId}</span>
+                  </div>
+                  <div className="add-transaction-member-info-row">
+                    <span className="add-transaction-member-info-label">বর্তমান শেয়ার:</span>
+                    <span className="add-transaction-member-info-value">{selectedMember.currentShares} টি</span>
                   </div>
                 </div>
               )}
@@ -219,20 +239,20 @@ const AddTransaction = () => {
           </div>
 
           {/* Transaction Details Card */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center mb-4">
-              <DollarSign className="h-5 w-5 text-green-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-900">লেনদেনের বিবরণ</h3>
+          <div className="add-transaction-section">
+            <div className="add-transaction-section-header">
+              <DollarSign className="add-transaction-section-icon" />
+              <h3 className="add-transaction-section-title">লেনদেনের বিবরণ</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">লেনদেনের ধরন *</label>
+              <div className="add-transaction-form-group">
+                <label className="add-transaction-label">লেনদেনের ধরন *</label>
                 <select
                   required
                   value={transactionData.transactionType}
                   onChange={(e) => handleTransactionTypeChange(e.target.value)}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="add-transaction-select"
                 >
                   {transactionTypes.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -242,8 +262,8 @@ const AddTransaction = () => {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">পরিমাণ (৳) *</label>
+              <div className="add-transaction-form-group">
+                <label className="add-transaction-label">পরিমাণ (৳) *</label>
                 <input
                   type="number"
                   required
@@ -251,65 +271,65 @@ const AddTransaction = () => {
                   step="0.01"
                   value={transactionData.amount}
                   onChange={(e) => setTransactionData({...transactionData, amount: e.target.value})}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="add-transaction-input"
                   placeholder="লেনদেনের পরিমাণ"
                 />
               </div>
 
               {transactionData.transactionType === 'share_purchase' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">শেয়ার সংখ্যা *</label>
+                <div className="add-transaction-form-group">
+                  <label className="add-transaction-label">শেয়ার সংখ্যা *</label>
                   <input
                     type="number"
                     min="1"
                     required
                     value={transactionData.shareAmount}
                     onChange={(e) => setTransactionData({...transactionData, shareAmount: e.target.value})}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="add-transaction-input"
                     placeholder="ক্রয় করার শেয়ার সংখ্যা"
                   />
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">তারিখ *</label>
+              <div className="add-transaction-form-group">
+                <label className="add-transaction-label">তারিখ *</label>
                 <input
                   type="date"
                   required
                   value={transactionData.date}
                   onChange={(e) => setTransactionData({...transactionData, date: e.target.value})}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="add-transaction-input"
                 />
               </div>
             </div>
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">বিবরণ</label>
+            <div className="add-transaction-form-group">
+              <label className="add-transaction-label">বিবরণ</label>
               <textarea
                 value={transactionData.description}
                 onChange={(e) => setTransactionData({...transactionData, description: e.target.value})}
                 rows="3"
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="add-transaction-textarea"
                 placeholder="লেনদেনের বিস্তারিত বিবরণ"
               />
             </div>
           </div>
 
           {/* Payment Details Card */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center mb-4">
-              <CreditCard className="h-5 w-5 text-purple-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-900">পেমেন্ট তথ্য</h3>
+          <div className="add-transaction-section">
+            <div className="add-transaction-section-header">
+              <CreditCard className="add-transaction-section-icon" />
+              <h3 className="add-transaction-section-title">পেমেন্ট তথ্য</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">পেমেন্ট পদ্ধতি *</label>
+              <div className="add-transaction-form-group">
+                <label className="add-transaction-label">পেমেন্ট পদ্ধতি *</label>
                 <select
                   required
                   value={transactionData.paymentMethod}
                   onChange={(e) => setTransactionData({...transactionData, paymentMethod: e.target.value})}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="add-transaction-select"
                 >
                   {paymentMethods.map((method) => (
                     <option key={method.value} value={method.value}>
@@ -320,46 +340,46 @@ const AddTransaction = () => {
               </div>
 
               {transactionData.paymentMethod !== 'cash' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">রেফারেন্স নম্বর</label>
+                <div className="add-transaction-form-group">
+                  <label className="add-transaction-label">রেফারেন্স নম্বর</label>
                   <input
                     type="text"
                     value={transactionData.paymentReference}
                     onChange={(e) => setTransactionData({...transactionData, paymentReference: e.target.value})}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="add-transaction-input"
                     placeholder="ট্রানজেকশন/চেক নম্বর"
                   />
                 </div>
               )}
             </div>
 
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">অতিরিক্ত নোট</label>
+            <div className="add-transaction-form-group">
+              <label className="add-transaction-label">অতিরিক্ত নোট</label>
               <textarea
                 value={transactionData.notes}
                 onChange={(e) => setTransactionData({...transactionData, notes: e.target.value})}
                 rows="2"
-                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="add-transaction-textarea"
                 placeholder="অতিরিক্ত তথ্য বা মন্তব্য"
               />
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+          <div className="add-transaction-section">
+            <div className="add-transaction-actions">
               <button
                 type="submit"
                 disabled={isSubmitting || !transactionData.memberId || !transactionData.amount}
-                className={`flex-1 flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all ${
+                className={`add-transaction-submit-btn ${
                   isSubmitting || !transactionData.memberId || !transactionData.amount
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
+                    ? 'disabled'
+                    : ''
                 }`}
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="add-transaction-spinner"></div>
                     লেনদেন সংরক্ষণ করা হচ্ছে...
                   </>
                 ) : (
@@ -372,8 +392,8 @@ const AddTransaction = () => {
               
               <button
                 type="button"
-                onClick={() => navigate('/cashier')}
-                className="flex-1 sm:flex-none px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                onClick={onClose}
+                className="add-transaction-cancel-btn"
               >
                 বাতিল করুন
               </button>
@@ -382,20 +402,16 @@ const AddTransaction = () => {
 
           {/* Status Messages */}
           {submitStatus && (
-            <div className={`rounded-lg p-4 ${
-              submitStatus === 'success' 
-                ? 'bg-green-50 border border-green-200' 
-                : 'bg-red-50 border border-red-200'
+            <div className={`add-transaction-status ${
+              submitStatus === 'success' ? 'success' : 'error'
             }`}>
-              <div className="flex items-center">
+              <div className="add-transaction-status-content">
                 {submitStatus === 'success' ? (
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
+                  <CheckCircle className="add-transaction-status-icon" />
                 ) : (
-                  <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+                  <AlertCircle className="add-transaction-status-icon" />
                 )}
-                <p className={`font-medium ${
-                  submitStatus === 'success' ? 'text-green-800' : 'text-red-800'
-                }`}>
+                <p className="add-transaction-status-text">
                   {submitStatus === 'success' 
                     ? 'লেনদেন সফলভাবে সংরক্ষিত হয়েছে!' 
                     : 'লেনদেন সংরক্ষণে ত্রুটি হয়েছে। আবার চেষ্টা করুন।'
@@ -405,6 +421,7 @@ const AddTransaction = () => {
             </div>
           )}
         </form>
+        </div>
       </div>
     </div>
   );

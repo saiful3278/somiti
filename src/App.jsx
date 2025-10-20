@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AdminDashboard from './components/AdminDashboard';
 import MemberManagement from './components/MemberManagement';
 import ShareTracking from './components/ShareTracking';
@@ -12,7 +12,8 @@ import ProfileSettings from './components/ProfileSettings';
 import AdminSettings from './components/AdminSettings';
 import CashierSettings from './components/CashierSettings';
 import MemberSettings from './components/MemberSettings';
-import AddTransaction from './components/AddTransaction';
+import Treasury from './components/Treasury';
+
 import MemberList from './components/MemberList';
 import Layout from './components/Layout';
 
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/members" element={<MemberManagement />} />
                 <Route path="/member-list" element={<MemberList userRole={userRole} />} />
                 <Route path="/shares" element={<ShareTracking />} />
+                <Route path="/treasury" element={<Treasury />} />
                 <Route path="/investments" element={<InvestmentManagement />} />
                 <Route path="/profit" element={<ProfitDistribution />} />
                 <Route path="/notices" element={<NoticeBoard />} />
@@ -45,7 +47,6 @@ function App() {
               <>
                 <Route path="/" element={<CashierDashboard />} />
                 <Route path="/cashier" element={<CashierDashboard />} />
-                <Route path="/add-transaction" element={<AddTransaction />} />
                 <Route path="/member-list" element={<MemberList userRole={userRole} />} />
                 <Route path="/shares" element={<ShareTracking />} />
                 <Route path="/notices" element={<NoticeBoard />} />
@@ -60,6 +61,7 @@ function App() {
                 <Route path="/member" element={<MemberDashboard />} />
                 <Route path="/member-list" element={<MemberList userRole={userRole} />} />
                 <Route path="/shares" element={<ShareTracking />} />
+                <Route path="/treasury" element={<Treasury />} />
                 <Route path="/investments" element={<InvestmentManagement />} />
                 <Route path="/notices" element={<NoticeBoard />} />
                 <Route path="/member-settings" element={<MemberSettings />} />

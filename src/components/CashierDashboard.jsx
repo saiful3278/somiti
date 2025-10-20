@@ -57,7 +57,7 @@ const CashierDashboard = () => {
   });
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [fundViewMode, setFundViewMode] = useState('overview'); // 'overview', 'cashflow', 'investments'
+  const [fundViewMode, setFundViewMode] = useState('overview'); // 'overview', 'cashflow'
   const [selectedTimeRange, setSelectedTimeRange] = useState('6months');
   
   // Firebase data states
@@ -65,15 +65,9 @@ const CashierDashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [fundData, setFundData] = useState({
     totalBalance: 0,
-    investedAmount: 0,
     availableCash: 0,
-    monthlyProfit: 0,
     monthlyExpense: 0,
-    netProfit: 0,
-    profitMargin: 0,
-    investmentReturn: 0,
-    cashFlow: [],
-    investmentBreakdown: []
+    cashFlow: []
   });
   
   // New functionality states
@@ -145,18 +139,7 @@ const CashierDashboard = () => {
         
         FundService.getFundSummary().then(result => {
           if (result.success && result.data) {
-            setFundData({
-              totalBalance: result.data.totalBalance || 0,
-              investedAmount: result.data.investedAmount || 0,
-              availableCash: result.data.availableCash || 0,
-              monthlyProfit: result.data.monthlyProfit || 0,
-              monthlyExpense: result.data.monthlyExpense || 0,
-              netProfit: result.data.netProfit || 0,
-              profitMargin: result.data.profitMargin || 0,
-              investmentReturn: result.data.investmentReturn || 0,
-              cashFlow: result.data.cashFlow || [],
-              investmentBreakdown: result.data.investmentBreakdown || []
-            });
+            setFundData(result.data);
           }
           setLoading(prev => ({ ...prev, fundData: false }));
           return result;
@@ -230,18 +213,7 @@ const CashierDashboard = () => {
         
         const updatedFundResult = await FundService.getFundSummary();
         if (updatedFundResult.success && updatedFundResult.data) {
-          setFundData({
-            totalBalance: updatedFundResult.data.totalBalance || 0,
-            investedAmount: updatedFundResult.data.investedAmount || 0,
-            availableCash: updatedFundResult.data.availableCash || 0,
-            monthlyProfit: updatedFundResult.data.monthlyProfit || 0,
-            monthlyExpense: updatedFundResult.data.monthlyExpense || 0,
-            netProfit: updatedFundResult.data.netProfit || 0,
-            profitMargin: updatedFundResult.data.profitMargin || 0,
-            investmentReturn: updatedFundResult.data.investmentReturn || 0,
-            cashFlow: updatedFundResult.data.cashFlow || [],
-            investmentBreakdown: updatedFundResult.data.investmentBreakdown || []
-          });
+          setFundData(updatedFundResult.data);
         }
       } else {
         console.error('লেনদেন যোগ করতে ত্রুটি:', addResult.error);
@@ -259,36 +231,14 @@ const CashierDashboard = () => {
     paidMembers: members.filter(member => member.status === 'active').length,
     unpaidMembers: members.filter(member => member.status === 'inactive').length,
     totalCollected: transactions
-      .filter(t => t.type === 'deposit' && new Date(t.createdAt?.seconds * 1000).getMonth() === new Date().getMonth())
-      .reduce((sum, t) => sum + t.amount, 0),
+      .filter(t => (t.transactionType === 'monthly_deposit' || t.transactionType === 'share_purchase') && 
+        new Date(t.createdAt?.seconds * 1000).getMonth() === new Date().getMonth())
+      .reduce((sum, t) => sum + (t.amount || 0), 0),
     expectedAmount: members.length * 1200 // Assuming 1200 per member monthly
   };
 
-  // Total fund management with enhanced data from Firebase
-  const fundSummary = {
-    totalBalance: fundData.totalBalance || 850000,
-    investedAmount: fundData.investedAmount || 650000,
-    availableCash: fundData.availableCash || 200000,
-    monthlyProfit: fundData.monthlyProfit || 25000,
-    monthlyExpense: fundData.monthlyExpense || 23000,
-    netProfit: fundData.netProfit || 2000,
-    profitMargin: fundData.profitMargin || 8.7,
-    investmentReturn: fundData.investmentReturn || 3.8,
-    cashFlow: fundData.cashFlow.length > 0 ? fundData.cashFlow : [
-      { month: 'জানুয়ারি', income: 45600, expense: 23000, profit: 22600 },
-      { month: 'ফেব্রুয়ারি', income: 48200, expense: 25000, profit: 23200 },
-      { month: 'মার্চ', income: 52000, expense: 28000, profit: 24000 },
-      { month: 'এপ্রিল', income: 49800, expense: 26500, profit: 23300 },
-      { month: 'মে', income: 51200, expense: 24800, profit: 26400 },
-      { month: 'জুন', income: 53600, expense: 27200, profit: 26400 }
-    ],
-    investmentBreakdown: fundData.investmentBreakdown.length > 0 ? fundData.investmentBreakdown : [
-      { type: 'ব্যাংক ডিপোজিট', amount: 300000, percentage: 46.2, return: 4.5 },
-      { type: 'সরকারি বন্ড', amount: 200000, percentage: 30.8, return: 3.8 },
-      { type: 'ব্যবসায়িক বিনিয়োগ', amount: 100000, percentage: 15.4, return: 8.2 },
-      { type: 'রিয়েল এস্টেট', amount: 50000, percentage: 7.7, return: 6.5 }
-    ]
-  };
+  // Use fund data directly from enhanced FundService (no need for duplicate calculation)
+  const fundSummary = fundData;
 
   // Monthly subscription records
   const monthlySubscriptions = [
@@ -358,7 +308,6 @@ const CashierDashboard = () => {
     { id: 'event', name: 'ইভেন্ট', color: '#10B981' },
     { id: 'maintenance', name: 'রক্ষণাবেক্ষণ', color: '#F59E0B' },
     { id: 'utility', name: 'ইউটিলিটি', color: '#EF4444' },
-    { id: 'investment', name: 'বিনিয়োগ', color: '#8B5CF6' },
     { id: 'emergency', name: 'জরুরি', color: '#EC4899' }
   ];
 
@@ -431,24 +380,7 @@ const CashierDashboard = () => {
       vendor: 'DESCO',
       notes: 'জানুয়ারি মাসের বিদ্যুৎ বিল'
     },
-    {
-      id: 5,
-      description: 'নতুন প্রজেক্ট বিনিয়োগ',
-      amount: 50000,
-      date: '৩০/০১/২০২৪',
-      category: 'investment',
-      invoiceNo: 'INV-005',
-      approvedBy: 'সভাপতি',
-      status: 'rejected',
-      priority: 'low',
-      submittedBy: 'বিনিয়োগ কমিটি',
-      submittedDate: '২৮/০১/২০২৪',
-      approvedDate: null,
-      paymentMethod: 'bank_transfer',
-      vendor: 'ABC কোম্পানি',
-      notes: 'নতুন ব্যবসায়িক প্রকল্পে বিনিয়োগ',
-      rejectionReason: 'পর্যাপ্ত তথ্য নেই'
-    }
+
   ];
 
   // Hourly collection data
@@ -501,7 +433,7 @@ const CashierDashboard = () => {
       case 'monthly_deposit': return 'মাসিক জমা';
       case 'share_purchase': return 'শেয়ার ক্রয়';
       case 'loan_payment': return 'ঋণ পরিশোধ';
-      case 'profit_withdrawal': return 'লাভ উত্তোলন';
+  
       default: return type;
     }
   };
@@ -559,12 +491,10 @@ const CashierDashboard = () => {
    const monthlyReportData = {
      '2024-01': {
        month: 'জানুয়ারি ২০২৪',
-       totalIncome: 125000,
+       totalIncome: 110000,
        totalExpense: 45000,
-       netProfit: 80000,
        memberSubscriptions: 85000,
        donations: 25000,
-       investments: 15000,
        officeExpenses: 18000,
        eventExpenses: 15000,
        utilityExpenses: 8000,
@@ -586,8 +516,7 @@ const CashierDashboard = () => {
        ],
        categoryBreakdown: [
          { name: 'সদস্য চাঁদা', value: 85000, color: '#3B82F6' },
-         { name: 'দান', value: 25000, color: '#10B981' },
-         { name: 'বিনিয়োগ', value: 15000, color: '#8B5CF6' }
+         { name: 'দান', value: 25000, color: '#10B981' }
        ],
        expenseBreakdown: [
          { name: 'অফিস খরচ', value: 18000, color: '#EF4444' },
@@ -596,9 +525,9 @@ const CashierDashboard = () => {
          { name: 'রক্ষণাবেক্ষণ', value: 4000, color: '#6B7280' }
        ],
        monthlyComparison: [
-         { month: 'নভেম্বর', income: 118000, expense: 42000, profit: 76000 },
-         { month: 'ডিসেম্বর', income: 122000, expense: 44000, profit: 78000 },
-         { month: 'জানুয়ারি', income: 125000, expense: 45000, profit: 80000 }
+         { month: 'নভেম্বর', income: 103000, expense: 42000 },
+         { month: 'ডিসেম্বর', income: 107000, expense: 44000 },
+         { month: 'জানুয়ারি', income: 110000, expense: 45000 }
        ]
      }
    };
@@ -990,8 +919,8 @@ const CashierDashboard = () => {
       return;
     }
     
-    // Generate member ID
-    const memberId = `SM-${String(monthlySummary.totalMembers + 1).padStart(3, '0')}`;
+    // Generate member ID (simple sequential number)
+    const memberId = String(monthlySummary.totalMembers + 1);
     
     const memberData = {
       ...newMemberData,
@@ -1218,14 +1147,7 @@ const CashierDashboard = () => {
                 <span className="report-metric-value expense">৳ {currentReportData.totalExpense.toLocaleString()}</span>
               )}
             </div>
-            <div className="report-metric">
-              <span className="report-metric-label">নেট লাভ</span>
-              {loading.transactions || loading.fundData ? (
-                <LoadingSkeleton className="h-5 w-20" />
-              ) : (
-                <span className="report-metric-value profit">৳ {currentReportData.netProfit.toLocaleString()}</span>
-              )}
-            </div>
+
           </div>
         </div>
 

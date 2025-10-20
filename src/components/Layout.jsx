@@ -4,6 +4,7 @@ import Sidebar from './common/Sidebar';
 import BottomNavigation from './common/BottomNavigation';
 import MobileSidebar from './common/MobileSidebar';
 import PrimarySearchAppBar from './appbar';
+import AddTransaction from './AddTransaction';
 import useSidebarLogic from '../hooks/useSidebarLogic';
 import '../styles/components/desktop-sidebar.css';
 
@@ -11,6 +12,7 @@ const Layout = ({ children, userRole, setUserRole }) => {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [addTransactionModalOpen, setAddTransactionModalOpen] = useState(false);
   const location = useLocation();
   const { navigationItems } = useSidebarLogic(userRole);
 
@@ -77,7 +79,16 @@ const Layout = ({ children, userRole, setUserRole }) => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <BottomNavigation userRole={userRole} />
+      <BottomNavigation 
+        userRole={userRole} 
+        onOpenAddTransaction={() => setAddTransactionModalOpen(true)}
+      />
+
+      {/* Add Transaction Modal */}
+      <AddTransaction 
+        isOpen={addTransactionModalOpen}
+        onClose={() => setAddTransactionModalOpen(false)}
+      />
     </div>
   );
 };

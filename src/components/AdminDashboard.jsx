@@ -29,59 +29,107 @@ const AdminDashboard = () => {
     activeMembers: 0,
     totalFunds: 0,
     monthlyDeposits: 0,
-    monthlyProfits: 0,
     recentTransactions: [],
-    monthlyData: [],
-    investmentData: []
+    monthlyData: []
   });
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Generate monthly deposits data from transactions
+  const generateMonthlyDepositsData = (transactions) => {
+    const monthNames = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+    const last6Months = [];
+    const currentDate = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const monthName = monthNames[date.getMonth()];
+      
+      // Calculate deposits for this month
+      const monthlyDeposits = transactions
+        .filter(t => {
+          if (!t.createdAt || t.transactionType !== 'monthly_deposit') return false;
+          const transactionDate = new Date(t.createdAt.seconds * 1000);
+          return transactionDate.getMonth() === date.getMonth() && 
+                 transactionDate.getFullYear() === date.getFullYear();
+        })
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+      
+      last6Months.push({
+        month: monthName,
+        deposits: monthlyDeposits
+      });
+    }
+    
+    return last6Months;
+  };
 
   // Load dashboard data from Firebase
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        setLoading(prev => ({ ...prev, initial: true }));
-        
-        // Load all data in parallel for better performance
-        const [membersResult, fundSummaryResult, transactionsResult] = await Promise.all([
-          MemberService.getAllMembers().then(members => {
-            const activeMembers = members.filter(member => member.status === 'active');
-            setDashboardData(prev => ({
-              ...prev,
-              totalMembers: members.length,
-              activeMembers: activeMembers.length
-            }));
-            setLoading(prev => ({ ...prev, members: false }));
-            return { members, activeMembers };
+        // Load all data in parallel
+        const [memberResult, fundSummary, transactions] = await Promise.all([
+          MemberService.getAllMembers().then(result => {
+            if (result.success) {
+              const members = result.data;
+              const activeMembers = members.filter(member => member.status === 'active').length;
+              setDashboardData(prev => ({
+                ...prev,
+                totalMembers: members.length,
+                activeMembers
+              }));
+              setLoading(prev => ({ ...prev, members: false }));
+              return members;
+            } else {
+              console.error('Error loading members:', result.error);
+              setLoading(prev => ({ ...prev, members: false }));
+              return [];
+            }
           }).catch(error => {
             console.error('Error loading members:', error);
             setLoading(prev => ({ ...prev, members: false }));
-            return { members: [], activeMembers: [] };
+            return [];
           }),
           
-          FundService.getFundSummary().then(fundSummary => {
-            setDashboardData(prev => ({
-              ...prev,
-              totalFunds: fundSummary.totalAmount || 0,
-              monthlyDeposits: fundSummary.monthlyDeposits || 0,
-              monthlyProfits: fundSummary.monthlyProfits || 0,
-              investmentData: fundSummary.investmentBreakdown || []
-            }));
-            setLoading(prev => ({ ...prev, fundData: false }));
-            return fundSummary;
+          FundService.getFundSummary().then(result => {
+            if (result.success && result.data) {
+              const fundSummary = result.data;
+              setDashboardData(prev => ({
+                ...prev,
+                totalFunds: fundSummary.totalAmount || 0,
+                monthlyDeposits: fundSummary.monthlyDeposits || 0
+              }));
+              setLoading(prev => ({ ...prev, fundData: false }));
+              return fundSummary;
+            } else {
+              console.error('Error loading fund summary:', result.error);
+              setLoading(prev => ({ ...prev, fundData: false }));
+              return {};
+            }
           }).catch(error => {
             console.error('Error loading fund summary:', error);
             setLoading(prev => ({ ...prev, fundData: false }));
             return {};
           }),
           
-          TransactionService.getRecentTransactions(10).then(transactions => {
-            setDashboardData(prev => ({
-              ...prev,
-              recentTransactions: transactions
-            }));
-            setLoading(prev => ({ ...prev, transactions: false }));
-            return transactions;
+          TransactionService.getAllTransactions().then(result => {
+            if (result.success) {
+              const allTransactions = result.data || [];
+              const recentTransactions = allTransactions.slice(0, 10);
+              const monthlyData = generateMonthlyDepositsData(allTransactions);
+              
+              setDashboardData(prev => ({
+                ...prev,
+                recentTransactions,
+                monthlyData
+              }));
+              setLoading(prev => ({ ...prev, transactions: false }));
+              return allTransactions;
+            } else {
+              console.error('Error loading transactions:', result.error);
+              setLoading(prev => ({ ...prev, transactions: false }));
+              return [];
+            }
           }).catch(error => {
             console.error('Error loading transactions:', error);
             setLoading(prev => ({ ...prev, transactions: false }));
@@ -125,33 +173,12 @@ const AdminDashboard = () => {
       icon: TrendingUp,
       color: 'bg-purple-500',
     },
-    {
-      title: 'এই মাসের লাভ',
-      value: `৳ ${dashboardData.monthlyProfits.toLocaleString()}`,
-      change: '-২%',
-      changeType: 'decrease',
-      icon: DollarSign,
-      color: 'bg-orange-500',
-    },
   ];
 
-  // Use Firebase data or fallback to dummy data
-  const monthlyData = dashboardData.monthlyData.length > 0 ? dashboardData.monthlyData : [
-    { month: 'জানুয়ারি', deposits: 75000, profits: 15000 },
-    { month: 'ফেব্রুয়ারি', deposits: 82000, profits: 17000 },
-    { month: 'মার্চ', deposits: 78000, profits: 16500 },
-    { month: 'এপ্রিল', deposits: 85000, profits: 18500 },
-    { month: 'মে', deposits: 90000, profits: 19000 },
-    { month: 'জুন', deposits: 85000, profits: 18500 },
-  ];
+  // Monthly deposits data for chart - using real data from transactions
+  const monthlyData = dashboardData.monthlyData || [];
 
-  const investmentData = dashboardData.investmentData.length > 0 ? dashboardData.investmentData : [
-    { name: 'ব্যাংক ডিপোজিট', value: 60, amount: 325000 },
-    { name: 'শেয়ার বাজার', value: 25, amount: 135000 },
-    { name: 'ব্যবসায়িক ঋণ', value: 15, amount: 85000 },
-  ];
 
-  const COLORS = ['#0A6CFF', '#00BFA5', '#F59E0B'];
 
   // Generate recent activities from Firebase data
   const recentActivities = dashboardData.recentTransactions.length > 0 
@@ -180,14 +207,7 @@ const AdminDashboard = () => {
           icon: PiggyBank,
           color: 'text-green-600',
         },
-        {
-          id: 3,
-          type: 'investment',
-          message: 'নতুন বিনিয়োগ: ব্যাংক ডিপোজিট ৫০,০০০ টাকা',
-          time: '১ দিন আগে',
-          icon: TrendingUp,
-          color: 'text-purple-600',
-        },
+
         {
           id: 4,
           type: 'notice',
@@ -208,13 +228,6 @@ const AdminDashboard = () => {
     },
     {
       id: 2,
-      title: 'লাভ বণ্টন সভা',
-      date: '২৮ জুন, ২০২৪',
-      time: 'বিকাল ৪:০০',
-      location: 'সমিতি অফিস',
-    },
-    {
-      id: 3,
       title: 'নতুন বিনিয়োগ পরিকল্পনা আলোচনা',
       date: '৫ জুলাই, ২০২৪',
       time: 'সকাল ১১:০০',
@@ -305,7 +318,7 @@ const AdminDashboard = () => {
                   <div className="md-card md-chart-card">
                     <div className="md-card-header">
                       <div>
-                        <h3 className="md-title-medium">মাসিক জমা ও লাভ</h3>
+                        <h3 className="md-title-medium">মাসিক জমা</h3>
                         <p className="md-body-small">গত ৬ মাসের পরিসংখ্যান</p>
                       </div>
                       <button className="md-text-button">
@@ -328,66 +341,12 @@ const AdminDashboard = () => {
                             }}
                           />
                           <Bar dataKey="deposits" fill="#6366f1" name="মাসিক জমা" radius={[4, 4, 0, 0]} />
-                          <Bar dataKey="profits" fill="#06b6d4" name="মাসিক লাভ" radius={[4, 4, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
 
-                  {/* Investment Distribution Card */}
-                  <div className="md-card md-chart-card">
-                    <div className="md-card-header">
-                      <div>
-                        <h3 className="md-title-medium">বিনিয়োগ বিতরণ</h3>
-                        <p className="md-body-small">মোট ৫,৪৫,০০০ টাকা</p>
-                      </div>
-                      <button className="md-text-button">
-                        <span className="md-label-large">বিস্তারিত</span>
-                      </button>
-                    </div>
-                    <div className="md-chart-container">
-                      <ResponsiveContainer width="100%" height={200}>
-                        <PieChart>
-                          <Pie
-                            data={investmentData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                            outerRadius={70}
-                            fill="#8884d8"
-                            dataKey="value"
-                            stroke="white"
-                            strokeWidth={2}
-                          >
-                            {investmentData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            formatter={(value, name) => [`${value}%`, name]}
-                            contentStyle={{
-                              backgroundColor: 'white',
-                              border: 'none',
-                              borderRadius: '12px',
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="md-investment-list">
-                      {investmentData.map((item, index) => (
-                        <div key={index} className="md-investment-item">
-                          <div className="md-investment-indicator" style={{ backgroundColor: COLORS[index] }} />
-                          <div className="md-investment-info">
-                            <span className="md-body-medium">{item.name}</span>
-                            <span className="md-title-small">৳ {item.amount.toLocaleString()}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+
                 </div>
               </div>
             )}
