@@ -90,7 +90,9 @@ const MemberList = () => {
 
   // Check if we should open the add member modal from navigation state
   useEffect(() => {
+    console.log('MemberList navigation state:', location.state);
     if (location.state?.openAddMemberModal) {
+      console.log('Opening add member modal from navigation');
       setShowAddMemberModal(true);
     }
   }, [location.state]);

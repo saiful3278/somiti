@@ -77,7 +77,7 @@ const AdminDashboard = () => {
   // Add handlers for FAB menu
   const handleNewMember = () => {
     setShowFabMenu(false);
-    navigate('/member-list', { state: { openAddMemberModal: true } });
+    navigate('/admin/members', { state: { openAddMemberModal: true } });
   };
 
   const handleNewTransaction = () => {
