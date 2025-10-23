@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, UserPlus, Eye, X, Phone, Mail, MapPin, Save, Loader2, DollarSign, User, Users, Crown, Info } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { Search, Filter, UserPlus, Eye, EyeOff, X, Phone, Mail, MapPin, Save, Loader2, DollarSign, User, Users, Crown, Info, Copy, Check, AlertTriangle, Shield, Lock, Download } from 'lucide-react';
 import { MemberService } from '../firebase/memberService';
+import SuccessAnimation from './common/SuccessAnimation';
+
 import '../styles/components/member-list.css';
 
-const MemberList = ({ userRole }) => {
+import { registerUser } from '../api/auth';
+
+const MemberList = () => {
+  const { user } = useAuth();
+  const location = useLocation();
   const [members, setMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,6 +35,16 @@ const MemberList = ({ userRole }) => {
   });
   const [memberFormErrors, setMemberFormErrors] = useState({});
   const [showRoleInfo, setShowRoleInfo] = useState(false);
+
+  const [addMemberSucceeded, setAddMemberSucceeded] = useState(false);
+
+  // Success Animation states
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successAnimationData, setSuccessAnimationData] = useState({
+    title: '',
+    message: '',
+    type: 'success'
+  });
 
   // Floating detail card states
   const [selectedMember, setSelectedMember] = useState(null);
@@ -70,6 +88,13 @@ const MemberList = ({ userRole }) => {
     fetchMembers();
   }, []);
 
+  // Check if we should open the add member modal from navigation state
+  useEffect(() => {
+    if (location.state?.openAddMemberModal) {
+      setShowAddMemberModal(true);
+    }
+  }, [location.state]);
+
   // Add New Member Form Functions
   const handleInputChange = (field, value) => {
     setNewMemberData(prev => ({
@@ -92,34 +117,19 @@ const MemberList = ({ userRole }) => {
       errors.name = 'নাম আবশ্যক';
     }
     
-    if (!newMemberData.phone.trim()) {
-      errors.phone = 'ফোন নম্বর আবশ্যক';
-    } else if (!/^01[3-9]\d{8}$/.test(newMemberData.phone)) {
+    // Phone validation - only if provided
+    if (newMemberData.phone.trim() && !/^01[3-9]\d{8}$/.test(newMemberData.phone)) {
       errors.phone = 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)';
     }
     
-    if (!newMemberData.address.trim()) {
-      errors.address = 'ঠিকানা আবশ্যক';
-    }
-    
-    if (!newMemberData.shareCount.trim()) {
-      errors.shareCount = 'শেয়ার সংখ্যা আবশ্যক';
-    } else if (isNaN(newMemberData.shareCount) || Number(newMemberData.shareCount) <= 0) {
+    // Share count validation - only if provided
+    if (newMemberData.shareCount.trim() && (isNaN(newMemberData.shareCount) || Number(newMemberData.shareCount) <= 0)) {
       errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
     }
     
-    if (!newMemberData.nomineeName.trim()) {
-      errors.nomineeName = 'নমিনির নাম আবশ্যক';
-    }
-    
-    if (!newMemberData.nomineePhone.trim()) {
-      errors.nomineePhone = 'নমিনির ফোন নম্বর আবশ্যক';
-    } else if (!/^01[3-9]\d{8}$/.test(newMemberData.nomineePhone)) {
+    // Nominee phone validation - only if provided
+    if (newMemberData.nomineePhone.trim() && !/^01[3-9]\d{8}$/.test(newMemberData.nomineePhone)) {
       errors.nomineePhone = 'সঠিক নমিনির ফোন নম্বর দিন';
-    }
-    
-    if (!newMemberData.nomineeRelation.trim()) {
-      errors.nomineeRelation = 'নমিনির সাথে সম্পর্ক আবশ্যক';
     }
     
     return errors;
@@ -137,24 +147,58 @@ const MemberList = ({ userRole }) => {
     try {
       setSaving(true);
       
-      // Generate member ID (simple sequential number)
-      const memberId = String(members.length + 1);
-      
-      const memberData = {
-        ...newMemberData,
-        memberId,
-        status: 'active',
-        shareCount: Number(newMemberData.shareCount),
-        joinDate: newMemberData.joiningDate
+      // Step 1: Generate credentials with new format
+      const randomDigits = Math.floor(Math.random() * 900) + 100; // 100-999
+      const firstName = newMemberData.name.split(' ')[0].toLowerCase();
+
+      const credentials = {
+        email: `${firstName}${randomDigits}@fulmurigram.com`,
+        password: `${firstName}${randomDigits}@123`
       };
       
-      const addResult = await MemberService.addMember(memberData);
-      
-      if (addResult.success) {
-        // Reload members
-        await fetchMembers();
-        
-        // Reset form and close modal
+      console.log('Generated credentials:', credentials);
+
+      // Step 2: Register user in the backend
+      const registrationResponse = await registerUser(credentials.email, credentials.password);
+
+      if (!registrationResponse.success) {
+        throw new Error(registrationResponse.message || 'Backend registration failed');
+      }
+
+      const { user_id } = registrationResponse;
+      console.log('✅ Backend registration successful, user_id:', user_id);
+
+      // Step 3: Save member to Firestore with user_id as document ID
+      const memberData = {
+        name: newMemberData.name,
+        phone: newMemberData.phone,
+        address: newMemberData.address,
+        shareCount: newMemberData.shareCount,
+        nomineeName: newMemberData.nomineeName,
+        nomineePhone: newMemberData.nomineePhone,
+        nomineeRelation: newMemberData.nomineeRelation,
+        joiningDate: newMemberData.joiningDate,
+        role: newMemberData.role || 'member',
+        email: credentials.email,
+        password: credentials.password,
+        user_id: user_id, // Save user_id from backend
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Use user_id as the document ID in Firestore
+      const addResult = await MemberService.addMember(memberData, user_id);
+
+      if (addResult && addResult.success) {
+        setAddMemberSucceeded(true);
+        setSuccessAnimationData({
+          title: 'সফল!',
+          message: `${memberData.name} সফলভাবে সদস্য হিসেবে যোগ হয়েছেন`,
+          type: 'success'
+        });
+        setShowSuccessAnimation(true);
+        // Reset form
         setNewMemberData({
           name: '',
           phone: '',
@@ -164,17 +208,19 @@ const MemberList = ({ userRole }) => {
           nomineePhone: '',
           nomineeRelation: '',
           joiningDate: new Date().toISOString().split('T')[0],
-          role: 'member' // Reset role to default
+          role: 'member'
         });
         setMemberFormErrors({});
-        setShowAddMemberModal(false);
+        
+        // Reload members after success animation closes (handled in SuccessAnimation onClose)
       } else {
-        console.error('সদস্য যোগ করতে ত্রুটি:', addResult.error);
+        console.error('সদস্য যোগ করতে ত্রুটি:', addResult?.error);
+        setAddMemberSucceeded(false);
         setError('সদস্য যোগ করতে ত্রুটি হয়েছে');
       }
     } catch (error) {
       console.error('সদস্য যোগ করতে ত্রুটি:', error);
-      setError('সদস্য যোগ করতে ত্রুটি হয়েছে');
+      setError(error.message || 'সদস্য যোগ করতে ত্রুটি হয়েছে');
     } finally {
       setSaving(false);
     }
@@ -228,13 +274,11 @@ const MemberList = ({ userRole }) => {
     { value: 'member', label: 'সদস্য', icon: User }
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  // Debug logs for state changes - moved to top level
+  useEffect(() => {
+    console.log('showSuccessAnimation changed:', showSuccessAnimation);
+    console.log('successAnimationData changed:', successAnimationData);
+  }, [showSuccessAnimation, successAnimationData]);
 
   if (error) {
     return (
@@ -267,7 +311,7 @@ const MemberList = ({ userRole }) => {
             <h1 className="member-list-title">সদস্য তালিকা</h1>
             <p className="member-list-subtitle">সমিতির সকল সদস্যদের তথ্য</p>
           </div>
-          {(userRole === 'admin' || userRole === 'cashier') && (
+          {(user?.role === 'admin' || user?.role === 'cashier') && (
             <button 
               className="add-member-btn"
               onClick={() => setShowAddMemberModal(true)}
@@ -312,71 +356,82 @@ const MemberList = ({ userRole }) => {
 
       {/* Member Cards - Single Column Layout */}
       <div className="member-cards-container">
-        {filteredMembers.map((member) => {
-          const roleInfo = getRoleInfo(member.role);
-          const RoleIcon = roleInfo.icon;
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="member-card member-card-minimal">
+              <div className="member-serial-number">
+                <div className="h-4 w-10 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="member-avatar-placeholder animate-pulse"></div>
+              <div className="member-info">
+                <div className="h-5 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                <div className="member-address mt-2">
+                  <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                </div>
+                <div className="member-details-row mt-2">
+                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          filteredMembers.map((member, index) => {
+            const roleInfo = getRoleInfo(member.role);
+            const RoleIcon = roleInfo.icon;
+            const displayId = member.memberId || member.membershipId || (index + 1);
 
-          return (
-            <div 
-              key={member.id} 
-              className="member-card member-card-minimal"
-              onClick={() => handleMemberClick(member)}
-            >
-              {/* Main Content - Improved Layout */}
-              <div className="member-card-content">
-                {/* Avatar */}
-                <div className="member-avatar-section">
-                  {member.avatar ? (
-                    <img
-                      src={member.avatar}
-                      alt={member.name}
-                      className="member-avatar"
-                    />
-                  ) : (
-                    <div className="member-avatar-placeholder">
-                      {getInitials(member.name)}
-                    </div>
-                  )}
+            return (
+              <div 
+                key={member.id} 
+                className="member-card member-card-minimal"
+                onClick={() => handleMemberClick(member)}
+              >
+                <div className="member-serial-number">
+                  #{displayId}
                 </div>
 
-                {/* Member Info - Well Organized */}
-                <div className="member-info-section">
-                  {/* First Line: Name and Role */}
-                  <div className="member-first-line">
-                    <h3 className="member-name-primary">
-                      {member.name}
-                    </h3>
-                    <span className={`member-role-badge-compact ${member.role}`}>
+                {member.avatar ? (
+                  <img
+                    src={member.avatar}
+                    alt={member.name}
+                    className="member-avatar"
+                  />
+                ) : (
+                  <div className="member-avatar-placeholder">
+                    {getInitials(member.name)}
+                  </div>
+                )}
+
+                <div className="member-info">
+                  <h3 className="member-name">
+                    {member.name}
+                  </h3>
+                  
+                  <div className="member-address">
+                    <MapPin className="w-4 h-4" />
+                    <span>{member.address || 'ঠিকানা যোগ করা হয়নি'}</span>
+                  </div>
+                  
+                  <div className="member-details-row">
+                    <div className="member-share-info">
+                      <DollarSign className="w-4 h-4" />
+                      <span>{member.shareCount} শেয়ার</span>
+                    </div>
+                    <span className={`member-role-badge ${member.role}`}>
                       <RoleIcon className="w-3 h-3" />
                       {roleInfo.label}
                     </span>
                   </div>
-                  
-                  {/* Second Line: Share Count and Address */}
-                  <div className="member-second-line">
-                    <div className="member-share-info">
-                      <DollarSign className="w-3 h-3" />
-                      <span>{member.shareCount} শেয়ার</span>
-                    </div>
-                    <div className="member-address-info">
-                      <MapPin className="w-3 h-3" />
-                      <span>{member.address}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Click Indicator */}
-                <div className="member-click-indicator">
-                  <Eye className="w-4 h-4" />
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* No Results */}
-      {filteredMembers.length === 0 && (
+      {filteredMembers.length === 0 && !loading && (
         <div className="text-center py-12">
           <Users className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">কোনো সদস্য পাওয়া যায়নি</h3>
@@ -431,14 +486,14 @@ const MemberList = ({ userRole }) => {
                   <div className="form-group">
                     <label className="form-label">
                       <Phone size={16} />
-                      ফোন নম্বর *
+                      ফোন নম্বর (ঐচ্ছিক)
                     </label>
                     <input
                       type="tel"
                       className={`form-input ${memberFormErrors.phone ? 'error' : ''}`}
                       value={newMemberData.phone}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="01XXXXXXXXX"
+                      placeholder="01XXXXXXXXX (ঐচ্ছিক)"
                     />
                     {memberFormErrors.phone && (
                       <span className="error-message">{memberFormErrors.phone}</span>
@@ -449,13 +504,13 @@ const MemberList = ({ userRole }) => {
                 <div className="form-group">
                   <label className="form-label">
                     <MapPin size={16} />
-                    ঠিকানা *
+                    ঠিকানা (ঐচ্ছিক)
                   </label>
                   <textarea
                     className={`form-textarea ${memberFormErrors.address ? 'error' : ''}`}
                     value={newMemberData.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="সম্পূর্ণ ঠিকানা লিখুন"
+                    placeholder="সম্পূর্ণ ঠিকানা লিখুন (ঐচ্ছিক)"
                     rows="2"
                   />
                   {memberFormErrors.address && (
@@ -465,7 +520,7 @@ const MemberList = ({ userRole }) => {
               </div>
 
               {/* Role Selection - Only visible to Admin */}
-              {userRole === 'admin' && (
+              {user?.role === 'admin' && (
                 <div className="form-section">
                   <h3 className="form-section-title">
                     <Crown size={18} />
@@ -475,7 +530,7 @@ const MemberList = ({ userRole }) => {
                   <div className="form-group">
                     <label className="form-label">
                       <Crown size={16} />
-                      সদস্যের ভূমিকা *
+                      সদস্যের ভূমিকা (ঐচ্ছিক)
                     </label>
                     <select
                       className={`form-select ${memberFormErrors.role ? 'error' : ''}`}
@@ -536,7 +591,7 @@ const MemberList = ({ userRole }) => {
                   <div className="form-group">
                     <label className="form-label">
                       <DollarSign size={16} />
-                      শেয়ার সংখ্যা *
+                      শেয়ার সংখ্যা (ঐচ্ছিক)
                     </label>
                     <input
                       type="number"
@@ -552,7 +607,7 @@ const MemberList = ({ userRole }) => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">যোগদানের তারিখ</label>
+                    <label className="form-label">যোগদানের তারিখ (ঐচ্ছিক)</label>
                     <input
                       type="date"
                       className="form-input"
@@ -574,14 +629,14 @@ const MemberList = ({ userRole }) => {
                   <div className="form-group">
                     <label className="form-label">
                       <User size={16} />
-                      নমিনির নাম *
+                      নমিনির নাম (ঐচ্ছিক)
                     </label>
                     <input
                       type="text"
                       className={`form-input ${memberFormErrors.nomineeName ? 'error' : ''}`}
                       value={newMemberData.nomineeName}
                       onChange={(e) => handleInputChange('nomineeName', e.target.value)}
-                      placeholder="নমিনির নাম লিখুন"
+                      placeholder="নমিনির নাম লিখুন (ঐচ্ছিক)"
                     />
                     {memberFormErrors.nomineeName && (
                       <span className="error-message">{memberFormErrors.nomineeName}</span>
@@ -591,14 +646,14 @@ const MemberList = ({ userRole }) => {
                   <div className="form-group">
                     <label className="form-label">
                       <Phone size={16} />
-                      নমিনির ফোন *
+                      নমিনির ফোন (ঐচ্ছিক)
                     </label>
                     <input
                       type="tel"
                       className={`form-input ${memberFormErrors.nomineePhone ? 'error' : ''}`}
                       value={newMemberData.nomineePhone}
                       onChange={(e) => handleInputChange('nomineePhone', e.target.value)}
-                      placeholder="01XXXXXXXXX"
+                      placeholder="01XXXXXXXXX (ঐচ্ছিক)"
                     />
                     {memberFormErrors.nomineePhone && (
                       <span className="error-message">{memberFormErrors.nomineePhone}</span>
@@ -607,13 +662,13 @@ const MemberList = ({ userRole }) => {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">নমিনির সাথে সম্পর্ক *</label>
+                  <label className="form-label">নমিনির সাথে সম্পর্ক (ঐচ্ছিক)</label>
                   <select
                     className={`form-select ${memberFormErrors.nomineeRelation ? 'error' : ''}`}
                     value={newMemberData.nomineeRelation}
                     onChange={(e) => handleInputChange('nomineeRelation', e.target.value)}
                   >
-                    <option value="">সম্পর্ক নির্বাচন করুন</option>
+                    <option value="">সম্পর্ক নির্বাচন করুন (ঐচ্ছিক)</option>
                     <option value="পিতা">পিতা</option>
                     <option value="মাতা">মাতা</option>
                     <option value="স্বামী">স্বামী</option>
@@ -694,6 +749,26 @@ const MemberList = ({ userRole }) => {
             </div>
 
             <div className="member-detail-content">
+              {/* Login Credentials */}
+              {(user?.role === 'admin' || user?.role === 'cashier') && (
+                <div className="member-detail-section">
+                  <h4 className="member-detail-section-title">
+                    <Lock className="w-4 h-4" />
+                    লগইন তথ্য
+                  </h4>
+                  <div className="member-detail-grid">
+                    <div className="member-detail-item">
+                      <span className="member-detail-label">ইমেইল:</span>
+                      <span className="member-detail-value code">{selectedMember.email}</span>
+                    </div>
+                    <div className="member-detail-item">
+                      <span className="member-detail-label">পাসওয়ার্ড:</span>
+                      <span className="member-detail-value code">{selectedMember.password}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="member-detail-section">
                 <h4 className="member-detail-section-title">
                   <Phone className="w-4 h-4" />
@@ -772,6 +847,20 @@ const MemberList = ({ userRole }) => {
           </div>
         </div>
       )}
+
+      {/* Success Animation */}
+      <SuccessAnimation
+        isVisible={showSuccessAnimation}
+        onClose={() => {
+          setShowSuccessAnimation(false);
+          fetchMembers();
+        }}
+        title={successAnimationData.title}
+        message={successAnimationData.message}
+        type={successAnimationData.type}
+        autoClose={true}
+        duration={3000}
+      />
     </div>
   );
 };

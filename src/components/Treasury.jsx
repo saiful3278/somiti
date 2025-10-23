@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   PiggyBank, 
   TrendingUp, 
@@ -10,13 +11,16 @@ import {
   Users,
   Loader2,
   Clock,
-  Star
+  Star,
+  ChevronRight
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FundService, TransactionService } from '../firebase';
+import TransactionDetailsCard from './common/TransactionDetailsCard';
 import '../styles/components/treasury.css';
 
 const Treasury = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState({
     fundData: true,
     transactions: true
@@ -29,6 +33,11 @@ const Treasury = () => {
     recentTransactions: [],
     monthlyData: []
   });
+
+  // Transaction Details Card states (replacing modal states)
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [showTransactionCard, setShowTransactionCard] = useState(false);
+  const [cardPosition, setCardPosition] = useState({ x: 0, y: 0 });
 
   // Load treasury data from Firebase
   useEffect(() => {
@@ -75,6 +84,49 @@ const Treasury = () => {
     loadTreasuryData();
   }, []);
 
+  // Transaction card handlers with position tracking
+  const handleTransactionClick = (transaction, event) => {
+    // Ensure we have a valid transaction object
+    if (!transaction) {
+      console.error('No transaction data provided');
+      return;
+    }
+    
+    // Get click position for floating card
+    setCardPosition({
+      x: event.clientX,
+      y: event.clientY
+    });
+    
+    // Create a safe transaction object with defaults
+    const safeTransaction = {
+      id: transaction.id || 'N/A',
+      memberName: transaction.memberName || 'অজানা সদস্য',
+      transactionType: transaction.transactionType || transaction.type || 'other',
+      type: transaction.type || transaction.transactionType || 'other',
+      amount: transaction.amount || 0,
+      date: transaction.date || transaction.createdAt || null,
+      createdAt: transaction.createdAt || null,
+      description: transaction.description || '',
+      transactionId: transaction.transactionId || transaction.id || 'N/A',
+      status: transaction.status || 'completed',
+      paymentMethod: transaction.paymentMethod || 'cash',
+      month: transaction.month,
+      monthName: transaction.monthName || '',
+      reference: transaction.reference,
+      processedBy: transaction.processedBy,
+      ...transaction // Spread the original transaction to preserve any additional fields
+    };
+    
+    setSelectedTransaction(safeTransaction);
+    setShowTransactionCard(true);
+  };
+
+  const closeTransactionCard = () => {
+    setShowTransactionCard(false);
+    setSelectedTransaction(null);
+  };
+
   // Calculate net balance
   const netBalance = treasuryData.totalFunds - treasuryData.totalWithdrawals;
 
@@ -109,6 +161,23 @@ const Treasury = () => {
     }
   ];
 
+  // Get month name for display
+  const getMonthName = (transaction) => {
+    // If transaction has monthName field, use it
+    if (transaction.monthName) {
+      return transaction.monthName;
+    }
+    
+    // Otherwise, extract month from date
+    const bengaliMonths = [
+      'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+      'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+    ];
+    
+    const date = new Date(transaction.date?.seconds * 1000 || transaction.createdAt?.seconds * 1000 || Date.now());
+    return bengaliMonths[date.getMonth()] || 'এই মাসে';
+  };
+
   // Format transaction for display
   const formatTransaction = (transaction) => {
     const typeMap = {
@@ -131,7 +200,7 @@ const Treasury = () => {
       type: typeMap[transaction.transactionType] || transaction.transactionType,
       amount: transaction.amount,
       memberName: transaction.memberName || 'অজানা সদস্য',
-      date: new Date(transaction.date?.seconds * 1000 || transaction.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString('bn-BD'),
+      monthName: getMonthName(transaction),
       isIncome: incomeTypes.includes(transaction.transactionType)
     };
   };
@@ -203,7 +272,12 @@ const Treasury = () => {
                 {treasuryData.recentTransactions.map((transaction) => {
                   const formattedTransaction = formatTransaction(transaction);
                   return (
-                    <div key={formattedTransaction.id} className="treasury-transaction-item">
+                    <div 
+                      key={formattedTransaction.id} 
+                      className="treasury-transaction-item"
+                      style={{ cursor: 'pointer' }}
+                      onClick={(e) => handleTransactionClick(transaction, e)}
+                    >
                       <div className={`treasury-transaction-icon ${formattedTransaction.isIncome ? 'deposit' : 'withdrawal'}`}>
                         {formattedTransaction.isIncome ? (
                           <ArrowUpRight className="w-4 h-4" />
@@ -213,7 +287,22 @@ const Treasury = () => {
                       </div>
                       <div className="treasury-transaction-details">
                         <p className="treasury-transaction-description">{formattedTransaction.type}</p>
-                        <p className="treasury-transaction-time">{formattedTransaction.memberName}</p>
+                        <p className="treasury-transaction-time">
+                          {formattedTransaction.memberName} • 
+                          <span className="month-badge" style={{
+                            backgroundColor: '#fff3e0',
+                            color: '#f57c00',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            display: 'inline-block',
+                            marginLeft: '4px',
+                            border: '1px solid #ffcc02'
+                          }}>
+                            {formattedTransaction.monthName}
+                          </span>
+                        </p>
                       </div>
                       <span className={`treasury-transaction-amount ${formattedTransaction.isIncome ? 'positive' : 'negative'}`}>
                         {formattedTransaction.isIncome ? '+' : '-'}৳ {formattedTransaction.amount.toLocaleString('bn-BD')}
@@ -229,6 +318,19 @@ const Treasury = () => {
                 <p className="treasury-empty-description">এখনো কোনো লেনদেন রেকর্ড করা হয়নি</p>
               </div>
             )}
+            
+            {/* See More Button */}
+            {!loading.transactions && treasuryData.recentTransactions.length > 0 && (
+              <div className="mt-6 text-center">
+                <button 
+                  onClick={() => navigate('/transactions')}
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-semibold rounded-xl border border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:shadow-sm transition-all duration-300 group"
+                >
+                  <span>সব লেনদেন দেখুন</span>
+                  <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -242,6 +344,14 @@ const Treasury = () => {
             বিনিয়োগ ট্র্যাকিং, রিটার্ন ক্যালকুলেশন এবং পোর্টফোলিও ম্যানেজমেন্ট ফিচার শীঘ্রই যোগ করা হবে।
           </p>
         </div>
+
+        {/* Transaction Details Floating Card */}
+        <TransactionDetailsCard
+          transaction={selectedTransaction}
+          isVisible={showTransactionCard}
+          onClose={closeTransactionCard}
+          position={cardPosition}
+        />
       </div>
     </div>
   );

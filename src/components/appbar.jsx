@@ -13,47 +13,30 @@ import SearchIcon from '@mui/icons-material/Search';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
 import { useLocation } from 'react-router-dom';
-import { User, Shield, DollarSign } from 'lucide-react';
+import { User, Shield, DollarSign, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import useSidebarLogic from '../hooks/useSidebarLogic';
 
 export default function PrimarySearchAppBar({ 
-  userRole, 
-  setUserRole, 
   sidebarVisible, 
   setSidebarVisible, 
   mobileSidebarOpen, 
   setMobileSidebarOpen, 
   isMobile 
 }) {
+  const { user, logout } = useAuth();
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
   const location = useLocation();
-  const { navigationItems } = useSidebarLogic(userRole);
+  const { navigationItems } = useSidebarLogic(user?.role);
 
   const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
-  // Role definitions
-  const roles = [
-    {
-      value: 'admin',
-      label: 'অ্যাডমিন',
-      icon: Shield,
-      color: '#dc2626'
-    },
-    {
-      value: 'cashier',
-      label: 'ক্যাশিয়ার',
-      icon: DollarSign,
-      color: '#059669'
-    },
-    {
-      value: 'member',
-      label: 'সদস্য',
-      icon: User,
-      color: '#2563eb'
-    }
-  ];
-
-  const currentRole = roles.find(role => role.value === userRole);
+  // Current role display only (no switching allowed)
+  const currentRole = {
+    admin: { label: 'অ্যাডমিন', icon: Shield, color: '#dc2626' },
+    cashier: { label: 'ক্যাশিয়ার', icon: DollarSign, color: '#059669' },
+    member: { label: 'সদস্য', icon: User, color: '#2563eb' }
+  }[user?.role] || { label: 'সদস্য', icon: User, color: '#2563eb' };
 
   const handleMobileMenuClose = () => {
     setMobileMoreAnchorEl(null);
@@ -63,8 +46,8 @@ export default function PrimarySearchAppBar({
     setMobileMoreAnchorEl(event.currentTarget);
   };
 
-  const handleRoleChange = (newRole) => {
-    setUserRole(newRole);
+  const handleLogout = () => {
+    logout();
     handleMobileMenuClose();
   };
 
@@ -112,63 +95,85 @@ export default function PrimarySearchAppBar({
         },
       }}
     >
-      {roles.map((role) => {
-        const RoleIcon = role.icon;
-        const isSelected = role.value === userRole;
-        
-        return (
-          <MenuItem 
-            key={role.value}
-            onClick={() => handleRoleChange(role.value)}
+      {/* Current Role Display (Read-only) */}
+      <MenuItem 
+        sx={{
+          backgroundColor: 'rgba(37, 99, 235, 0.08)',
+          py: 1.5,
+          px: 2,
+          cursor: 'default',
+          '&:hover': {
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+          },
+        }}
+        disabled
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+          <Box
             sx={{
-              backgroundColor: isSelected ? 'rgba(37, 99, 235, 0.08)' : 'transparent',
-              '&:hover': {
-                backgroundColor: 'rgba(37, 99, 235, 0.04)',
-              },
-              py: 1.5,
-              px: 2,
+              p: 1,
+              borderRadius: '8px',
+              backgroundColor: `${currentRole.color}15`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-              <Box
-                sx={{
-                  p: 1,
-                  borderRadius: '8px',
-                  backgroundColor: isSelected ? `${role.color}15` : 'transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <RoleIcon 
-                  size={18} 
-                  style={{ color: role.color }}
-                />
-              </Box>
-              <Typography 
-                sx={{ 
-                  color: isSelected ? '#2563eb' : 'text.primary',
-                  fontWeight: isSelected ? 600 : 400,
-                  fontSize: '0.9rem'
-                }}
-              >
-                {role.label}
-              </Typography>
-              {isSelected && (
-                <Box 
-                  sx={{ 
-                    ml: 'auto', 
-                    width: 6, 
-                    height: 6, 
-                    backgroundColor: '#2563eb', 
-                    borderRadius: '50%' 
-                  }} 
-                />
-              )}
-            </Box>
-          </MenuItem>
-        );
-      })}
+            <currentRole.icon 
+              size={18} 
+              style={{ color: currentRole.color }}
+            />
+          </Box>
+          <Typography 
+            sx={{ 
+              color: '#2563eb',
+              fontWeight: 600,
+              fontSize: '0.9rem'
+            }}
+          >
+            {currentRole.label}
+          </Typography>
+          <Box 
+            sx={{ 
+              ml: 'auto', 
+              width: 6, 
+              height: 6, 
+              backgroundColor: '#2563eb', 
+              borderRadius: '50%' 
+            }} 
+          />
+        </Box>
+      </MenuItem>
+
+      <MenuItem 
+        onClick={handleLogout}
+        sx={{
+          '&:hover': {
+            backgroundColor: 'rgba(220, 38, 38, 0.04)',
+          },
+          py: 1.5,
+          px: 2,
+          mt: 1,
+          borderTop: '1px solid #e5e7eb'
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            sx={{
+              p: 1,
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <LogOut size={18} style={{ color: '#dc2626' }} />
+          </Box>
+          <Typography sx={{ color: '#dc2626', fontWeight: 500, fontSize: '0.9rem' }}>
+            লগ আউট
+          </Typography>
+        </Box>
+      </MenuItem>
     </Menu>
   );
 

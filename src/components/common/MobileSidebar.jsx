@@ -13,9 +13,11 @@ import {
   LogOut,
   ChevronRight
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import '../../styles/components/mobile-sidebar.css';
 
-const MobileSidebar = ({ isOpen, onClose, userRole, setUserRole }) => {
+const MobileSidebar = ({ isOpen, onClose }) => {
+  const { user, logout } = useAuth();
   const location = useLocation();
   const sidebarRef = useRef(null);
   const startXRef = useRef(0);
@@ -116,7 +118,7 @@ const MobileSidebar = ({ isOpen, onClose, userRole, setUserRole }) => {
       ]
     };
 
-    return roleSpecificItems[userRole] || roleSpecificItems.member;
+    return roleSpecificItems[user?.role] || roleSpecificItems.member;
   };
 
   const navigationItems = getNavigationItems();
@@ -215,8 +217,8 @@ const MobileSidebar = ({ isOpen, onClose, userRole, setUserRole }) => {
             </div>
             <div>
               <p className="text-sm font-semibold text-gray-900">
-                {userRole === 'admin' ? 'প্রশাসক' : 
-                 userRole === 'cashier' ? 'ক্যাশিয়ার' : 'সদস্য'}
+                {user?.role === 'admin' ? 'প্রশাসক' :
+                user?.role === 'cashier' ? 'ক্যাশিয়ার' : 'সদস্য'}
               </p>
             </div>
           </div>
@@ -327,9 +329,14 @@ const MobileSidebar = ({ isOpen, onClose, userRole, setUserRole }) => {
               background: 'rgba(254, 242, 242, 0.8)',
               border: '1px solid rgba(254, 202, 202, 0.5)'
             }}
-            onClick={() => {
-              console.log('Logout clicked');
-              onClose();
+            onClick={async () => {
+              try {
+                await logout();
+                onClose();
+              } catch (error) {
+                console.error('Logout failed:', error);
+                onClose();
+              }
             }}
           >
             <LogOut className="w-4 h-4 mr-2" />

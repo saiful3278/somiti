@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { PiggyBank } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import useSidebarLogic from '../../hooks/useSidebarLogic';
 import '../../styles/components/desktop-sidebar.css';
 
-const Sidebar = ({ userRole, setUserRole, isVisible = true }) => {
+const Sidebar = ({ isVisible = true }) => {
+  const { user } = useAuth();
   const location = useLocation();
-  const { navigationItems, roleNames } = useSidebarLogic(userRole);
+  const { navigationItems, roleNames } = useSidebarLogic(user?.role);
 
   return (
     <div className={`desktop-sidebar w-72 bg-white/98 backdrop-blur-xl border-r border-gray-200 shadow-xl ${isVisible ? 'visible' : 'hidden'}`}>

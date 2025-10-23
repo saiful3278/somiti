@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   User, 
   DollarSign, 
@@ -15,7 +16,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  ChevronRight
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -23,27 +25,19 @@ import {
 } from 'recharts';
 import { MemberService } from '../firebase/memberService';
 import { TransactionService, FundService } from '../firebase/transactionService';
+import TransactionDetailsCard from './common/TransactionDetailsCard';
+import { useUser } from '../contexts/UserContext';
 
 const MemberDashboard = () => {
+  const navigate = useNavigate();
+  const { currentUser, loading: userLoading, error: userError } = useUser();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState({
-    member: true,
     transactions: true,
     fundData: true,
     initial: true
   });
   const [error, setError] = useState(null);
-
-  // State for real data
-  const [memberInfo, setMemberInfo] = useState({
-    id: 'SM-001',
-    name: 'মোহাম্মদ রহিম উদ্দিন',
-    joinDate: '২০২২-০১-১৫',
-    phone: '০১৭১২৩৪৫৬৭৮',
-    address: 'ঢাকা, বাংলাদেশ',
-    membershipType: 'নিয়মিত সদস্য',
-    status: 'সক্রিয়'
-  });
 
   const [financialSummary, setFinancialSummary] = useState({
     totalShares: 0,
@@ -59,40 +53,23 @@ const MemberDashboard = () => {
   const [transactions, setTransactions] = useState([]);
   const [fundData, setFundData] = useState({});
 
+  // Transaction Details Card states (replacing modal states)
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [showTransactionCard, setShowTransactionCard] = useState(false);
+  const [cardPosition, setCardPosition] = useState({ x: 0, y: 0 });
+
   // Load data from Firebase
   useEffect(() => {
-    const loadMemberData = async () => {
+    const loadDashboardData = async () => {
+      if (!currentUser?.uid) return;
+
       try {
         setLoading(prev => ({ ...prev, initial: true }));
         setError(null);
 
-        // Load all data in parallel
-        const [membersResult, transactionsResult, fundResult] = await Promise.all([
-          MemberService.getAllMembers().then(result => {
-            if (result.success && result.data.length > 0) {
-              // For demo, use first member or find specific member
-              const currentMember = result.data[0]; // In real app, this would be based on logged-in user
-              setMemberInfo({
-                id: currentMember.id || 'SM-001',
-                name: currentMember.name || 'মোহাম্মদ রহিম উদ্দিন',
-                joinDate: currentMember.joinDate || '২০২২-০১-১৫',
-                phone: currentMember.phone || '০১৭১২৩৪৫৬৭৮',
-                address: currentMember.address || 'ঢাকা, বাংলাদেশ',
-                membershipType: currentMember.membershipType || 'নিয়মিত সদস্য',
-                status: currentMember.status || 'সক্রিয়',
-                shareCount: currentMember.shareCount || 0,
-                totalShares: currentMember.totalShares || 0
-              });
-            }
-            setLoading(prev => ({ ...prev, member: false }));
-            return result;
-          }).catch(error => {
-            console.error('সদস্য তথ্য লোড করতে ত্রুটি:', error);
-            setLoading(prev => ({ ...prev, member: false }));
-            return { success: false, error };
-          }),
-
-          TransactionService.getAllTransactions().then(result => {
+        // Load transactions and fund data in parallel
+        const [transactionsResult, fundResult] = await Promise.all([
+          TransactionService.getTransactionsByUserId(currentUser.uid).then(result => {
             if (result.success) {
               setTransactions(result.data || []);
             }
@@ -125,8 +102,51 @@ const MemberDashboard = () => {
       }
     };
 
-    loadMemberData();
-  }, []);
+    loadDashboardData();
+  }, [currentUser]);
+
+  // Handle transaction click with position tracking
+  const handleTransactionClick = (transaction, event) => {
+    // Ensure we have a valid transaction object
+    if (!transaction) {
+      console.error('No transaction data provided');
+      return;
+    }
+    
+    // Get click position for floating card
+    setCardPosition({
+      x: event.clientX,
+      y: event.clientY
+    });
+    
+    // Create a safe transaction object with defaults
+    const safeTransaction = {
+      id: transaction.id || 'N/A',
+      memberName: transaction.memberName || 'অজানা সদস্য',
+      transactionType: transaction.transactionType || transaction.type || 'other',
+      type: transaction.type || transaction.transactionType || 'other',
+      amount: transaction.amount || 0,
+      date: transaction.date || transaction.createdAt || null,
+      createdAt: transaction.createdAt || null,
+      description: transaction.description || '',
+      transactionId: transaction.transactionId || transaction.id || 'N/A',
+      status: transaction.status || 'completed',
+      paymentMethod: transaction.paymentMethod || 'cash',
+      month: transaction.month,
+      monthName: transaction.monthName || '',
+      reference: transaction.reference,
+      processedBy: transaction.processedBy,
+      ...transaction // Spread the original transaction to preserve any additional fields
+    };
+    
+    setSelectedTransaction(safeTransaction);
+    setShowTransactionCard(true);
+  };
+
+  const closeTransactionCard = () => {
+    setShowTransactionCard(false);
+    setSelectedTransaction(null);
+  };
 
   // Calculate financial summary from real data
   useEffect(() => {
@@ -150,19 +170,61 @@ const MemberDashboard = () => {
         ? Math.round(monthlyDepositTransactions.reduce((sum, t) => sum + (t.amount || 0), 0) / monthlyDepositTransactions.length)
         : 0;
 
-      const calculatedShares = memberInfo.shareCount || memberInfo.totalShares || 0;
+      const calculatedShares = currentUser?.shareCount || currentUser?.totalShares || 0;
+      const sharePrice = 500; // Fixed share price of 500 tk per share
+
+      // Calculate Outstanding Loan (বকেয়া ঋণ) based on missed monthly payments
+      const calculateOutstandingDue = () => {
+        const currentDate = new Date();
+        const memberJoinDate = currentUser?.joinDate ? new Date(currentUser.joinDate.seconds * 1000) : new Date(currentDate.getFullYear(), 0, 1); // Default to start of current year
+        
+        // Get all months from join date to current month
+        const monthsFromJoin = [];
+        const startDate = new Date(memberJoinDate.getFullYear(), memberJoinDate.getMonth(), 1);
+        const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        
+        for (let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
+          monthsFromJoin.push(new Date(d));
+        }
+        
+        // Get months with successful payments
+        const paidMonths = monthlyDepositTransactions.map(t => {
+          const transactionDate = new Date(t.createdAt?.seconds * 1000);
+          return `${transactionDate.getFullYear()}-${transactionDate.getMonth()}`;
+        });
+        
+        // Find missed months
+        const missedMonths = monthsFromJoin.filter(month => {
+          const monthKey = `${month.getFullYear()}-${month.getMonth()}`;
+          return !paidMonths.includes(monthKey) && month < new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        });
+        
+        // Calculate total due amount (missed months × share value)
+        const totalDue = missedMonths.length * sharePrice;
+        
+        return {
+          totalDue,
+          missedMonthsCount: missedMonths.length,
+          hasDue: totalDue > 0
+        };
+      };
+
+      const outstandingInfo = calculateOutstandingDue();
       
       setFinancialSummary(prev => ({
         ...prev,
         totalShares: calculatedShares, // Use actual share count from member data
-        shareValue: memberDeposits,
+        shareValue: calculatedShares * sharePrice, // Calculate share value: shares × 500
         monthlyDeposit: avgMonthlyDeposit,
         totalDeposits: memberDeposits,
         loanTaken: memberLoans,
-        loanRemaining: memberLoans - loanRepayments
+        loanRemaining: outstandingInfo.totalDue, // Use calculated due amount instead of loan remaining
+        outstandingDue: outstandingInfo.totalDue,
+        missedPayments: outstandingInfo.missedMonthsCount,
+        hasDue: outstandingInfo.hasDue
       }));
     }
-  }, [transactions, fundData, memberInfo]);
+  }, [transactions, fundData, currentUser]);
 
   // Generate deposit history from real transactions
   const depositHistory = React.useMemo(() => {
@@ -219,9 +281,21 @@ const MemberDashboard = () => {
           'loan_repayment': 'ঋণ পরিশোধ'
         };
         
+        // Function to get month name from transaction
+        const getMonthName = (transaction, date) => {
+          // If transaction has month name, use it
+          if (transaction.monthName) {
+            return transaction.monthName;
+          }
+          
+          // Otherwise, extract month from date
+          const monthNames = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+          return monthNames[date.getMonth()];
+        };
+        
         return {
           id: t.id,
-          date: date.toLocaleDateString('bn-BD'),
+          date: getMonthName(t, date),
           type: t.transactionType,
           amount: t.amount || 0,
           status: 'completed',
@@ -360,14 +434,14 @@ const MemberDashboard = () => {
                 <User className="h-8 w-8" />
               </div>
               <div className="md-profile-details">
-                <h1 className="md-headline-medium">{memberInfo.name}</h1>
-                <p className="md-body-medium">সদস্য আইডি: {memberInfo.id}</p>
-                <p className="md-body-small">যোগদানের তারিখ: {memberInfo.joinDate}</p>
+                <h1 className="md-headline-medium">{currentUser?.name || 'লোড হচ্ছে...'}</h1>
+                <p className="md-body-medium">সদস্য আইডি: {currentUser?.id || 'N/A'}</p>
+                <p className="md-body-small">যোগদানের তারিখ: {currentUser?.joinDate || 'N/A'}</p>
               </div>
             </div>
             <div className="md-membership-badge">
               <p className="md-label-small">সদস্যপদের ধরন</p>
-              <p className="md-label-medium">{memberInfo.membershipType}</p>
+              <p className="md-label-medium">{currentUser?.membershipType || 'নিয়মিত সদস্য'}</p>
             </div>
           </div>
         </div>
@@ -423,7 +497,7 @@ const MemberDashboard = () => {
                 <PieChart className="h-6 w-6" />
               </div>
               <div className="md-stats-info">
-                <p className="md-label-medium">মোট শেয়ার</p>
+                <p className="md-label-medium">আমার শেয়ার</p>
                 <p className="md-display-small">
                   {loading.member || loading.transactions ? 
                     <LoadingSkeleton className="w-16 h-8" /> : 
@@ -455,7 +529,7 @@ const MemberDashboard = () => {
                 <p className="md-display-small">
                   {loading.transactions ? 
                     <LoadingSkeleton className="w-24 h-8" /> : 
-                    `৳ ${financialSummary.totalDeposits.toLocaleString()}`
+                    `৳ ${financialSummary.shareValue.toLocaleString()}`
                   }
                 </p>
                 <div className="md-stats-change">
@@ -463,7 +537,7 @@ const MemberDashboard = () => {
                   <span className="md-label-small">
                     {loading.transactions ? 
                       <LoadingSkeleton className="w-16 h-4" /> : 
-                      `মাসিক ৳ ${financialSummary.monthlyDeposit}`
+                      `মাসিক = ৳${financialSummary.shareValue.toLocaleString()}`
                     }
                   </span>
                 </div>
@@ -473,23 +547,33 @@ const MemberDashboard = () => {
 
           <div className="md-card md-stats-card">
             <div className="md-stats-content">
-              <div className="md-stats-icon md-stats-icon-error">
-                <CreditCard className="h-6 w-6" />
+              <div className={`md-stats-icon ${financialSummary.hasDue ? 'md-stats-icon-error' : 'md-stats-icon-success'}`}>
+                {financialSummary.hasDue ? (
+                  <AlertTriangle className="h-6 w-6" />
+                ) : (
+                  <CreditCard className="h-6 w-6" />
+                )}
               </div>
               <div className="md-stats-info">
                 <p className="md-label-medium">বকেয়া ঋণ</p>
-                <p className="md-display-small">
+                <p className={`md-display-small ${financialSummary.hasDue ? 'text-red-600' : ''}`}>
                   {loading.transactions ? 
                     <LoadingSkeleton className="w-20 h-8" /> : 
                     `৳ ${financialSummary.loanRemaining.toLocaleString()}`
                   }
                 </p>
                 <div className="md-stats-change">
-                  <ArrowDownRight className="h-4 w-4" />
-                  <span className="md-label-small">
+                  {financialSummary.hasDue ? (
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                  ) : (
+                    <ArrowDownRight className="h-4 w-4" />
+                  )}
+                  <span className={`md-label-small ${financialSummary.hasDue ? 'text-red-600' : ''}`}>
                     {loading.transactions ? 
                       <LoadingSkeleton className="w-24 h-4" /> : 
-                      `মোট ৳ ${financialSummary.loanTaken.toLocaleString()}`
+                      financialSummary.hasDue ? 
+                        `${financialSummary.missedPayments} মাস বকেয়া` :
+                        'কোনো বকেয়া নেই'
                     }
                   </span>
                 </div>
@@ -638,7 +722,12 @@ const MemberDashboard = () => {
                       </>
                     ) : (
                       recentTransactions.map((transaction) => (
-                        <div key={transaction.id} className="md-list-item">
+                        <div 
+                          key={transaction.id} 
+                          className="md-list-item" 
+                          style={{ cursor: 'pointer' }}
+                          onClick={(e) => handleTransactionClick(transaction, e)}
+                        >
                           <div className="md-list-item-leading">
                             <div className="md-avatar">
                               {transaction.type === 'monthly_deposit' && <DollarSign className="h-5 w-5" />}
@@ -648,7 +737,20 @@ const MemberDashboard = () => {
                           <div className="md-list-item-content">
                             <div className="md-list-item-headline">{transaction.description}</div>
                             <div className="md-list-item-supporting-text">
-                              {getTransactionTypeLabel(transaction.type)} • {transaction.date}
+                              {getTransactionTypeLabel(transaction.type)} • 
+                              <span className="month-badge" style={{
+                                backgroundColor: '#fff3e0',
+                                color: '#f57c00',
+                                padding: '2px 8px',
+                                borderRadius: '10px',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                display: 'inline-block',
+                                marginLeft: '4px',
+                                border: '1px solid #ffcc02'
+                              }}>
+                                {transaction.date}
+                              </span>
                             </div>
                           </div>
                           <div className="md-list-item-trailing">
@@ -665,6 +767,19 @@ const MemberDashboard = () => {
                       ))
                     )}
                   </div>
+                  
+                  {/* See More Button */}
+                  {!loading.transactions && recentTransactions.length > 0 && (
+                    <div className="mt-6 text-center">
+                      <button 
+                        onClick={() => navigate('/transactions')}
+                        className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-semibold rounded-xl border border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:shadow-sm transition-all duration-300 group"
+                      >
+                        <span>সব লেনদেন দেখুন</span>
+                        <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -859,6 +974,13 @@ const MemberDashboard = () => {
           <Plus className="h-6 w-6" />
         </button>
 
+        {/* Transaction Details Floating Card */}
+        <TransactionDetailsCard
+          transaction={selectedTransaction}
+          isVisible={showTransactionCard}
+          onClose={closeTransactionCard}
+          position={cardPosition}
+        />
 
       </div>
   );

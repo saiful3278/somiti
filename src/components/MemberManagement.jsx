@@ -19,6 +19,7 @@ import {
 import SearchInput from './common/SearchInput';
 import TableHeader from './common/TableHeader';
 import Modal from './common/Modal';
+import SuccessAnimation from './common/SuccessAnimation';
 import { MemberService } from '../firebase';
 
 const MemberManagement = () => {
@@ -32,6 +33,14 @@ const MemberManagement = () => {
 
   // Firebase integrated member data
   const [members, setMembers] = useState([]);
+
+  // Success Animation states
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successAnimationData, setSuccessAnimationData] = useState({
+    title: '',
+    message: '',
+    type: 'success'
+  });
 
   const [newMember, setNewMember] = useState({
     name: '',
@@ -157,10 +166,18 @@ const MemberManagement = () => {
     
     setSaving(true);
     try {
-      const membershipId = String(members.length + 1);
+      // Get the next sequential member ID based on existing members
+      const existingIds = members
+        .map(member => parseInt(member.membershipId || member.memberId || 0))
+        .filter(id => !isNaN(id));
+      
+      const nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+      const membershipId = String(nextId);
+      
       const newMemberData = {
         ...newMember,
         membershipId,
+        memberId: nextId, // Also store as numeric ID
         joinDate: new Date().toISOString().split('T')[0],
         totalShares: 0,
         totalDeposit: 0,
@@ -172,21 +189,34 @@ const MemberManagement = () => {
       console.log('Firebase result:', result);
       
       if (result.success) {
-        console.log('Member added successfully, reloading members...');
-        await loadMembers(); // Reload members list
-        setNewMember({
-          name: '',
-          fatherName: '',
-          phone: '',
-          email: '',
-          address: '',
-          occupation: '',
-          nid: '',
-          emergencyContact: '',
-          monthlyDeposit: '',
+        console.log('Member added successfully');
+        
+        // Show success animation immediately
+        setSuccessAnimationData({
+          title: 'সফল!',
+          message: `${newMember.name} সফলভাবে সদস্য হিসেবে যোগ হয়েছেন`,
+          type: 'success'
         });
-        setShowAddModal(false);
-        alert('সদস্য সফলভাবে যোগ করা হয়েছে!');
+        setShowSuccessAnimation(true);
+        
+        // Reset form and close modal after animation, then reload members
+        setTimeout(async () => {
+          setNewMember({
+            name: '',
+            fatherName: '',
+            phone: '',
+            email: '',
+            address: '',
+            occupation: '',
+            nid: '',
+            emergencyContact: '',
+            monthlyDeposit: '',
+          });
+          setShowAddModal(false);
+          
+          // Reload members in background after modal closes
+          await loadMembers();
+        }, 3500);
       } else {
         console.error('Failed to add member:', result);
         let errorMessage = 'সদস্য যোগ করতে ত্রুটি হয়েছে!';
@@ -710,6 +740,17 @@ const MemberManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Success Animation */}
+      <SuccessAnimation
+        isVisible={showSuccessAnimation}
+        onClose={() => setShowSuccessAnimation(false)}
+        title={successAnimationData.title}
+        message={successAnimationData.message}
+        type={successAnimationData.type}
+        autoClose={true}
+        duration={3000}
+      />
     </div>
   );
 };

@@ -70,11 +70,11 @@
   --spacing-2xl: 3rem;
 
   /* Border Radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
+  --radius-sm: 1rem !important;
+  --radius-md: 1.5rem !important;
+  --radius-lg: 2rem !important;
+  --radius-xl: 2.5rem !important;
+  --radius-2xl: 3rem !important;
 
   /* Typography */
   --font-family-primary: 'Noto Sans Bengali', 'Inter', system-ui, -apple-system, sans-serif;

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { 
   Home,
   Users,
@@ -11,8 +12,9 @@ import {
   Plus
 } from 'lucide-react';
 
-const BottomNavigation = ({ userRole, onOpenAddTransaction }) => {
+const BottomNavigation = ({ onOpenAddTransaction }) => {
   const location = useLocation();
+  const { user } = useAuth();
 
   // Define navigation items based on user role
   const getNavigationItems = () => {
@@ -27,25 +29,25 @@ const BottomNavigation = ({ userRole, onOpenAddTransaction }) => {
 
     const roleSpecificItems = {
       admin: [
-        { name: 'কোষাগার', href: '/treasury', icon: TrendingUp },
-        { name: 'সদস্য', href: '/member-list', icon: Users },
-        { name: 'সেটিংস', href: '/admin-settings', icon: Settings }
+        { name: 'কোষাগার', href: '/admin/treasury', icon: TrendingUp },
+        { name: 'সদস্য', href: '/admin/members', icon: Users },
+        { name: 'সেটিংস', href: '/admin/settings', icon: Settings }
       ],
       cashier: [
-        { name: 'লেনদেন', href: '/cashier', icon: DollarSign },
-        { name: 'নতুন', href: '/add-transaction', icon: Plus },
-        { name: 'সদস্য', href: '/member-list', icon: Users },
-        { name: 'সেটিংস', href: '/cashier-settings', icon: Settings }
+        { name: 'লেনদেন', href: '/cashier/transactions', icon: DollarSign },
+        { name: 'নতুন', href: '/cashier/add-transaction', icon: Plus },
+        { name: 'সদস্য', href: '/cashier/members', icon: Users },
+        { name: 'সেটিংস', href: '/cashier/settings', icon: Settings }
       ],
       member: [
-        { name: 'শেয়ার', href: '/shares', icon: PieChart },
-        { name: 'কোষাগার', href: '/treasury', icon: TrendingUp },
-        { name: 'সদস্য', href: '/member-list', icon: Users },
-        { name: 'সেটিংস', href: '/member-settings', icon: Settings }
+        { name: 'শেয়ার', href: '/member/share-tracking', icon: PieChart },
+        { name: 'কোষাগার', href: '/cashier/treasury', icon: TrendingUp },
+        { name: 'সদস্য', href: '/admin/members', icon: Users },
+        { name: 'সেটিংস', href: '/member/settings', icon: Settings }
       ]
     };
 
-    return [...commonItems, ...(roleSpecificItems[userRole] || roleSpecificItems.member)];
+    return [...commonItems, ...(roleSpecificItems[user?.role] || roleSpecificItems.member)];
   };
 
   const navigationItems = getNavigationItems();

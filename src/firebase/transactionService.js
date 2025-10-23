@@ -57,11 +57,11 @@ export class TransactionService {
   }
 
   // Get transactions by member
-  static async getTransactionsByMember(memberId) {
+  static async getTransactionsByUserId(userId) {
     try {
       const q = query(
         collection(db, TRANSACTIONS_COLLECTION),
-        where('memberId', '==', memberId),
+        where('userId', '==', userId),
         orderBy('createdAt', 'desc')
       );
       const querySnapshot = await getDocs(q);
@@ -178,15 +178,17 @@ export class FundService {
       
       const transactions = transactionsResult.data || [];
       
-      // Calculate deposits (monthly_deposit, share_purchase, loan_repayment)
-      const depositTransactions = transactions
-        .filter(t => t.transactionType === 'monthly_deposit' || 
-                    t.transactionType === 'share_purchase' || 
-                    t.transactionType === 'loan_repayment');
+      // Define income and expense transaction types
+      const incomeTypes = ['monthly_deposit', 'share_purchase', 'loan_repayment', 'penalty'];
+      const expenseTypes = ['loan_disbursement', 'profit_distribution'];
       
-      // Calculate withdrawals (loan_disbursement)
+      // Calculate deposits (income transactions)
+      const depositTransactions = transactions
+        .filter(t => incomeTypes.includes(t.transactionType));
+      
+      // Calculate withdrawals (expense transactions)
       const withdrawalTransactions = transactions
-        .filter(t => t.transactionType === 'loan_disbursement');
+        .filter(t => expenseTypes.includes(t.transactionType));
       
       const totalDeposits = depositTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
       const totalWithdrawals = withdrawalTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);

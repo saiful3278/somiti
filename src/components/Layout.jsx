@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import Sidebar from './common/Sidebar';
 import BottomNavigation from './common/BottomNavigation';
 import MobileSidebar from './common/MobileSidebar';
@@ -8,13 +9,14 @@ import AddTransaction from './AddTransaction';
 import useSidebarLogic from '../hooks/useSidebarLogic';
 import '../styles/components/desktop-sidebar.css';
 
-const Layout = ({ children, userRole, setUserRole }) => {
+const Layout = ({ children }) => {
+  const { user } = useAuth();
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [addTransactionModalOpen, setAddTransactionModalOpen] = useState(false);
   const location = useLocation();
-  const { navigationItems } = useSidebarLogic(userRole);
+  const { navigationItems } = useSidebarLogic(user?.role);
 
   // Check if device is mobile
   useEffect(() => {
@@ -35,8 +37,7 @@ const Layout = ({ children, userRole, setUserRole }) => {
       {/* Desktop Sidebar - Hidden on Mobile */}
       {!isMobile && (
         <Sidebar 
-          userRole={userRole} 
-          setUserRole={setUserRole} 
+          userRole={user?.role} 
           isVisible={sidebarVisible}
         />
       )}
@@ -45,12 +46,11 @@ const Layout = ({ children, userRole, setUserRole }) => {
       <MobileSidebar 
         isOpen={mobileSidebarOpen}
         onClose={() => setMobileSidebarOpen(false)}
-        userRole={userRole}
-        setUserRole={setUserRole}
+        userRole={user?.role}
       />
 
       {/* Modern Main Content with Optimized Transitions */}
-      <div className={`flex-1 flex flex-col overflow-hidden bg-gray-50/30 ${
+      <div className={`flex-1 flex flex-col overflow-hidden ${
         !isMobile && sidebarVisible 
           ? 'main-content-with-sidebar-visible' 
           : 'main-content-without-sidebar'
@@ -58,8 +58,7 @@ const Layout = ({ children, userRole, setUserRole }) => {
         {/* Material-UI App Bar */}
         <div style={{ margin: 0, padding: 0 }}>
           <PrimarySearchAppBar 
-            userRole={userRole}
-            setUserRole={setUserRole}
+            userRole={user?.role}
             sidebarVisible={sidebarVisible}
             setSidebarVisible={setSidebarVisible}
             mobileSidebarOpen={mobileSidebarOpen}
@@ -69,9 +68,7 @@ const Layout = ({ children, userRole, setUserRole }) => {
         </div>
 
         {/* Mobile-Optimized Main Content Area */}
-        <main className={`flex-1 overflow-auto p-4 md:p-8 bg-gradient-to-br from-gray-50/50 to-white/50 ${
-          isMobile ? 'pb-20' : ''
-        }`}>
+        <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
@@ -80,7 +77,7 @@ const Layout = ({ children, userRole, setUserRole }) => {
 
       {/* Mobile Bottom Navigation */}
       <BottomNavigation 
-        userRole={userRole} 
+        userRole={user?.role} 
         onOpenAddTransaction={() => setAddTransactionModalOpen(true)}
       />
 

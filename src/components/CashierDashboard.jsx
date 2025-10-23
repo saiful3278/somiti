@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   DollarSign, 
   Plus, 
@@ -28,6 +29,7 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   ArrowUpDown,
   SortAsc,
   SortDesc,
@@ -45,10 +47,14 @@ import {
   Loader2
 } from 'lucide-react';
 import SearchInput from './common/SearchInput';
+import TransactionDetailsCard from './common/TransactionDetailsCard';
+import SuccessAnimation from './common/SuccessAnimation';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
 import { MemberService, TransactionService, FundService } from '../firebase';
+import '../styles/components/cashier-dashboard.css';
 
 const CashierDashboard = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState({
     members: true,
     transactions: true,
@@ -75,6 +81,16 @@ const CashierDashboard = () => {
   const [expandedTransaction, setExpandedTransaction] = useState(null);
   const [paymentMethodSortOrder, setPaymentMethodSortOrder] = useState('desc'); // 'asc', 'desc'
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  // Spinner state for light transaction refresh
+  const [refreshingTransactions, setRefreshingTransactions] = useState(false);
+  
+  // Success animation state
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successAnimationData, setSuccessAnimationData] = useState({
+    title: '',
+    message: '',
+    type: 'default'
+  });
   
   // Transaction History state variables
   const [transactionFilter, setTransactionFilter] = useState('all'); // 'all', 'completed', 'pending', 'failed'
@@ -98,8 +114,55 @@ const CashierDashboard = () => {
     nomineeRelation: '',
     joiningDate: new Date().toISOString().split('T')[0]
   });
+
+  // Transaction Details Card states (replacing modal states)
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [showTransactionCard, setShowTransactionCard] = useState(false);
+  const [cardPosition, setCardPosition] = useState({ x: 0, y: 0 });
   const [memberFormErrors, setMemberFormErrors] = useState({});
   const [error, setError] = useState(null);
+
+  // Handle transaction click with position tracking
+  const handleTransactionClick = (transaction, event) => {
+    // Ensure we have a valid transaction object
+    if (!transaction) {
+      console.error('No transaction data provided');
+      return;
+    }
+    
+    // Get click position for floating card
+    setCardPosition({
+      x: event.clientX,
+      y: event.clientY
+    });
+    
+    // Create a safe transaction object with defaults
+    const safeTransaction = {
+      id: transaction.id || 'N/A',
+      memberName: transaction.memberName || 'অজানা সদস্য',
+      transactionType: transaction.transactionType || transaction.type || 'other',
+      type: transaction.type || transaction.transactionType || 'other',
+      amount: transaction.amount || 0,
+      date: transaction.date || transaction.createdAt || null,
+      createdAt: transaction.createdAt || null,
+      description: transaction.description || '',
+      transactionId: transaction.transactionId || transaction.id || 'N/A',
+      status: transaction.status || 'completed',
+      paymentMethod: transaction.paymentMethod || 'cash',
+      month: transaction.month,
+      reference: transaction.reference,
+      processedBy: transaction.processedBy,
+      ...transaction // Spread the original transaction to preserve any additional fields
+    };
+    
+    setSelectedTransaction(safeTransaction);
+    setShowTransactionCard(true);
+  };
+
+  const closeTransactionCard = () => {
+    setShowTransactionCard(false);
+    setSelectedTransaction(null);
+  };
 
   // Refresh data function
   const refreshData = async () => {
@@ -168,33 +231,27 @@ const CashierDashboard = () => {
   const handleAddMember = async (memberData) => {
     try {
       setSaving(true);
+      console.log('🚀 handleAddMember called with:', memberData);
+      
       const addResult = await MemberService.addMember(memberData);
+      console.log('📡 MemberService.addMember result:', addResult);
       
       if (addResult.success) {
-        // Reload members
-        const updatedMembersResult = await MemberService.getAllMembers();
-        if (updatedMembersResult.success) {
-          setMembers(updatedMembersResult.data || []);
-        }
+        console.log('✅ Member service returned success');
         
-        setShowAddMemberModal(false);
-        setNewMemberData({
-          name: '',
-          phone: '',
-          address: '',
-          shareCount: '',
-          nomineeName: '',
-          nomineePhone: '',
-          nomineeRelation: '',
-          joiningDate: new Date().toISOString().split('T')[0]
-        });
+        // Return success to indicate the operation completed successfully
+        console.log('✅ Returning success from handleAddMember');
+        return { success: true };
       } else {
-        console.error('সদস্য যোগ করতে ত্রুটি:', addResult.error);
+        console.error('❌ Member service returned error:', addResult.error);
+        return { success: false, error: addResult.error };
       }
     } catch (error) {
-      console.error('সদস্য যোগ করতে ত্রুটি:', error);
+      console.error('💥 Exception in handleAddMember:', error);
+      return { success: false, error: error.message };
     } finally {
       setSaving(false);
+      console.log('🏁 handleAddMember finally block executed');
     }
   };
 
@@ -311,77 +368,33 @@ const CashierDashboard = () => {
     { id: 'emergency', name: 'জরুরি', color: '#EC4899' }
   ];
 
-  const expenseRecords = [
-    {
-      id: 1,
-      description: 'অফিস ভাড়া',
-      amount: 8000,
-      date: '০১/০১/২০২ৄ',
-      category: 'office',
-      invoiceNo: 'INV-001',
-      approvedBy: 'সভাপতি',
-      status: 'approved',
-      priority: 'medium',
-      submittedBy: 'ক্যাশিয়ার',
-      submittedDate: '৩১/১২/২০২৩',
-      approvedDate: '০১/০১/২০২৪',
-      paymentMethod: 'bank_transfer',
-      vendor: 'বিল্ডিং ওনার',
-      notes: 'মাসিক অফিস ভাড়া পেমেন্ট'
-    },
-    {
-      id: 2,
-      description: 'কমিউনিটি ইভেন্ট',
-      amount: 15000,
-      date: '১৫/০১/২০২৪',
-      category: 'event',
-      invoiceNo: 'INV-002',
-      approvedBy: 'সাধারণ সম্পাদক',
-      status: 'approved',
-      priority: 'high',
-      submittedBy: 'ইভেন্ট কমিটি',
-      submittedDate: '১০/০১/২০২৪',
-      approvedDate: '১২/০১/২০২৪',
-      paymentMethod: 'cash',
-      vendor: 'ইভেন্ট সাপ্লাইয়ার',
-      notes: 'বার্ষিক সাংস্কৃতিক অনুষ্ঠান'
-    },
-    {
-      id: 3,
-      description: 'এয়ার কন্ডিশনার মেরামত',
-      amount: 3500,
-      date: '২০/০১/২০২৪',
-      category: 'maintenance',
-      invoiceNo: 'INV-003',
-      approvedBy: 'সভাপতি',
-      status: 'pending',
-      priority: 'medium',
-      submittedBy: 'অফিস ম্যানেজার',
-      submittedDate: '১৮/০১/২০২৪',
-      approvedDate: null,
-      paymentMethod: 'cash',
-      vendor: 'টেক সার্ভিস',
-      notes: 'অফিসের এসি মেরামতের জন্য'
-    },
-    {
-      id: 4,
-      description: 'বিদ্যুৎ বিল',
-      amount: 2800,
-      date: '২৫/০১/২০২৪',
-      category: 'utility',
-      invoiceNo: 'INV-004',
-      approvedBy: 'কোষাধ্যক্ষ',
-      status: 'approved',
-      priority: 'high',
-      submittedBy: 'ক্যাশিয়ার',
-      submittedDate: '২৩/০১/২০২৪',
-      approvedDate: '২৪/০১/২০২৪',
-      paymentMethod: 'mobile_banking',
-      vendor: 'DESCO',
-      notes: 'জানুয়ারি মাসের বিদ্যুৎ বিল'
-    },
-
-  ];
+  // Calculate real expense records from Firebase transactions
+  const expenseRecords = React.useMemo(() => {
+    return transactions
+      .filter(transaction => ['expense', 'loan_disbursement', 'withdrawal'].includes(transaction.transactionType || transaction.type))
+      .map(transaction => ({
+        id: transaction.id,
+        description: transaction.description || transaction.note || 'খরচ',
+        amount: transaction.amount || 0,
+        date: transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000).toLocaleDateString('bn-BD') : new Date().toLocaleDateString('bn-BD'),
+        category: transaction.category || 'other',
+        invoiceNo: transaction.invoiceNo || `INV-${transaction.id}`,
+        approvedBy: transaction.approvedBy || 'সভাপতি',
+        status: transaction.status || 'approved',
+        priority: transaction.priority || 'medium',
+        submittedBy: transaction.submittedBy || 'ক্যাশিয়ার',
+        submittedDate: transaction.submittedDate || (transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000).toLocaleDateString('bn-BD') : new Date().toLocaleDateString('bn-BD')),
+        approvedDate: transaction.approvedDate || (transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000).toLocaleDateString('bn-BD') : new Date().toLocaleDateString('bn-BD')),
+        paymentMethod: transaction.paymentMethod || 'cash',
+        vendor: transaction.vendor || 'বিক্রেতা',
+        notes: transaction.notes || transaction.description || 'খরচের বিবরণ'
+      }))
+      .sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateB - dateA;
+      });
+  }, [transactions]);
 
   // Hourly collection data
   const hourlyCollections = [
@@ -395,12 +408,43 @@ const CashierDashboard = () => {
     { hour: '৪টা', amount: 3500 }
   ];
 
-  // Payment method breakdown
-  const paymentMethods = [
-    { method: 'নগদ', amount: 25000, count: 15, percentage: 55.6 },
-    { method: 'ব্যাংক ট্রান্সফার', amount: 12000, count: 8, percentage: 26.7 },
-    { method: 'মোবাইল ব্যাংকিং', amount: 8000, count: 5, percentage: 17.8 }
-  ];
+  // Utility function for payment method labels
+  const getPaymentMethodLabel = (method) => {
+    switch(method) {
+      case 'cash': return 'নগদ';
+      case 'bank_transfer': return 'ব্যাংক ট্রান্সফার';
+      case 'mobile_banking': return 'মোবাইল ব্যাংকিং';
+      default: return method;
+    }
+  };
+
+  // Payment method breakdown from real Firebase data
+  const paymentMethods = React.useMemo(() => {
+    if (!transactions.length) return [];
+    
+    const methodStats = transactions.reduce((acc, transaction) => {
+      const method = transaction.paymentMethod || 'cash';
+      const amount = transaction.amount || 0;
+      
+      if (!acc[method]) {
+        acc[method] = { amount: 0, count: 0 };
+      }
+      
+      acc[method].amount += amount;
+      acc[method].count += 1;
+      
+      return acc;
+    }, {});
+    
+    const totalAmount = Object.values(methodStats).reduce((sum, stat) => sum + stat.amount, 0);
+    
+    return Object.entries(methodStats).map(([method, stats]) => ({
+      method: getPaymentMethodLabel(method),
+      amount: stats.amount,
+      count: stats.count,
+      percentage: totalAmount > 0 ? (stats.amount / totalAmount * 100) : 0
+    }));
+  }, [transactions]);
 
   // Pending approvals
   const pendingApprovals = [
@@ -435,15 +479,6 @@ const CashierDashboard = () => {
       case 'loan_payment': return 'ঋণ পরিশোধ';
   
       default: return type;
-    }
-  };
-
-  const getPaymentMethodLabel = (method) => {
-    switch(method) {
-      case 'cash': return 'নগদ';
-      case 'bank_transfer': return 'ব্যাংক ট্রান্সফার';
-      case 'mobile_banking': return 'মোবাইল ব্যাংকিং';
-      default: return method;
     }
   };
 
@@ -532,7 +567,37 @@ const CashierDashboard = () => {
      }
    };
 
-   const currentReportData = monthlyReportData[selectedReportMonth] || monthlyReportData['2024-01'];
+   // Calculate real monthly report data from Firebase transactions
+   const currentReportData = React.useMemo(() => {
+     const currentMonth = new Date().getMonth();
+     const currentYear = new Date().getFullYear();
+     
+     const monthlyTransactions = transactions.filter(transaction => {
+       if (!transaction.createdAt) return false;
+       const transactionDate = new Date(transaction.createdAt.seconds * 1000);
+       return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+     });
+     
+     const totalIncome = monthlyTransactions
+       .filter(t => ['monthly_deposit', 'share_purchase', 'donation'].includes(t.transactionType || t.type))
+       .reduce((sum, t) => sum + (t.amount || 0), 0);
+       
+     const totalExpense = monthlyTransactions
+       .filter(t => ['expense', 'loan_disbursement', 'withdrawal'].includes(t.transactionType || t.type))
+       .reduce((sum, t) => sum + (t.amount || 0), 0);
+     
+     return {
+       month: new Date().toLocaleDateString('bn-BD', { month: 'long', year: 'numeric' }),
+       totalIncome,
+       totalExpense,
+       memberSubscriptions: monthlyTransactions
+         .filter(t => t.transactionType === 'monthly_deposit')
+         .reduce((sum, t) => sum + (t.amount || 0), 0),
+       donations: monthlyTransactions
+         .filter(t => t.transactionType === 'donation')
+         .reduce((sum, t) => sum + (t.amount || 0), 0)
+     };
+   }, [transactions]);
 
    // Report generation functions
    const handleGenerateReport = async () => {
@@ -556,177 +621,32 @@ const CashierDashboard = () => {
      window.print();
    };
 
-  // Enhanced transactions data
-  const recentTransactions = [
-    {
-      id: 1,
-      memberName: 'মোহাম্মদ রহিম উদ্দিন',
-      memberId: 'SM-001',
-      type: 'subscription',
-      amount: 1200,
-      paymentMethod: 'cash',
-      status: 'completed',
-      time: '10:30 AM',
-      date: '2024-01-15',
-      description: 'মাসিক চাঁদা - জানুয়ারি ২০২৪',
-      reference: 'TXN-001-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    },
-    {
-      id: 2,
-      memberName: 'ফাতেমা খাতুন',
-      memberId: 'SM-002',
-      type: 'loan',
-      amount: 25000,
-      paymentMethod: 'bank',
-      status: 'pending',
-      time: '11:15 AM',
-      date: '2024-01-15',
-      description: 'ঋণ গ্রহণ - ব্যবসায়িক প্রয়োজনে',
-      reference: 'TXN-002-2024',
-      processedBy: 'ম্যানেজার - করিম'
-    },
-    {
-      id: 3,
-      memberName: 'আব্দুল কাদের',
-      memberId: 'SM-003',
-      type: 'loan',
-      amount: 3000,
-      paymentMethod: 'mobile',
-      status: 'completed',
-      time: '02:45 PM',
-      date: '2024-01-15',
-      description: 'ঋণ পরিশোধ - কিস্তি ৩',
-      reference: 'TXN-003-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    },
-    {
-      id: 4,
-      memberName: 'সালমা বেগম',
-      memberId: 'SM-004',
-      type: 'donation',
-      amount: 2000,
-      paymentMethod: 'cash',
-      status: 'completed',
-      time: '09:20 AM',
-      date: '2024-01-14',
-      description: 'দান - মসজিদ নির্মাণ',
-      reference: 'TXN-004-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    },
-    {
-      id: 5,
-      memberName: 'মোহাম্মদ আলী',
-      memberId: 'SM-005',
-      type: 'fine',
-      amount: 500,
-      paymentMethod: 'mobile',
-      status: 'completed',
-      time: '03:30 PM',
-      date: '2024-01-14',
-      description: 'জরিমানা - দেরিতে চাঁদা প্রদান',
-      reference: 'TXN-005-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    },
-    {
-      id: 6,
-      memberName: 'রাশিদা খাতুন',
-      memberId: 'SM-006',
-      type: 'subscription',
-      amount: 1200,
-      paymentMethod: 'bank',
-      status: 'failed',
-      time: '04:15 PM',
-      date: '2024-01-13',
-      description: 'মাসিক চাঁদা - জানুয়ারি ২০২৪',
-      reference: 'TXN-006-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    },
-    {
-      id: 7,
-      memberName: 'আব্দুর রহমান',
-      memberId: 'SM-007',
-      type: 'subscription',
-      amount: 1200,
-      paymentMethod: 'card',
-      status: 'completed',
-      time: '01:45 PM',
-      date: '2024-01-13',
-      description: 'মাসিক চাঁদা - জানুয়ারি ২০২৪',
-      reference: 'TXN-007-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    },
-    {
-      id: 8,
-      memberName: 'নাসির উদ্দিন',
-      memberId: 'SM-008',
-      type: 'loan',
-      amount: 15000,
-      paymentMethod: 'bank',
-      status: 'pending',
-      time: '10:00 AM',
-      date: '2024-01-12',
-      description: 'ঋণ গ্রহণ - চিকিৎসা খরচ',
-      reference: 'TXN-008-2024',
-      processedBy: 'ম্যানেজার - করিম'
-    },
-    {
-      id: 9,
-      memberName: 'হাসিনা বেগম',
-      memberId: 'SM-009',
-      type: 'donation',
-      amount: 5000,
-      paymentMethod: 'cash',
-      status: 'completed',
-      time: '11:30 AM',
-      date: '2024-01-12',
-      description: 'দান - এতিমখানা সহায়তা',
-      reference: 'TXN-009-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    },
-    {
-      id: 10,
-      memberName: 'কামাল হোসেন',
-      memberId: 'SM-010',
-      type: 'subscription',
-      amount: 1200,
-      paymentMethod: 'mobile',
-      status: 'completed',
-      time: '02:15 PM',
-      date: '2024-01-11',
-      description: 'মাসিক চাঁদা - জানুয়ারি ২০২৪',
-      reference: 'TXN-010-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    },
-    {
-      id: 11,
-      memberName: 'জামিলা খাতুন',
-      memberId: 'SM-011',
-      type: 'fine',
-      amount: 300,
-      paymentMethod: 'cash',
-      status: 'pending',
-      time: '09:45 AM',
-      date: '2024-01-11',
-      description: 'জরিমানা - সভায় অনুপস্থিতি',
-      reference: 'TXN-011-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    },
-    {
-      id: 12,
-      memberName: 'ইব্রাহিম খলিল',
-      memberId: 'SM-012',
-      type: 'loan',
-      amount: 8000,
-      paymentMethod: 'bank',
-      status: 'completed',
-      time: '03:00 PM',
-      date: '2024-01-10',
-      description: 'ঋণ পরিশোধ - কিস্তি ৫',
-      reference: 'TXN-012-2024',
-      processedBy: 'ক্যাশিয়ার - আহমেদ'
-    }
-  ];
+  // Use real Firebase transactions data
+  const recentTransactions = React.useMemo(() => {
+    return transactions.map(transaction => ({
+      id: transaction.id,
+      memberName: transaction.memberName || 'অজানা সদস্য',
+      memberId: transaction.memberId || 'N/A',
+      type: transaction.transactionType || transaction.type || 'other',
+      amount: transaction.amount || 0,
+      paymentMethod: transaction.paymentMethod || 'cash',
+      status: transaction.status || 'completed',
+      time: transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000).toLocaleTimeString('bn-BD', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      }) : 'N/A',
+      date: transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      description: transaction.description || getTransactionTypeLabel(transaction.transactionType || transaction.type || 'other'),
+      reference: transaction.transactionId || transaction.id || 'N/A',
+      processedBy: transaction.processedBy || 'ক্যাশিয়ার'
+    })).sort((a, b) => {
+      // Sort by date descending (newest first)
+      const dateA = new Date(a.date + ' ' + a.time);
+      const dateB = new Date(b.date + ' ' + b.time);
+      return dateB - dateA;
+    });
+  }, [transactions]);
 
   // New functionality helper functions
   const searchFilteredTransactions = recentTransactions.filter(transaction =>
@@ -742,10 +662,21 @@ const CashierDashboard = () => {
     }
   });
 
-  const handleRefresh = () => {
+  // Single-source refresh handler used by various refresh buttons across the dashboard
+  // This now calls the existing `refreshData` helper to actually reload members,
+  // transactions and fund summary data from Firebase and updates the last refresh time.
+  const handleRefresh = async () => {
+    // Prevent multiple parallel refresh requests
+    if (loading.initial) return;
+
+    // Show a global loading indicator (reuses existing state keys)
+    setLoading(prev => ({ ...prev, initial: true }));
+
+    // Trigger the comprehensive data reload
+    await refreshData();
+
+    // Record the moment of refresh for any UI hint
     setLastRefresh(new Date());
-    // In a real app, this would trigger data refetch
-    console.log('Data refreshed at:', new Date().toLocaleTimeString());
   };
 
   const toggleTransactionExpand = (transactionId) => {
@@ -850,10 +781,35 @@ const CashierDashboard = () => {
     // In a real app, this would generate and print a receipt
   };
 
-  const handleRefreshTransactions = () => {
-    console.log('Refreshing transactions...');
-    // In a real app, this would reload transaction data from the server
+  // Lightweight refresh dedicated for transaction list only (used inside Transaction History card)
+  const handleRefreshTransactions = async () => {
+    if (refreshingTransactions) return; // Prevent multiple clicks
+
+    console.log('🔄 Starting transaction refresh...');
+    setRefreshingTransactions(true); // Start spinner only for icon
+
+    try {
+      // Add minimum loading time for better UX (at least 500ms)
+      const [result] = await Promise.all([
+        TransactionService.getAllTransactions(),
+        new Promise(resolve => setTimeout(resolve, 500))
+      ]);
+      
+      if (result.success) {
+        setTransactions(result.data || []);
+        console.log('✅ Transaction refresh successful:', result.data?.length || 0, 'transactions loaded');
+      } else {
+        console.error('❌ লেনদেন লোড করতে ত্রুটি:', result.error);
+      }
+    } catch (error) {
+      console.error('❌ লেনদেন লোড করতে ত্রুটি:', error);
+    } finally {
+      setRefreshingTransactions(false); // Stop spinner
+      setLastRefresh(new Date());
+      console.log('🛑 Transaction refresh completed, spinner stopped');
+    }
   };
+
 
   // Add New Member Form Functions
   const handleInputChange = (field, value) => {
@@ -910,44 +866,94 @@ const CashierDashboard = () => {
     return errors;
   };
 
-  const handleSubmitNewMember = (e) => {
+  const handleSubmitNewMember = async (e) => {
     e.preventDefault();
+    console.log('🔥 handleSubmitNewMember called');
+    
     const errors = validateForm();
     
     if (Object.keys(errors).length > 0) {
+      console.log('❌ Form validation errors:', errors);
       setMemberFormErrors(errors);
       return;
     }
     
-    // Generate member ID (simple sequential number)
-    const memberId = String(monthlySummary.totalMembers + 1);
-    
-    const memberData = {
-      ...newMemberData,
-      memberId,
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      createdBy: 'ক্যাশিয়ার - আহমেদ'
-    };
-    
-    console.log('নতুন সদস্য যোগ করা হচ্ছে:', memberData);
-    
-    // In a real app, this would make an API call to save the member
-    alert(`সদস্য সফলভাবে যোগ করা হয়েছে!\nসদস্য আইডি: ${memberId}\nনাম: ${newMemberData.name}`);
-    
-    // Reset form and close modal
-    setNewMemberData({
-      name: '',
-      phone: '',
-      address: '',
-      shareCount: '',
-      nomineeName: '',
-      nomineePhone: '',
-      nomineeRelation: '',
-      joiningDate: new Date().toISOString().split('T')[0]
-    });
-    setMemberFormErrors({});
-    setShowAddMemberModal(false);
+    try {
+      setSaving(true);
+      console.log('💾 Setting saving to true');
+      
+      // Generate member ID (simple sequential number)
+      const memberId = String(monthlySummary.totalMembers + 1);
+      
+      const memberData = {
+        ...newMemberData,
+        memberId,
+        status: 'active',
+        createdAt: new Date().toISOString(),
+        createdBy: 'ক্যাশিয়ার - আহমেদ'
+      };
+      
+      console.log('📝 নতুন সদস্য যোগ করা হচ্ছে:', memberData);
+      
+      // Call the existing handleAddMember function
+      const result = await handleAddMember(memberData);
+      console.log('📊 handleAddMember result:', result);
+      
+      if (result && result.success) {
+        console.log('✅ Member added successfully, showing animation');
+        
+        // Show success animation immediately
+        const animationData = {
+          title: 'সদস্য যোগ করা হয়েছে!',
+          message: `${newMemberData.name} সফলভাবে সমিতিতে যোগদান করেছেন।`,
+          type: 'member'
+        };
+        console.log('🎉 Setting animation data:', animationData);
+        
+        setSuccessAnimationData(animationData);
+        setShowSuccessAnimation(true);
+        console.log('🎬 Animation state set to true');
+        
+        // Reset form
+        setNewMemberData({
+          name: '',
+          phone: '',
+          address: '',
+          shareCount: '',
+          nomineeName: '',
+          nomineePhone: '',
+          nomineeRelation: '',
+          joiningDate: new Date().toISOString().split('T')[0]
+        });
+        setMemberFormErrors({});
+        console.log('🔄 Form reset');
+        
+        // Close modal after animation duration and reload members in background
+        setTimeout(async () => {
+          setShowAddMemberModal(false);
+          console.log('🚪 Modal closed after animation');
+          
+          // Reload members in background after modal closes
+          const updatedMembersResult = await MemberService.getAllMembers();
+          console.log('📋 Updated members result:', updatedMembersResult);
+          
+          if (updatedMembersResult.success) {
+            setMembers(updatedMembersResult.data || []);
+            console.log('👥 Members list updated');
+          }
+        }, 3500); // Wait for animation to complete
+      } else {
+        console.error('❌ সদস্য যোগ করতে ত্রুটি:', result?.error || 'Unknown error');
+        // You could show an error animation here too
+      }
+      
+    } catch (error) {
+      console.error('💥 সদস্য যোগ করতে ত্রুটি:', error);
+      // You could show an error animation here too
+    } finally {
+      setSaving(false);
+      console.log('🏁 Setting saving to false');
+    }
   };
 
   const handleCloseModal = () => {
@@ -961,13 +967,43 @@ const CashierDashboard = () => {
   );
 
   return (
-    <div className="md-dashboard">
-      <div className="md-surface-container">
-        <div className="md-dashboard-content">
+    <>
+      <div className="treasury-container cashier-dashboard">
+      <div className="p-4">
+      <div className="treasury-header">
+        <h1 className="treasury-title">ক্যাশিয়ার ড্যাশবোর্ড</h1>
+        <p className="treasury-subtitle">আর্থিক লেনদেন ও তহবিল ব্যবস্থাপনা</p>
+      </div>
+
+      {/* Central Action Buttons */}
+      <div className="flex flex-col items-center gap-2 mb-3">
+        {/* Refresh Button */}
+        <button 
+          onClick={refreshData}
+          disabled={loading.initial}
+          className={`icon-action-btn blue flex items-center gap-2 w-48 justify-center ${loading.initial ? 'opacity-75 cursor-not-allowed' : ''}`}
+          title={loading.initial ? "ডেটা লোড হচ্ছে..." : "সব ডেটা রিফ্রেশ করুন"}
+        >
+          <RefreshCw className={`h-4 w-4 ${loading.initial ? 'animate-spin' : ''}`} />
+          <span className="text-sm font-medium">
+            {loading.initial ? 'লোড হচ্ছে...' : 'রিফ্রেশ করুন'}
+          </span>
+        </button>
+        
+        {/* Add Member Button */}
+        <button 
+          onClick={() => setShowAddMemberModal(true)}
+          className="icon-action-btn green flex items-center gap-2 w-48 justify-center"
+          title="নতুন সদস্য যোগ করুন"
+        >
+          <UserPlus className="h-4 w-4" />
+          <span className="text-sm font-medium">নতুন সদস্য</span>
+        </button>
+      </div>
         
         {/* Error Display */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-3">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <X className="h-5 w-5 text-red-400" />
@@ -988,200 +1024,418 @@ const CashierDashboard = () => {
         )}
         
         {/* Monthly Summary Card */}
-        <div className="dashboard-card">
-          <div className="card-header-with-action">
-            <h3 className="card-title">
-              <DollarSign className="h-5 w-5" />
-              মাসিক সারসংক্ষেপ
-            </h3>
-            <div className="flex items-center space-x-2">
-              <button 
-                onClick={refreshData}
-                className="refresh-btn"
-                title="ডেটা রিফ্রেশ করুন"
-                disabled={loading.initial}
-              >
-                <RefreshCw className={`h-4 w-4 ${loading.initial ? 'animate-spin' : ''}`} />
-              </button>
-              <button 
-                onClick={() => setShowAddMemberModal(true)}
-                className="add-member-btn"
-                title="নতুন সদস্য যোগ করুন"
-              >
-                <UserPlus className="h-4 w-4" />
-                নতুন সদস্য
-              </button>
+        <div className="treasury-card">
+          {/* Card Header */}
+          <div className="treasury-card-header">
+            <h3 className="treasury-card-title">মাসিক সারসংক্ষেপ</h3>
+            <div className="treasury-card-icon">
+              <DollarSign className="w-5 h-5" />
             </div>
           </div>
-          <div className="simple-monthly-report">
-            <div className="report-metric">
-              <div className="report-metric-label">মোট সদস্য</div>
-              <div className="report-metric-value">
-                {loading.members ? <LoadingSkeleton className="w-16" /> : monthlySummary.totalMembers}
+            
+
+            
+            {/* Summary Metrics Grid */}
+          <div className="treasury-summary-grid">
+            {/* Total Members */}
+            <div className="treasury-card">
+              <div className="treasury-card-info">
+                <h3 className="treasury-card-label">মোট সদস্য</h3>
+                <div className="treasury-card-value">
+                  {loading.members ? <LoadingSkeleton className="w-16 h-10" /> : monthlySummary.totalMembers}
+                </div>
+                <div className="treasury-card-subtitle">সক্রিয় সদস্য</div>
+              </div>
+              <div className="treasury-card-icon">
+                <Users className="w-5 h-5" />
               </div>
             </div>
-            <div className="report-metric">
-              <div className="report-metric-label">মাসিক সংগ্রহ</div>
-              <div className="report-metric-value income">
-                {loading.transactions ? <LoadingSkeleton className="w-24" /> : `৳ ${monthlySummary.totalCollected.toLocaleString()}`}
+
+            {/* Monthly Collection */}
+            <div className="treasury-card">
+              <div className="treasury-card-info">
+                <h3 className="treasury-card-label">মাসিক সংগ্রহ</h3>
+                <div className="treasury-card-value">
+                  {loading.transactions ? <LoadingSkeleton className="w-24 h-10" /> : `৳ ${monthlySummary.totalCollected.toLocaleString()}`}
+                </div>
+                <div className="treasury-card-subtitle">এই মাসে</div>
+              </div>
+              <div className="treasury-card-icon">
+                <TrendingUp className="w-5 h-5" />
               </div>
             </div>
-            <div className="report-metric">
-              <div className="report-metric-label">মোট ফান্ড</div>
-              <div className="report-metric-value profit">
-                {loading.fundData ? <LoadingSkeleton className="w-24" /> : `৳ ${fundSummary.totalBalance.toLocaleString()}`}
+
+            {/* Cashier Balance */}
+            <div className="treasury-card !bg-transparent !shadow-none border-2 border-dashed border-gray-300">
+              <div className="treasury-card-info">
+                <h3 className="treasury-card-label">ক্যাশিয়ার ব্যালেন্স</h3>
+                <div className="treasury-card-value">
+                  {loading.fundData ? <LoadingSkeleton className="w-24 h-10" /> : `৳ ${fundSummary.totalBalance.toLocaleString()}`}
+                </div>
+                <div className="treasury-card-subtitle">হাতে নগদ</div>
+              </div>
+              <div className="treasury-card-icon">
+                <Wallet className="w-5 h-5" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Payment Methods Card */}
-        <div className="dashboard-card">
-          <div className="payment-header">
-            <h3 className="card-title">
-              <Banknote className="h-5 w-5" />
-              পেমেন্ট পদ্ধতি
-            </h3>
+        <div className="treasury-card">
+          {/* Card Header */}
+          <div className="treasury-card-header">
+            <div className="treasury-card-title">
+              <div className="treasury-card-icon">
+                <Banknote className="w-5 h-5" />
+              </div>
+              <h3>পেমেন্ট পদ্ধতি</h3>
+            </div>
             <button 
               onClick={() => setPaymentMethodSortOrder(paymentMethodSortOrder === 'desc' ? 'asc' : 'desc')}
-              className="sort-btn"
+              className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
               title="পরিমাণ অনুযায়ী সাজান"
             >
-              {paymentMethodSortOrder === 'desc' ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />}
+              {paymentMethodSortOrder === 'desc' ? 
+                <SortDesc className="h-4 w-4" /> : 
+                <SortAsc className="h-4 w-4" />
+              }
             </button>
           </div>
-          <div className="simple-payment-methods">
+          
+          {/* Payment Methods Grid */}
+          <div className="treasury-summary-grid">
             {loading.fundData ? (
               <>
-                <LoadingSkeleton className="h-8 w-full mb-2" />
-                <LoadingSkeleton className="h-8 w-full mb-2" />
-                <LoadingSkeleton className="h-8 w-full" />
+                <div className="treasury-card">
+                  <div className="treasury-card-content">
+                    <div className="treasury-card-info">
+                      <LoadingSkeleton className="w-16 h-4" />
+                      <LoadingSkeleton className="w-20 h-8" />
+                      <LoadingSkeleton className="w-12 h-3" />
+                    </div>
+                    <div className="treasury-card-icon">
+                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+                <div className="treasury-card">
+                  <div className="treasury-card-content">
+                    <div className="treasury-card-info">
+                      <LoadingSkeleton className="w-20 h-4" />
+                      <LoadingSkeleton className="w-24 h-8" />
+                      <LoadingSkeleton className="w-16 h-3" />
+                    </div>
+                    <div className="treasury-card-icon">
+                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+                <div className="treasury-card">
+                  <div className="treasury-card-content">
+                    <div className="treasury-card-info">
+                      <LoadingSkeleton className="w-18 h-4" />
+                      <LoadingSkeleton className="w-16 h-8" />
+                      <LoadingSkeleton className="w-14 h-3" />
+                    </div>
+                    <div className="treasury-card-icon">
+                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                    </div>
+                  </div>
+                </div>
               </>
             ) : (
-              sortedPaymentMethods.map((method, index) => (
-                <div key={index} className="payment-method-item">
-                  <span className="payment-method-name">{method.method}</span>
-                  <span className="payment-method-amount">৳ {method.amount.toLocaleString()}</span>
-                </div>
-              ))
+              sortedPaymentMethods.slice(0, 4).map((method, index) => {
+                // Get icon based on payment method
+                const getPaymentIcon = (methodName) => {
+                  if (methodName.includes('নগদ') || methodName.includes('ক্যাশ')) {
+                    return <Banknote className="h-5 w-5" />;
+                  } else if (methodName.includes('বিকাশ')) {
+                    return <Phone className="h-5 w-5" />;
+                  } else if (methodName.includes('ব্যাংক')) {
+                    return <Calculator className="h-5 w-5" />;
+                  } else {
+                    return <Wallet className="h-5 w-5" />;
+                  }
+                };
+
+                return (
+                  <div key={index} className="treasury-card treasury-card-compact">
+                    <div className="treasury-card-info">
+                      <h3 className="treasury-card-label">{method.method}</h3>
+                      <div className="treasury-card-value">
+                        ৳ {method.amount.toLocaleString()}
+                      </div>
+                      <div className="treasury-card-subtitle">
+                        {method.count} টি লেনদেন • {method.percentage}%
+                      </div>
+                    </div>
+                    <div className="treasury-card-icon">
+                      {getPaymentIcon(method.method)}
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
+          
+          {/* See All Payment Methods Button */}
+          {!loading.fundData && sortedPaymentMethods.length > 4 && (
+            <div className="mt-4 text-center">
+              <button 
+                onClick={() => navigate('/transactions')}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200"
+              >
+                আরও {sortedPaymentMethods.length - 4} টি পেমেন্ট পদ্ধতি দেখুন
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Expense Tracking Card */}
-        <div className="dashboard-card">
-          <div className="expense-header">
-            <h3 className="card-title">
-              <Receipt className="h-5 w-5" />
-              খরচের রেকর্ড
-            </h3>
-            <button 
-              onClick={handleRefresh}
-              className="refresh-btn"
-              title="রিফ্রেশ করুন"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
+        <div className="treasury-card">
+          {/* Card Header */}
+          <div className="treasury-card-header">
+            <div className="treasury-card-title">
+              <div className="treasury-card-icon">
+                <Receipt className="w-5 h-5" />
+              </div>
+              <h3>খরচের রেকর্ড</h3>
+            </div>
           </div>
-          <div className="simple-expense-list">
+          
+          {/* Expense Summary Grid */}
+          <div className="treasury-summary-grid">
+            {/* Total Expense */}
+            <div className="treasury-card">
+              <div className="treasury-card-info">
+                <h3 className="treasury-card-label">মোট খরচ</h3>
+                <div className="treasury-card-value">
+                  {loading.transactions ? (
+                    <LoadingSkeleton className="w-24 h-8" />
+                  ) : (
+                    `৳ ${expenseRecords.reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}`
+                  )}
+                </div>
+                <div className="treasury-card-subtitle">এই মাসে</div>
+              </div>
+              <div className="treasury-card-icon">
+                <TrendingDown className="h-5 w-5" />
+              </div>
+            </div>
+
+            {/* Recent Expenses */}
             {loading.transactions ? (
               <>
-                <div className="simple-expense-item">
-                  <div className="expense-info">
-                    <LoadingSkeleton className="h-4 w-32 mb-1" />
-                    <LoadingSkeleton className="h-3 w-20" />
+                <div className="treasury-card">
+                  <div className="treasury-card-content">
+                    <div className="treasury-card-info">
+                      <LoadingSkeleton className="w-20 h-4" />
+                      <LoadingSkeleton className="w-16 h-8" />
+                      <LoadingSkeleton className="w-24 h-3" />
+                    </div>
+                    <div className="treasury-card-icon">
+                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                    </div>
                   </div>
-                  <LoadingSkeleton className="h-4 w-16" />
                 </div>
-                <div className="simple-expense-item">
-                  <div className="expense-info">
-                    <LoadingSkeleton className="h-4 w-28 mb-1" />
-                    <LoadingSkeleton className="h-3 w-20" />
+                <div className="treasury-card">
+                  <div className="treasury-card-content">
+                    <div className="treasury-card-info">
+                      <LoadingSkeleton className="w-18 h-4" />
+                      <LoadingSkeleton className="w-20 h-8" />
+                      <LoadingSkeleton className="w-16 h-3" />
+                    </div>
+                    <div className="treasury-card-icon">
+                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                    </div>
                   </div>
-                  <LoadingSkeleton className="h-4 w-16" />
-                </div>
-                <div className="simple-expense-item">
-                  <div className="expense-info">
-                    <LoadingSkeleton className="h-4 w-36 mb-1" />
-                    <LoadingSkeleton className="h-3 w-20" />
-                  </div>
-                  <LoadingSkeleton className="h-4 w-16" />
                 </div>
               </>
             ) : (
-              expenseRecords.slice(0, 3).map((expense) => (
-                <div key={expense.id} className="simple-expense-item">
-                  <div className="expense-info">
-                    <span className="expense-description">{expense.description}</span>
-                    <span className="expense-date">{expense.date}</span>
+              expenseRecords.slice(0, 2).map((expense) => {
+                // Get expense category icon
+                const getExpenseIcon = (type) => {
+                  if (type === 'expense') {
+                    return <Receipt className="h-5 w-5" />;
+                  } else if (type === 'loan_disbursement') {
+                    return <ArrowUpRight className="h-5 w-5" />;
+                  } else if (type === 'withdrawal') {
+                    return <ArrowDownRight className="h-5 w-5" />;
+                  } else {
+                    return <Receipt className="h-5 w-5" />;
+                  }
+                };
+
+                const getExpenseTypeLabel = (type) => {
+                  if (type === 'expense') return 'খরচ';
+                  if (type === 'loan_disbursement') return 'ঋণ প্রদান';
+                  if (type === 'withdrawal') return 'উত্তোলন';
+                  return 'অন্যান্য';
+                };
+
+                return (
+                  <div key={expense.id} className="treasury-card">
+                    <div className="treasury-card-content">
+                      <div className="treasury-card-info">
+                        <h3 className="treasury-card-label">{getExpenseTypeLabel(expense.type)}</h3>
+                        <div className="treasury-card-value">
+                          ৳ {expense.amount.toLocaleString()}
+                        </div>
+                        <div className="treasury-card-subtitle">
+                          {expense.description}
+                        </div>
+                      </div>
+                      <div className="treasury-card-icon">
+                        {getExpenseIcon(expense.type)}
+                      </div>
+                    </div>
                   </div>
-                  <div className="expense-amount">
-                    ৳ {expense.amount.toLocaleString()}
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
+
+          {/* View All Link */}
+          {!loading.transactions && expenseRecords.length > 3 && (
+            <div className="mt-4 text-center">
+              <button 
+                onClick={() => navigate('/transactions')}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200"
+              >
+                আরও {expenseRecords.length - 3} টি খরচ দেখুন
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Monthly Report Card */}
-        <div className="dashboard-card">
-          <h3 className="card-title">
-            <FileText className="h-5 w-5" />
-            মাসিক রিপোর্ট
-          </h3>
-          <div className="simple-monthly-report">
-            <div className="report-metric">
-              <span className="report-metric-label">মোট আয়</span>
-              {loading.transactions || loading.fundData ? (
-                <LoadingSkeleton className="h-5 w-20" />
-              ) : (
-                <span className="report-metric-value income">৳ {currentReportData.totalIncome.toLocaleString()}</span>
-              )}
+        <div className="treasury-card">
+          {/* Card Header */}
+          <div className="treasury-card-header">
+            <div className="treasury-card-title">
+              <div className="treasury-card-icon">
+                <FileText className="w-5 h-5" />
+              </div>
+              <h3>মাসিক রিপোর্ট</h3>
             </div>
-            <div className="report-metric">
-              <span className="report-metric-label">মোট ব্যয়</span>
-              {loading.transactions || loading.fundData ? (
-                <LoadingSkeleton className="h-5 w-20" />
-              ) : (
-                <span className="report-metric-value expense">৳ {currentReportData.totalExpense.toLocaleString()}</span>
-              )}
+            <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+              {new Date().toLocaleDateString('bn-BD', { month: 'long', year: 'numeric' })}
+            </div>
+          </div>
+          
+          {/* Current Month Header */}
+          <div className="monthly-report-header">
+            <div className="monthly-report-header-content">
+              <div className="monthly-report-header-icon">
+                <Calendar className="h-6 w-6" />
+              </div>
+              <div className="monthly-report-header-text">
+                <h2 className="monthly-report-title">বর্তমান মাস</h2>
+                <div className="monthly-report-date">
+                  {new Date().toLocaleDateString('bn-BD', { month: 'long' })} ২০২৫
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Monthly Report Grid */}
+          <div className="treasury-summary-grid">
+
+            {/* Total Income */}
+            <div className="treasury-card">
+              <div className="treasury-card-info">
+                <h3 className="treasury-card-label">মোট আয়</h3>
+                <div className="treasury-card-value">
+                  {loading.transactions || loading.fundData ? (
+                    <LoadingSkeleton className="h-8 w-24" />
+                  ) : (
+                    `৳ ${currentReportData.totalIncome.toLocaleString()}`
+                  )}
+                </div>
+                <div className="treasury-card-subtitle">এই মাসে</div>
+              </div>
+              <div className="treasury-card-icon">
+                <ArrowUpRight className="h-5 w-5" />
+              </div>
             </div>
 
+            {/* Total Expense */}
+            <div className="treasury-card">
+              <div className="treasury-card-info">
+                <h3 className="treasury-card-label">মোট ব্যয়</h3>
+                <div className="treasury-card-value">
+                  {loading.transactions || loading.fundData ? (
+                    <LoadingSkeleton className="h-8 w-24" />
+                  ) : (
+                    `৳ ${currentReportData.totalExpense.toLocaleString()}`
+                  )}
+                </div>
+                <div className="treasury-card-subtitle">এই মাসে</div>
+              </div>
+              <div className="treasury-card-icon">
+                <ArrowDownRight className="h-5 w-5" />
+              </div>
+            </div>
+
+            {/* Net Balance */}
+            <div className="treasury-card">
+              <div className="treasury-card-info">
+                <h3 className="treasury-card-label">নেট ব্যালান্স</h3>
+                <div className="treasury-card-value">
+                  {loading.transactions || loading.fundData ? (
+                    <LoadingSkeleton className="h-6 w-24" />
+                  ) : (
+                    `৳ ${(currentReportData.totalIncome - currentReportData.totalExpense).toLocaleString()}`
+                  )}
+                </div>
+                <div className="treasury-card-subtitle">
+                  {!loading.transactions && !loading.fundData && (
+                    (currentReportData.totalIncome - currentReportData.totalExpense) >= 0 
+                      ? 'লাভজনক অবস্থা'
+                      : 'ঘাটতি রয়েছে'
+                  )}
+                </div>
+              </div>
+              <div className="treasury-card-icon">
+                <Calculator className="h-5 w-5" />
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Transaction History Card */}
-        <div className="dashboard-card">
-          <div className="transaction-header">
-            <h3 className="card-title">
-              <Activity className="h-5 w-5" />
-              সাম্প্রতিক লেনদেন
-            </h3>
-            <button 
-              onClick={handleRefresh}
-              className="refresh-btn"
-              title="রিফ্রেশ করুন"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
+        <div className="treasury-card">
+          {/* Card Header */}
+          <div className="treasury-card-header">
+            <div className="treasury-card-title">
+              <div className="treasury-card-icon">
+                <Receipt className="w-5 h-5" />
+              </div>
+              <h3>সাম্প্রতিক লেনদেন</h3>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+                {searchFilteredTransactions.length} টি লেনদেন
+              </span>
+            </div>
           </div>
           
           {/* Search Input */}
-          <div className="transaction-search">
-            <div className="search-input-wrapper">
-              <Search className="h-4 w-4 search-icon" />
+            <div className="mb-3">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="সদস্য বা লেনদেনের ধরন খুঁজুন..."
                 value={transactionSearchTerm}
                 onChange={(e) => setTransactionSearchTerm(e.target.value)}
-                className="search-input"
+                className="w-full pl-12 pr-12 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-300"
               />
               {transactionSearchTerm && (
                 <button
                   onClick={() => setTransactionSearchTerm('')}
-                  className="clear-search-btn"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -1189,59 +1443,117 @@ const CashierDashboard = () => {
             </div>
           </div>
 
-          <div className="simple-transaction-list">
+          {/* Transaction List */}
+            <div className="space-y-2">
             {loading.transactions ? (
               <>
                 {[1, 2, 3, 4].map((index) => (
-                  <div key={index} className="simple-transaction-item">
-                    <div className="transaction-main">
-                      <div className="transaction-info">
-                        <LoadingSkeleton className="h-4 w-24 mb-1" />
-                        <LoadingSkeleton className="h-3 w-16" />
+                  <div key={index} className="bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-100 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                        <div className="flex-1">
+                          <LoadingSkeleton className="h-4 w-32 mb-2" />
+                          <LoadingSkeleton className="h-3 w-24" />
+                        </div>
                       </div>
-                      <LoadingSkeleton className="h-4 w-16" />
-                      <LoadingSkeleton className="h-4 w-4" />
+                      <LoadingSkeleton className="h-4 w-20" />
                     </div>
                   </div>
                 ))}
               </>
+            ) : searchFilteredTransactions.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="p-4 bg-gray-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                  <Receipt className="h-8 w-8 text-gray-400" />
+                </div>
+                <h4 className="text-gray-600 font-medium mb-2">কোনো লেনদেন পাওয়া যায়নি</h4>
+                {transactionSearchTerm && (
+                  <p className="text-sm text-gray-500">"{transactionSearchTerm}" এর জন্য কোনো ফলাফল নেই</p>
+                )}
+              </div>
             ) : (
               searchFilteredTransactions.slice(0, 4).map((transaction) => (
-                <div key={transaction.id} className="simple-transaction-item">
+                <div key={transaction.id} className="bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300 hover:shadow-sm group">
                   <div 
-                    className="transaction-main"
-                    onClick={() => toggleTransactionExpand(transaction.id)}
-                    style={{ cursor: 'pointer' }}
+                    className="p-4 cursor-pointer hover:bg-white/50 transition-all duration-300"
+                    onClick={(event) => handleTransactionClick(transaction, event)}
                   >
-                    <div className="transaction-info">
-                      <span className="transaction-member">{transaction.memberName}</span>
-                      <span className="transaction-type">{getTransactionTypeLabel(transaction.type)}</span>
-                    </div>
-                    <div className="transaction-amount">
-                      ৳ {transaction.amount.toLocaleString()}
-                    </div>
-                    <div className="expand-indicator">
-                      {expandedTransaction === transaction.id ? '−' : '+'}
+                    <div className="flex items-center justify-between">
+                      {/* Transaction Info */}
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-3 rounded-lg backdrop-blur-sm transition-all duration-300 group-hover:shadow-sm ${
+                          transaction.type === 'deposit' ? 'bg-green-100/50 text-green-600' :
+                          transaction.type === 'withdrawal' ? 'bg-red-100/50 text-red-600' :
+                          transaction.type === 'loan' ? 'bg-orange-100/50 text-orange-600' :
+                          'bg-blue-100/50 text-blue-600'
+                        }`}>
+                          {transaction.type === 'deposit' ? <ArrowUpRight className="h-5 w-5" /> :
+                           transaction.type === 'withdrawal' ? <ArrowDownRight className="h-5 w-5" /> :
+                           transaction.type === 'loan' ? <Banknote className="h-5 w-5" /> :
+                           <DollarSign className="h-5 w-5" />}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{transaction.memberName}</h4>
+                          <div className="flex items-center space-x-2 text-xs text-gray-500 mt-1">
+                            <span>{getTransactionTypeLabel(transaction.type)}</span>
+                            <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                            <span>{new Date(transaction.date).toLocaleDateString('bn-BD')}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Amount and Expand */}
+                      <div className="flex items-center space-x-3">
+                        <div className={`text-base sm:text-lg font-bold ${
+                          transaction.type === 'deposit' ? 'text-green-600' :
+                          transaction.type === 'withdrawal' ? 'text-red-600' :
+                          transaction.type === 'loan' ? 'text-orange-600' :
+                          'text-blue-600'
+                        }`}>
+                          ৳ {transaction.amount.toLocaleString()}
+                        </div>
+                        <div className="text-gray-400 transition-transform duration-200 ${
+                          expandedTransaction === transaction.id ? 'rotate-180' : ''
+                        }">
+                          <ChevronDown className="h-4 w-4" />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 
+                  {/* Expanded Details */}
                   {expandedTransaction === transaction.id && (
-                    <div className="transaction-details">
-                      <div className="detail-row">
-                        <span className="detail-label">তারিখ:</span>
-                        <span className="detail-value">{transaction.date}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">পেমেন্ট পদ্ধতি:</span>
-                        <span className="detail-value">{getPaymentMethodLabel(transaction.paymentMethod)}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">রেফারেন্স:</span>
-                        <span className="detail-value">{transaction.reference}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">প্রক্রিয়াকারী:</span>
-                        <span className="detail-value">{transaction.processedBy}</span>
+                    <div className="px-4 pb-4 bg-gradient-to-r from-gray-50 to-white border-t border-gray-100">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
+                        <div className="flex items-center justify-between sm:block py-2">
+                          <span className="text-gray-500 text-xs font-medium">মাস:</span>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100/50 text-green-700 border border-green-200">
+                            {(() => {
+                              const getMonthNameFromDate = (dateString) => {
+                                const monthNames = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+                                if (dateString) {
+                                  const date = new Date(dateString);
+                                  return monthNames[date.getMonth()];
+                                }
+                                return 'এই মাসে';
+                              };
+                              return getMonthNameFromDate(transaction.date);
+                            })()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between sm:block py-2">
+                          <span className="text-gray-500 text-xs font-medium">পেমেন্ট পদ্ধতি:</span>
+                          <span className="text-sm font-semibold text-gray-800">{getPaymentMethodLabel(transaction.paymentMethod)}</span>
+                        </div>
+                        <div className="flex items-center justify-between sm:block py-2">
+                          <span className="text-gray-500 text-xs font-medium">রেফারেন্স:</span>
+                          <span className="text-sm font-semibold text-gray-800">{transaction.reference}</span>
+                        </div>
+                        <div className="flex items-center justify-between sm:block py-2">
+                          <span className="text-gray-500 text-xs font-medium">প্রক্রিয়াকারী:</span>
+                          <span className="text-sm font-semibold text-gray-800">{transaction.processedBy}</span>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1249,6 +1561,22 @@ const CashierDashboard = () => {
               ))
             )}
           </div>
+          
+          {/* View All Link */}
+          {!loading.transactions && searchFilteredTransactions.length > 4 && (
+            <div className="mt-6 text-center">
+              <button 
+                onClick={() => navigate('/transactions')}
+                className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-semibold rounded-xl border border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:shadow-sm transition-all duration-300 group"
+              >
+                <span>সব লেনদেন দেখুন</span>
+                <span className="bg-blue-200 text-blue-800 text-xs font-bold px-2 py-1 rounded-full group-hover:bg-blue-300 transition-colors">
+                  {searchFilteredTransactions.length - 4}+
+                </span>
+                <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Add New Member Modal */}
@@ -1457,10 +1785,28 @@ const CashierDashboard = () => {
             </div>
           </div>
         )}
-
-        </div>
       </div>
-    </div>
+      </div>
+
+      {/* Transaction Details Card */}
+      <TransactionDetailsCard
+          transaction={selectedTransaction}
+          isVisible={showTransactionCard}
+          onClose={closeTransactionCard}
+          position={cardPosition}
+        />
+
+      {/* Success Animation */}
+      <SuccessAnimation
+        isVisible={showSuccessAnimation}
+        onClose={() => setShowSuccessAnimation(false)}
+        title={successAnimationData.title}
+        message={successAnimationData.message}
+        type={successAnimationData.type}
+        autoClose={true}
+        duration={3000}
+      />
+    </>
   );
 };
 

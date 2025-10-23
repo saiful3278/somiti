@@ -5,7 +5,8 @@ import {
   TrendingUp, 
   DollarSign, 
   Bell, 
-  Settings 
+  Settings,
+  UserPlus
 } from 'lucide-react';
 
 const useSidebarLogic = (userRole) => {

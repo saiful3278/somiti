@@ -9,7 +9,9 @@ import {
   query, 
   where, 
   orderBy,
-  serverTimestamp 
+  serverTimestamp, 
+  setDoc,
+  getDoc
 } from 'firebase/firestore';
 import { db } from './config.js';
 
@@ -19,26 +21,42 @@ const MEMBERS_COLLECTION = 'members';
 export class MemberService {
   
   // Add new member
-  static async addMember(memberData) {
+  static async addMember(memberData, userId) {
     try {
-      console.log('MemberService.addMember called with:', memberData);
-      console.log('Database instance:', db);
-      console.log('Collection name:', MEMBERS_COLLECTION);
-      
-      const docRef = await addDoc(collection(db, MEMBERS_COLLECTION), {
+      if (!userId) {
+        throw new Error('User ID is required to add a member.');
+      }
+
+      const memberRef = doc(db, MEMBERS_COLLECTION, userId);
+      await setDoc(memberRef, {
         ...memberData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         status: 'active'
       });
       
-      console.log('Document added successfully with ID:', docRef.id);
-      return { success: true, id: docRef.id };
+      console.log('Document added successfully with ID:', userId);
+      return { success: true, id: userId };
     } catch (error) {
       console.error('সদস্য যোগ করতে ত্রুটি:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      return { success: false, error: error.message, code: error.code };
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get member by ID
+  static async getMemberById(userId) {
+    try {
+      const memberRef = doc(db, MEMBERS_COLLECTION, userId);
+      const docSnap = await getDoc(memberRef);
+
+      if (docSnap.exists()) {
+        return { success: true, data: { id: docSnap.id, ...docSnap.data() } };
+      } else {
+        return { success: false, error: 'Member not found' };
+      }
+    } catch (error) {
+      console.error('Error getting member by ID:', error);
+      return { success: false, error: error.message };
     }
   }
 
@@ -130,6 +148,27 @@ export class MemberService {
       return { success: true, newStatus };
     } catch (error) {
       console.error('সদস্যের অবস্থা পরিবর্তন করতে ত্রুটি:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get member by Firebase Auth UID
+  static async getMemberByAuthUid(authUid) {
+    try {
+      const q = query(
+        collection(db, MEMBERS_COLLECTION), 
+        where('authUid', '==', authUid)
+      );
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        return { success: false, error: 'Member not found' };
+      }
+      
+      const doc = querySnapshot.docs[0];
+      return { success: true, data: { id: doc.id, ...doc.data() } };
+    } catch (error) {
+      console.error('Auth UID দিয়ে সদস্য খুঁজতে ত্রুটি:', error);
       return { success: false, error: error.message };
     }
   }

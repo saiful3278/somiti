@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   PiggyBank, 
@@ -12,12 +13,16 @@ import {
   Edit,
   Plus,
   MoreVertical,
-  Loader2
+  Loader2,
+  UserPlus,
+  Receipt
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { MemberService, TransactionService, FundService } from '../firebase';
+import TransactionDetailsCard from './common/TransactionDetailsCard';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState({
     members: true,
     transactions: true,
@@ -33,6 +38,12 @@ const AdminDashboard = () => {
     monthlyData: []
   });
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [showTransactionCard, setShowTransactionCard] = useState(false);
+  const [cardPosition, setCardPosition] = useState({ x: 0, y: 0 });
+  
+  // Add new state for FAB menu
+  const [showFabMenu, setShowFabMenu] = useState(false);
 
   // Generate monthly deposits data from transactions
   const generateMonthlyDepositsData = (transactions) => {
@@ -62,6 +73,38 @@ const AdminDashboard = () => {
     
     return last6Months;
   };
+
+  // Add handlers for FAB menu
+  const handleNewMember = () => {
+    setShowFabMenu(false);
+    navigate('/member-list', { state: { openAddMemberModal: true } });
+  };
+
+  const handleNewTransaction = () => {
+    setShowFabMenu(false);
+    // Navigate to a page that will open AddTransaction modal
+    // Since AddTransaction is a modal component, we need to handle this differently
+    // We can create a dedicated page or pass state to open the modal
+    navigate('/add-transaction');
+  };
+
+  const toggleFabMenu = () => {
+    setShowFabMenu(!showFabMenu);
+  };
+
+  // Close FAB menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showFabMenu && !event.target.closest('.md-fab-container')) {
+        setShowFabMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFabMenu]);
 
   // Load dashboard data from Firebase
   useEffect(() => {
@@ -175,6 +218,49 @@ const AdminDashboard = () => {
     },
   ];
 
+  // Transaction card handlers with position tracking
+  const handleTransactionClick = (transaction, event) => {
+    // Ensure we have a valid transaction object
+    if (!transaction) {
+      console.error('No transaction data provided');
+      return;
+    }
+    
+    // Get click position for floating card
+    setCardPosition({
+      x: event.clientX,
+      y: event.clientY
+    });
+    
+    // Create a safe transaction object with defaults
+    const safeTransaction = {
+      id: transaction.id || 'N/A',
+      memberName: transaction.memberName || 'অজানা সদস্য',
+      transactionType: transaction.transactionType || transaction.type || 'other',
+      type: transaction.type || transaction.transactionType || 'other',
+      amount: transaction.amount || 0,
+      date: transaction.date || transaction.createdAt || null,
+      createdAt: transaction.createdAt || null,
+      description: transaction.description || '',
+      transactionId: transaction.transactionId || transaction.id || 'N/A',
+      status: transaction.status || 'completed',
+      paymentMethod: transaction.paymentMethod || 'cash',
+      month: transaction.month,
+      monthName: transaction.monthName || '',
+      reference: transaction.reference,
+      processedBy: transaction.processedBy,
+      ...transaction // Spread the original transaction to preserve any additional fields
+    };
+    
+    setSelectedTransaction(safeTransaction);
+    setShowTransactionCard(true);
+  };
+
+  const closeTransactionCard = () => {
+    setShowTransactionCard(false);
+    setSelectedTransaction(null);
+  };
+
   // Monthly deposits data for chart - using real data from transactions
   const monthlyData = dashboardData.monthlyData || [];
 
@@ -182,14 +268,50 @@ const AdminDashboard = () => {
 
   // Generate recent activities from Firebase data
   const recentActivities = dashboardData.recentTransactions.length > 0 
-    ? dashboardData.recentTransactions.map((transaction, index) => ({
-        id: transaction.id || index,
-        type: transaction.type,
-        message: `${transaction.memberName || 'সদস্য'} ${transaction.amount.toLocaleString()} টাকা ${transaction.type === 'deposit' ? 'জমা দিয়েছেন' : 'উত্তোলন করেছেন'}`,
-        time: transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000).toLocaleDateString('bn-BD') : 'আজ',
-        icon: transaction.type === 'deposit' ? PiggyBank : DollarSign,
-        color: transaction.type === 'deposit' ? 'text-green-600' : 'text-red-600',
-      }))
+    ? dashboardData.recentTransactions.map((transaction, index) => {
+        // Map transaction types to Bengali labels and determine action
+        const getTransactionInfo = (transactionType) => {
+          const typeMap = {
+            'monthly_deposit': { label: 'মাসিক জমা', action: 'জমা দিয়েছেন', icon: PiggyBank, color: 'text-green-600' },
+            'share_purchase': { label: 'শেয়ার ক্রয়', action: 'শেয়ার কিনেছেন', icon: PiggyBank, color: 'text-blue-600' },
+            'loan_disbursement': { label: 'ঋণ গ্রহণ', action: 'ঋণ নিয়েছেন', icon: DollarSign, color: 'text-orange-600' },
+            'loan_repayment': { label: 'ঋণ পরিশোধ', action: 'ঋণ পরিশোধ করেছেন', icon: PiggyBank, color: 'text-green-600' },
+            'profit_distribution': { label: 'লাভ বিতরণ', action: 'লাভ পেয়েছেন', icon: PiggyBank, color: 'text-green-600' },
+            'penalty': { label: 'জরিমানা', action: 'জরিমানা দিয়েছেন', icon: DollarSign, color: 'text-red-600' },
+            'other': { label: 'অন্যান্য', action: 'লেনদেন করেছেন', icon: DollarSign, color: 'text-gray-600' }
+          };
+          return typeMap[transactionType] || typeMap['other'];
+        };
+
+        const transactionInfo = getTransactionInfo(transaction.transactionType);
+        
+        // Function to get month name from transaction
+        const getMonthName = (transaction) => {
+          // If transaction has month name, use it
+          if (transaction.monthName) {
+            return transaction.monthName;
+          }
+          
+          // Otherwise, extract month from timestamp
+          if (transaction.createdAt) {
+            const monthNames = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+            const date = new Date(transaction.createdAt.seconds * 1000);
+            return monthNames[date.getMonth()];
+          }
+          
+          return 'এই মাসে';
+        };
+        
+        return {
+          id: transaction.id || index,
+          type: transaction.transactionType,
+          message: `${transaction.memberName || 'সদস্য'} ${transaction.amount.toLocaleString()} টাকা ${transactionInfo.action}`,
+          time: getMonthName(transaction),
+          icon: transactionInfo.icon,
+          color: transactionInfo.color,
+          originalTransaction: transaction,
+        };
+      })
     : [
         {
           id: 1,
@@ -198,6 +320,14 @@ const AdminDashboard = () => {
           time: '২ ঘন্টা আগে',
           icon: Users,
           color: 'text-blue-600',
+          originalTransaction: {
+            id: 'dummy-1',
+            memberName: 'মোহাম্মদ রহিম',
+            transactionType: 'member_join',
+            amount: 0,
+            description: 'নতুন সদস্য যোগদান',
+            createdAt: new Date()
+          }
         },
         {
           id: 2,
@@ -206,6 +336,14 @@ const AdminDashboard = () => {
           time: '৪ ঘন্টা আগে',
           icon: PiggyBank,
           color: 'text-green-600',
+          originalTransaction: {
+            id: 'dummy-2',
+            memberName: 'ফাতেমা খাতুন',
+            transactionType: 'monthly_deposit',
+            amount: 5000,
+            description: 'মাসিক জমা',
+            createdAt: new Date()
+          }
         },
 
         {
@@ -215,6 +353,14 @@ const AdminDashboard = () => {
           time: '২ দিন আগে',
           icon: Bell,
           color: 'text-orange-600',
+          originalTransaction: {
+            id: 'dummy-4',
+            memberName: 'সমিতি',
+            transactionType: 'other',
+            amount: 0,
+            description: 'মাসিক সভার নোটিশ',
+            createdAt: new Date()
+          }
         },
       ];
 
@@ -356,13 +502,21 @@ const AdminDashboard = () => {
                 <div className="md-card">
                   <div className="md-card-header">
                     <h3 className="md-title-medium">সাম্প্রতিক কার্যক্রম</h3>
-                    <button className="md-text-button">
+                    <button 
+                      className="md-text-button"
+                      onClick={() => navigate('/transactions')}
+                    >
                       <span className="md-label-large">সব দেখুন</span>
                     </button>
                   </div>
                   <div className="md-list">
                     {recentActivities.map((activity, index) => (
-                      <div key={activity.id} className="md-list-item" style={{ animationDelay: `${index * 100}ms` }}>
+                      <div 
+                        key={activity.id} 
+                        className="md-list-item" 
+                        style={{ animationDelay: `${index * 100}ms`, cursor: 'pointer' }}
+                        onClick={(e) => handleTransactionClick(activity.originalTransaction, e)}
+                      >
                         <div className="md-list-item-leading">
                           <div className={`md-list-icon ${activity.color}`}>
                             <activity.icon className="h-5 w-5" />
@@ -370,7 +524,19 @@ const AdminDashboard = () => {
                         </div>
                         <div className="md-list-item-content">
                           <div className="md-list-item-headline">{activity.message}</div>
-                          <div className="md-list-item-supporting-text">{activity.time}</div>
+                          <div className="md-list-item-supporting-text">
+                            <span className="md-badge md-badge-month" style={{
+                              backgroundColor: '#e3f2fd',
+                              color: '#1976d2',
+                              padding: '4px 8px',
+                              borderRadius: '12px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              display: 'inline-block'
+                            }}>
+                              {activity.time}
+                            </span>
+                          </div>
                         </div>
                         <div className="md-list-item-trailing">
                           <button className="md-icon-button-small">
@@ -389,7 +555,10 @@ const AdminDashboard = () => {
                 <div className="md-card">
                   <div className="md-card-header">
                     <h3 className="md-title-medium">আসন্ন কার্যক্রম</h3>
-                    <button className="md-text-button">
+                    <button 
+                      className="md-text-button"
+                      onClick={() => navigate('/transactions')}
+                    >
                       <span className="md-label-large">সব দেখুন</span>
                     </button>
                   </div>
@@ -424,12 +593,47 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Material Design 3 Floating Action Button */}
+      {/* Material Design 3 Floating Action Button with Menu */}
       <div className="md-fab-container">
-        <button className="md-fab md-fab-primary">
+        {/* FAB Menu Items */}
+        {showFabMenu && (
+          <div className="md-fab-menu">
+            <button 
+              className="md-fab md-fab-secondary"
+              onClick={handleNewMember}
+              title="নতুন সদস্য যোগ করুন"
+            >
+              <UserPlus className="h-5 w-5" />
+              <span className="md-fab-label">নতুন সদস্য</span>
+            </button>
+            <button 
+              className="md-fab md-fab-secondary"
+              onClick={handleNewTransaction}
+              title="নতুন লেনদেন যোগ করুন"
+            >
+              <Receipt className="h-5 w-5" />
+              <span className="md-fab-label">নতুন লেনদেন</span>
+            </button>
+          </div>
+        )}
+        
+        {/* Main FAB */}
+        <button 
+          className={`md-fab md-fab-primary ${showFabMenu ? 'rotated' : ''}`}
+          onClick={toggleFabMenu}
+          title="নতুন যোগ করুন"
+        >
           <Plus className="h-6 w-6" />
         </button>
       </div>
+
+      {/* Transaction Details Floating Card */}
+      <TransactionDetailsCard
+        transaction={selectedTransaction}
+        isVisible={showTransactionCard}
+        onClose={closeTransactionCard}
+        position={cardPosition}
+      />
     </div>
   );
 };

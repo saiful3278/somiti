@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { MemberService } from '../firebase/memberService';
 import { TransactionService } from '../firebase/transactionService';
+import SuccessAnimation from './common/SuccessAnimation';
 import '../styles/components/add-transaction-modal.css';
 
 const AddTransaction = ({ isOpen, onClose }) => {
@@ -21,6 +22,14 @@ const AddTransaction = ({ isOpen, onClose }) => {
   const [submitStatus, setSubmitStatus] = useState(null);
   const [members, setMembers] = useState([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
+  
+  // Success animation state
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successAnimationData, setSuccessAnimationData] = useState({
+    title: '',
+    message: '',
+    type: 'transaction'
+  });
   
   const [transactionData, setTransactionData] = useState({
     memberId: '',
@@ -32,6 +41,7 @@ const AddTransaction = ({ isOpen, onClose }) => {
     paymentReference: '',
     description: '',
     date: new Date().toISOString().split('T')[0],
+    month: new Date().getMonth(), // Current month (0-11)
     notes: ''
   });
 
@@ -76,6 +86,21 @@ const AddTransaction = ({ isOpen, onClose }) => {
     { value: 'other', label: 'অন্যান্য' }
   ];
 
+  const months = [
+    { value: 0, label: 'জানুয়ারি' },
+    { value: 1, label: 'ফেব্রুয়ারি' },
+    { value: 2, label: 'মার্চ' },
+    { value: 3, label: 'এপ্রিল' },
+    { value: 4, label: 'মে' },
+    { value: 5, label: 'জুন' },
+    { value: 6, label: 'জুলাই' },
+    { value: 7, label: 'আগস্ট' },
+    { value: 8, label: 'সেপ্টেম্বর' },
+    { value: 9, label: 'অক্টোবর' },
+    { value: 10, label: 'নভেম্বর' },
+    { value: 11, label: 'ডিসেম্বর' }
+  ];
+
   const paymentMethods = [
     { value: 'cash', label: 'নগদ' },
     { value: 'bank_transfer', label: 'ব্যাংক ট্রান্সফার' },
@@ -118,6 +143,8 @@ const AddTransaction = ({ isOpen, onClose }) => {
         paymentReference: transactionData.paymentReference || null,
         description: transactionData.description || '',
         date: transactionData.date,
+        month: transactionData.month,
+        monthName: months[transactionData.month].label,
         notes: transactionData.notes || '',
         status: 'completed'
       };
@@ -127,9 +154,16 @@ const AddTransaction = ({ isOpen, onClose }) => {
       
       if (result.success) {
         console.log('Transaction saved successfully with ID:', result.id);
-        setSubmitStatus('success');
         
-        // Reset form and close modal after successful submission
+        // Show success animation
+        setSuccessAnimationData({
+          title: 'লেনদেন সফল!',
+          message: `${selectedMember?.name || 'সদস্য'} এর জন্য ${transactionData.amount} টাকার লেনদেন সফলভাবে সংরক্ষিত হয়েছে।`,
+          type: 'transaction'
+        });
+        setShowSuccessAnimation(true);
+        
+        // Reset form and close modal after animation
         setTimeout(() => {
           setTransactionData({
             memberId: '',
@@ -141,11 +175,12 @@ const AddTransaction = ({ isOpen, onClose }) => {
             paymentReference: '',
             description: '',
             date: new Date().toISOString().split('T')[0],
+            month: new Date().getMonth(),
             notes: ''
           });
           setSubmitStatus(null);
           onClose(); // Close the modal
-        }, 2000);
+        }, 3500); // Wait for animation to complete
       } else {
         console.error('Failed to save transaction:', result.error);
         setSubmitStatus('error');
@@ -301,6 +336,22 @@ const AddTransaction = ({ isOpen, onClose }) => {
                   className="add-transaction-input"
                 />
               </div>
+
+              <div className="add-transaction-form-group">
+                <label className="add-transaction-label">মাস *</label>
+                <select
+                  required
+                  value={transactionData.month}
+                  onChange={(e) => setTransactionData({...transactionData, month: parseInt(e.target.value)})}
+                  className="add-transaction-select"
+                >
+                  {months.map((month) => (
+                    <option key={month.value} value={month.value}>
+                      {month.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="add-transaction-form-group">
@@ -423,6 +474,17 @@ const AddTransaction = ({ isOpen, onClose }) => {
         </form>
         </div>
       </div>
+      
+      {/* Success Animation */}
+      <SuccessAnimation
+        isVisible={showSuccessAnimation}
+        onClose={() => setShowSuccessAnimation(false)}
+        title={successAnimationData.title}
+        message={successAnimationData.message}
+        type={successAnimationData.type}
+        autoClose={true}
+        duration={3000}
+      />
     </div>
   );
 };

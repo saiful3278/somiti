@@ -7,10 +7,12 @@
 }
 
 .member-list-header {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); /* Light gradient background */
+  color: #374151; /* Dark gray text instead of white */
+  padding: 1.25rem; /* Slightly reduced padding */
+  border-radius: 1.5rem !important; /* Slightly smaller border radius */
+  border: 1px solid #e5e7eb; /* Light stroke/border */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* Lighter shadow */
   margin-bottom: 1.5rem;
 }
 
@@ -23,15 +25,16 @@
 }
 
 .member-list-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.375rem; /* Slightly smaller font */
+  font-weight: 600; /* Reduced font weight for lighter look */
   color: #1f2937;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem; /* Reduced margin */
 }
 
 .member-list-subtitle {
   color: #6b7280;
   font-size: 0.875rem;
+  font-weight: 400; /* Lighter font weight */
 }
 
 /* Add member button */
@@ -39,23 +42,24 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); /* Light blue gradient */
+  color: #0369a1; /* Blue text */
+  border: 1px solid #bae6fd; /* Light blue border */
+  border-radius: 1rem !important; /* Smaller border radius */
+  padding: 0.625rem 1rem; /* Slightly reduced padding */
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500; /* Lighter font weight */
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 1px 3px rgba(3, 105, 161, 0.1); /* Lighter shadow */
   white-space: nowrap;
 }
 
 .add-member-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); /* Slightly darker on hover */
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 2px 6px rgba(3, 105, 161, 0.15); /* Subtle hover shadow */
+  border-color: #7dd3fc; /* Darker border on hover */
 }
 
 .add-member-btn:active {
@@ -63,27 +67,30 @@
 }
 
 .member-search-container {
-  background: white;
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  background: linear-gradient(135deg, #fefefe 0%, #f9fafb 100%); /* Very light gradient */
+  border-radius: 1.5rem !important; /* Slightly smaller border radius */
+  border: 1px solid #e5e7eb; /* Light stroke/border */
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04); /* Very light shadow */
+  padding: 1.25rem; /* Slightly reduced padding */
   margin-bottom: 1.5rem;
 }
 
 .member-search-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  border: 1px solid #e5e7eb; /* Lighter border */
+  border-radius: 1rem !important; /* Smaller border radius */
+  font-size: 0.95rem; /* Slightly smaller font */
   margin-bottom: 1rem;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease; /* Smoother transition */
+  background: #fefefe; /* Very light background */
 }
 
 .member-search-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #93c5fd; /* Light blue focus border */
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.1); /* Light blue focus shadow */
+  background: white; /* White background on focus */
 }
 
 .member-filter-buttons {
@@ -93,62 +100,199 @@
 }
 
 .member-filter-btn {
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid #d1d5db;
-  background: white;
-  color: #374151;
+  padding: 0.5rem 0.875rem; /* Slightly reduced padding */
+  border-radius: 0.75rem; /* Slightly larger border radius */
+  border: 1px solid #e5e7eb; /* Lighter border */
+  background: linear-gradient(135deg, #fefefe 0%, #f9fafb 100%); /* Light gradient */
+  color: #6b7280; /* Lighter text color */
   font-size: 0.875rem;
+  font-weight: 500; /* Medium font weight */
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .member-filter-btn:hover {
-  background: #f3f4f6;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); /* Light hover gradient */
+  border-color: #d1d5db; /* Slightly darker border on hover */
+  color: #374151; /* Darker text on hover */
 }
 
 .member-filter-btn.active {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); /* Light blue gradient */
+  color: #1d4ed8; /* Blue text */
+  border-color: #93c5fd; /* Light blue border */
+  box-shadow: 0 1px 3px rgba(29, 78, 216, 0.1); /* Subtle blue shadow */
 }
 
 .member-cards-container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.5rem; /* Further reduced from 0.75rem */
 }
 
 .member-card {
-  background: white;
+  background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%); /* Very subtle gradient */
+  border: 1px solid #e5e7eb; /* Light stroke/border */
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  padding: 1rem;
-  transition: box-shadow 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); /* Very light shadow */
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .member-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); /* Slightly enhanced hover shadow */
+  transform: translateY(-1px); /* Reduced hover lift */
+  border-color: #d1d5db; /* Slightly darker border on hover */
+  background: linear-gradient(135deg, #fefefe 0%, #f9fafb 100%); /* Subtle gradient change on hover */
+}
+
+/* Improved visual hierarchy with better spacing */
+.member-info-section {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
+}
+
+/* Serial Number */
+.member-serial-number {
+  position: absolute;
+  top: 4px; /* Further reduced from 6px */
+  right: 6px; /* Further reduced from 8px */
+  background: #3b82f6;
+  color: white;
+  font-size: 9px; /* Further reduced from 10px */
+  font-weight: 600;
+  padding: 2px 5px; /* Further reduced from 3px 6px */
+  border-radius: 6px; /* Further reduced from 8px */
+  min-width: 18px; /* Further reduced from 20px */
+  text-align: center;
+  line-height: 1.2;
 }
 
 .member-card-content {
   display: flex;
+  align-items: center; /* Changed from flex-start to center for better alignment */
+  gap: 8px; /* Further reduced from 10px */
+}
+
+.member-avatar-section {
+  flex-shrink: 0;
+}
+
+/* Removed duplicate - already defined above with better styling */
+
+/* New organized layout styles */
+.member-name-container {
+  margin-bottom: 4px; /* Further reduced from 8px */
+}
+
+.member-name-primary {
+  font-size: 14px; /* Further reduced from 16px */
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  line-height: 1.2; /* Tighter line height */
+}
+
+/* Member Address */
+.member-address {
+  display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 3px; /* Further reduced from 4px */
+  font-size: 11px; /* Further reduced from 12px */
+  color: #6b7280;
+  margin: 2px 0 4px 0; /* Further reduced from 3px 0 6px 0 */
+  padding: 2px 0; /* Further reduced from 3px 0 */
+}
+
+.member-address svg {
+  color: #9ca3af;
+  flex-shrink: 0;
+  width: 12px; /* Smaller icon */
+  height: 12px;
+}
+
+.member-details-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Better distribution of elements */
+  gap: 6px; /* Further reduced from 8px */
+  margin-top: 2px; /* Added small top margin for better separation */
+  flex-wrap: wrap;
+}
+
+.member-share-info {
+  display: flex;
+  align-items: center;
+  gap: 3px; /* Further reduced from 4px */
+  font-size: 11px; /* Further reduced from 12px */
+  font-weight: 600;
+  color: #059669;
+  background: #f0fdf4;
+  padding: 3px 6px; /* Further reduced from 4px 8px */
+  border-radius: 12px; /* Further reduced from 16px */
+  border: 1px solid #bbf7d0;
+  flex-shrink: 0;
+}
+
+.member-share-info svg {
+  width: 12px; /* Smaller icon */
+  height: 12px;
+}
+
+.member-role-badge {
+  padding: 2px 6px; /* Further reduced from 3px 8px */
+  border-radius: 8px; /* Further reduced from 12px */
+  font-size: 9px; /* Further reduced from 10px */
+  font-weight: 600;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 2px; /* Further reduced from 3px */
+  flex-shrink: 0;
+  line-height: 1.1;
+}
+
+.member-role-badge svg {
+  width: 10px; /* Smaller icon */
+  height: 10px;
+}
+
+.member-role-badge.member {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.member-role-badge.cashier {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.member-role-badge.admin {
+  background: #fecaca;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
 }
 
 .member-avatar {
-  width: 3rem;
-  height: 3rem;
+  width: 2rem; /* Further reduced from 2.5rem */
+  height: 2rem; /* Further reduced from 2.5rem */
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid #e5e7eb;
   flex-shrink: 0;
 }
 
 .member-avatar-placeholder {
-  width: 3rem;
-  height: 3rem;
+  width: 2rem; /* Further reduced from 2.5rem */
+  height: 2rem; /* Further reduced from 2.5rem */
   border-radius: 50%;
   background: #3b82f6;
   color: white;
@@ -779,10 +923,14 @@
   flex-shrink: 0;
   color: #9ca3af;
   transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 50%;
+  background: #f9fafb;
 }
 
-.member-card-minimal:hover .member-click-indicator {
+.member-card:hover .member-click-indicator {
   color: #3b82f6;
+  background: #eff6ff;
   transform: scale(1.1);
 }
 

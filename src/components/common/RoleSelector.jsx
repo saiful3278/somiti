@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { ChevronDown, User, Shield, DollarSign } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 
-const RoleSelector = ({ userRole, setUserRole }) => {
+const RoleSelector = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useAuth();
 
   const roles = [
     {
@@ -25,11 +27,12 @@ const RoleSelector = ({ userRole, setUserRole }) => {
     }
   ];
 
-  const currentRole = roles.find(role => role.value === userRole);
+  const currentRole = roles.find(role => role.value === user?.role);
   const CurrentIcon = currentRole?.icon || User;
 
   const handleRoleChange = (newRole) => {
-    setUserRole(newRole);
+    // Role switching is now handled by the authentication system
+    // This component is now read-only for display purposes
     setIsOpen(false);
   };
 

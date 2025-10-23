@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useUser } from '../contexts/UserContext';
 import { 
   User, 
   Settings, 
@@ -64,27 +65,45 @@ import {
 } from 'lucide-react';
 
 const AdminSettings = () => {
+  const { currentUser, loading: userLoading } = useUser();
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
-  // Enhanced admin profile data
+  // Enhanced admin profile data - will be populated from real user data
   const [profileData, setProfileData] = useState({
-    name: 'মোহাম্মদ করিম উদ্দিন',
-    adminId: 'ADM-001',
-    phone: '০১৭১২৩৪৫৬৭৮',
-    email: 'admin@somiti.com',
-    address: 'ধানমন্ডি, ঢাকা',
-    joinDate: '২০২০-০১-০১',
+    name: '',
+    adminId: '',
+    phone: '',
+    email: '',
+    address: '',
+    joinDate: '',
     role: 'প্রধান অ্যাডমিন',
-    nidNumber: '১২৩৪৫৬৭৮৯০',
-    emergencyContact: '০১৮১২৩৪৫৬৭৮',
+    nidNumber: '',
+    emergencyContact: '',
     department: 'প্রশাসন',
     designation: 'সিস্টেম অ্যাডমিনিস্ট্রেটর',
     permissions: ['সকল অধিকার', 'ডেটা ব্যাকআপ', 'ব্যবহারকারী ব্যবস্থাপনা']
   });
+
+  // Load real user data when currentUser changes
+  useEffect(() => {
+    if (currentUser && !userLoading) {
+      setProfileData(prev => ({
+        ...prev,
+        name: currentUser.name || 'অজানা অ্যাডমিন',
+        adminId: currentUser.id || 'ADM-001',
+        phone: currentUser.phone || '',
+        email: currentUser.email || '',
+        address: currentUser.address || '',
+        joinDate: currentUser.joinDate || '',
+        nidNumber: currentUser.nid || '',
+        emergencyContact: currentUser.emergencyContact || ''
+      }));
+    }
+  }, [currentUser, userLoading]);
 
   // Enhanced notification settings
   const [notificationSettings, setNotificationSettings] = useState({

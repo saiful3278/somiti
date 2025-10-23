@@ -1,0 +1,245 @@
+/* TransactionDetailsCard - Lightweight & Clean Styles */
+
+/* Backdrop */
+.transaction-card-backdrop {
+  backdrop-filter: blur(2px);
+  transition: opacity 0.2s ease;
+}
+
+/* Main Card */
+.transaction-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 1.5rem;
+}
+
+/* Header */
+.transaction-card-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-bottom: none;
+  border-radius: 1.5rem 1.5rem 0 0;
+  padding: 1rem 1.5rem;
+  min-height: 60px;
+}
+
+.transaction-card-title {
+  color: white;
+  font-size: 1rem;
+}
+
+/* Close Button */
+.transaction-card-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+  color: white;
+  border-radius: 50%;
+}
+
+.transaction-card-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* Content */
+.transaction-card-content {
+  background: #ffffff;
+  border-radius: 0 0 1.5rem 1.5rem;
+  overflow: hidden;
+}
+
+/* Member Info */
+.member-info-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.member-info-section:hover {
+  transform: translateY(-1px);
+}
+
+/* Transaction Details */
+.transaction-detail-row {
+  transition: background-color 0.2s ease;
+  border-radius: 0.5rem;
+  padding: 4px 8px;
+  margin: 1px 0;
+}
+
+.transaction-detail-row:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* Amount */
+.transaction-amount {
+  color: #059669;
+  font-weight: 600;
+}
+
+/* Status Badge */
+.status-badge {
+  background: #fbbf24;
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 0.5rem;
+}
+
+.status-badge.completed {
+  background: #10b981;
+}
+
+.status-badge.pending {
+  background: #f59e0b;
+}
+
+.status-badge.failed {
+  background: #ef4444;
+}
+
+/* Icons */
+.transaction-icon {
+  transition: transform 0.2s ease;
+}
+
+.transaction-icon:hover {
+  transform: scale(1.1);
+}
+
+/* Enhanced Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}
+
+/* Apply animations */
+.transaction-card-backdrop {
+  animation: fadeIn 0.3s ease;
+  transition: background-color 0.1s ease;
+}
+
+.transaction-card {
+  animation: slideIn 0.3s ease;
+  transform-origin: center;
+}
+
+/* Enhanced backdrop hover effect */
+.transaction-card-backdrop:hover {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Mobile-specific optimizations */
+.transaction-card-backdrop {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.transaction-card {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Mobile touch feedback */
+@media (hover: none) and (pointer: coarse) {
+  .transaction-card-backdrop:active {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+  }
+  
+  .transaction-card-backdrop:hover {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
+/* Enhanced Responsive Design for Mobile-First */
+@media (max-width: 768px) {
+  .transaction-card {
+    width: 90vw;
+    max-width: 450px;
+    margin: 0 auto;
+  }
+  
+  .transaction-card-content {
+    max-height: 70vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 640px) {
+  .transaction-card {
+    width: 92vw;
+    max-width: 400px;
+  }
+  
+  .transaction-card-header {
+    padding: 1rem;
+  }
+  
+  .transaction-card-content {
+    padding: 1rem;
+    max-height: 65vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .transaction-card {
+    width: 95vw;
+    max-width: 360px;
+  }
+  
+  .transaction-card-header {
+    padding: 0.75rem;
+  }
+  
+  .transaction-card-content {
+    padding: 0.75rem;
+    max-height: 60vh;
+  }
+  
+  .transaction-card-title {
+    font-size: 1rem;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 360px) {
+  .transaction-card {
+    width: 98vw;
+    max-width: 340px;
+  }
+  
+  .transaction-card-content {
+    max-height: 55vh;
+  }
+}

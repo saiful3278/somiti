@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useUser } from '../contexts/UserContext';
 import { 
   User, 
   Settings, 
@@ -33,25 +34,43 @@ import {
 } from 'lucide-react';
 
 const CashierSettings = () => {
+  const { currentUser, loading: userLoading } = useUser();
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
-  // Cashier profile data
+  // Cashier profile data - will be populated from real user data
   const [profileData, setProfileData] = useState({
-    name: 'ফাতেমা খাতুন',
-    cashierId: 'CSH-001',
-    phone: '০১৮১২৩৪৫৬৭৮',
-    email: 'cashier@somiti.com',
-    address: 'ঢাকা, বাংলাদেশ',
-    joinDate: '২০২১-০৩-১০',
+    name: '',
+    cashierId: '',
+    phone: '',
+    email: '',
+    address: '',
+    joinDate: '',
     role: 'ক্যাশিয়ার',
-    nidNumber: '৯৮৭৬৫৪৩২১০',
-    emergencyContact: '০১৭১২৩৪৫৬৭৮',
+    nidNumber: '',
+    emergencyContact: '',
     designation: 'প্রধান ক্যাশিয়ার'
   });
+
+  // Load real user data when currentUser changes
+  useEffect(() => {
+    if (currentUser && !userLoading) {
+      setProfileData(prev => ({
+        ...prev,
+        name: currentUser.name || 'অজানা ক্যাশিয়ার',
+        cashierId: currentUser.id || 'CSH-001',
+        phone: currentUser.phone || '',
+        email: currentUser.email || '',
+        address: currentUser.address || '',
+        joinDate: currentUser.joinDate || '',
+        nidNumber: currentUser.nid || '',
+        emergencyContact: currentUser.emergencyContact || ''
+      }));
+    }
+  }, [currentUser, userLoading]);
 
   // Cashier-specific notification settings
   const [notificationSettings, setNotificationSettings] = useState({

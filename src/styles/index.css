@@ -5,6 +5,7 @@
 @import './base/variables.css';
 @import './base/reset.css';
 @import './base/animations.css';
+@import './base/global-layout.css'; /* Global layout fixes */
 @import './animations.css';
 
 /* Layout styles */

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useUser } from '../contexts/UserContext';
 import { 
   User, 
   Settings, 
@@ -14,21 +15,28 @@ import {
   Download,
   Edit3,
   DollarSign,
+  Calculator,
+  Receipt,
   CreditCard,
   PieChart,
+  TrendingUp,
   FileText,
   Clock,
+  CheckCircle,
+  AlertTriangle,
+  Info,
+  HelpCircle,
+  Zap,
+  Activity,
+  BarChart3,
+  Calendar,
+  Printer,
   Heart,
   Users,
-  Calendar,
   Gift,
   Star,
   Award,
   Target,
-  TrendingUp,
-  HelpCircle,
-  CheckCircle,
-  Zap,
   AlertCircle,
   Home,
   MapPin,
@@ -36,22 +44,39 @@ import {
 } from 'lucide-react';
 
 const MemberSettings = () => {
+  const { currentUser, loading: userLoading } = useUser();
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
-  // Enhanced state management
+  // Enhanced state management - will be populated from real user data
   const [profileData, setProfileData] = useState({
-    name: 'মোহাম্মদ রহিম',
-    email: 'rahim@email.com',
-    phone: '০১৭১২৩৪৫৬৭৮',
-    address: 'ঢাকা, বাংলাদেশ',
-    occupation: 'ব্যবসায়ী',
-    nid: '১২৩৪৫৬৭৮৯০',
-    emergencyContact: '০১৮১২৩৪৫৬৭৮'
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    occupation: '',
+    nid: '',
+    emergencyContact: ''
   });
+
+  // Load real user data when currentUser changes
+  useEffect(() => {
+    if (currentUser && !userLoading) {
+      setProfileData(prev => ({
+        ...prev,
+        name: currentUser.name || 'অজানা সদস্য',
+        email: currentUser.email || '',
+        phone: currentUser.phone || '',
+        address: currentUser.address || '',
+        occupation: currentUser.occupation || '',
+        nid: currentUser.nid || '',
+        emergencyContact: currentUser.emergencyContact || ''
+      }));
+    }
+  }, [currentUser, userLoading]);
 
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
