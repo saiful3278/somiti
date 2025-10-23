@@ -1,29 +1,46 @@
 /* Treasury Page Styles - Cleaned up version */
 .treasury-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: white;
   padding: 0.75rem;
   font-family: 'Noto Sans Bengali', sans-serif;
 }
 
 .treasury-header {
   text-align: center;
-  margin-bottom: 1.5rem;
-  padding: 1rem 0;
+  margin-bottom: 2rem;
+  padding: 2rem 1rem;
+  position: relative;
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.treasury-header::after {
+  content: '💰';
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  font-size: 4rem;
+  opacity: 0.3;
+  transform: rotate(15deg);
 }
 
 .treasury-title {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 4.5rem;
+  font-weight: 800;
   color: #1e293b;
-  margin-bottom: 0.5rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.75rem;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .treasury-subtitle {
-  font-size: 0.8rem;
+  font-size: 1.1rem;
   color: #64748b;
-  font-weight: 400;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Summary Cards Grid */
@@ -383,7 +400,7 @@
   }
   
   .treasury-title {
-    font-size: 1rem;
+    font-size: 1.5rem;
   }
   
   .treasury-card-value {

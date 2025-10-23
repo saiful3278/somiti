@@ -134,7 +134,7 @@ const Treasury = () => {
   // Summary cards data
   const summaryCards = [
     {
-      title: 'মোট ফান্ড',
+      title: 'সঞ্চিত অর্থ',
       value: treasuryData.totalFunds,
       change: '+১২%',
       changeType: 'increase',
@@ -152,7 +152,7 @@ const Treasury = () => {
       loading: loading.fundData
     },
     {
-      title: 'নিট ব্যালেন্স',
+      title: 'বর্তমান তহবিল',
       value: netBalance,
       change: '+৫%',
       changeType: 'increase',

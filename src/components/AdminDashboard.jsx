@@ -266,120 +266,135 @@ const AdminDashboard = () => {
 
 
 
-  // Generate recent activities from Firebase data
-  const recentActivities = dashboardData.recentTransactions.length > 0 
-    ? dashboardData.recentTransactions.map((transaction, index) => {
-        // Map transaction types to Bengali labels and determine action
-        const getTransactionInfo = (transactionType) => {
-          const typeMap = {
-            'monthly_deposit': { label: 'মাসিক জমা', action: 'জমা দিয়েছেন', icon: PiggyBank, color: 'text-green-600' },
-            'share_purchase': { label: 'শেয়ার ক্রয়', action: 'শেয়ার কিনেছেন', icon: PiggyBank, color: 'text-blue-600' },
-            'loan_disbursement': { label: 'ঋণ গ্রহণ', action: 'ঋণ নিয়েছেন', icon: DollarSign, color: 'text-orange-600' },
-            'loan_repayment': { label: 'ঋণ পরিশোধ', action: 'ঋণ পরিশোধ করেছেন', icon: PiggyBank, color: 'text-green-600' },
-            'profit_distribution': { label: 'লাভ বিতরণ', action: 'লাভ পেয়েছেন', icon: PiggyBank, color: 'text-green-600' },
-            'penalty': { label: 'জরিমানা', action: 'জরিমানা দিয়েছেন', icon: DollarSign, color: 'text-red-600' },
-            'other': { label: 'অন্যান্য', action: 'লেনদেন করেছেন', icon: DollarSign, color: 'text-gray-600' }
-          };
-          return typeMap[transactionType] || typeMap['other'];
-        };
+  // Map transaction types to Bengali labels and determine action
+  const getTransactionInfo = (transactionType) => {
+    const typeMap = {
+      'monthly_deposit': { label: 'মাসিক জমা', action: 'জমা দিয়েছেন', icon: PiggyBank, color: 'text-green-600' },
+      'share_purchase': { label: 'শেয়ার ক্রয়', action: 'শেয়ার কিনেছেন', icon: PiggyBank, color: 'text-blue-600' },
+      'loan_disbursement': { label: 'ঋণ গ্রহণ', action: 'ঋণ নিয়েছেন', icon: DollarSign, color: 'text-orange-600' },
+      'loan_repayment': { label: 'ঋণ পরিশোধ', action: 'ঋণ পরিশোধ করেছেন', icon: PiggyBank, color: 'text-green-600' },
+      'profit_distribution': { label: 'লাভ বিতরণ', action: 'লাভ পেয়েছেন', icon: PiggyBank, color: 'text-green-600' },
+      'penalty': { label: 'জরিমানা', action: 'জরিমানা দিয়েছেন', icon: DollarSign, color: 'text-red-600' },
+      'other': { label: 'অন্যান্য', action: 'লেনদেন করেছেন', icon: DollarSign, color: 'text-gray-600' }
+    };
+    return typeMap[transactionType] || typeMap['other'];
+  };
 
-        const transactionInfo = getTransactionInfo(transaction.transactionType);
+  // State for recent activities
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(true);
+
+  // Fetch recent activities from Firebase
+  useEffect(() => {
+    const fetchRecentActivities = async () => {
+      try {
+        setActivitiesLoading(true);
+        const result = await TransactionService.getRecentTransactions(10);
         
-        // Function to get month name from transaction
-        const getMonthName = (transaction) => {
-          // If transaction has month name, use it
-          if (transaction.monthName) {
-            return transaction.monthName;
-          }
+        if (result.success && result.data) {
+          const formattedActivities = result.data.map((transaction, index) => {
+            const transactionInfo = getTransactionInfo(transaction.transactionType);
+            
+            const getTimeAgo = (transaction) => {
+              if (!transaction.createdAt) return 'এই মাসে';
+              
+              const transactionDate = transaction.createdAt.toDate ? transaction.createdAt.toDate() : new Date(transaction.createdAt.seconds * 1000);
+              const now = new Date();
+              const diffTime = Math.abs(now - transactionDate);
+              const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+              
+              if (diffHours < 1) {
+                return 'এখনই';
+              } else if (diffHours < 24) {
+                return `${diffHours} ঘন্টা আগে`;
+              } else if (diffDays === 1) {
+                return 'গতকাল';
+              } else if (diffDays <= 7) {
+                return `${diffDays} দিন আগে`;
+              } else if (diffDays <= 30) {
+                const weeks = Math.floor(diffDays / 7);
+                return `${weeks} সপ্তাহ আগে`;
+              }
+              
+              return 'এই মাসে';
+            };
+            
+            return {
+              id: transaction.id || index,
+              type: transaction.transactionType,
+              message: `${transaction.memberName || 'সদস্য'} ${(transaction.amount || 0).toLocaleString()} টাকা ${transactionInfo.action}`,
+              time: getTimeAgo(transaction),
+              icon: transactionInfo.icon,
+              color: transactionInfo.color,
+              originalTransaction: transaction,
+            };
+          });
           
-          // Otherwise, extract month from timestamp
-          if (transaction.createdAt) {
-            const monthNames = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-            const date = new Date(transaction.createdAt.seconds * 1000);
-            return monthNames[date.getMonth()];
-          }
-          
-          return 'এই মাসে';
-        };
-        
-        return {
-          id: transaction.id || index,
-          type: transaction.transactionType,
-          message: `${transaction.memberName || 'সদস্য'} ${(transaction.amount || 0).toLocaleString()} টাকা ${transactionInfo.action}`,
-          time: getMonthName(transaction),
-          icon: transactionInfo.icon,
-          color: transactionInfo.color,
-          originalTransaction: transaction,
-        };
-      })
-    : [
-        {
-          id: 1,
-          type: 'member_join',
-          message: 'নতুন সদস্য মোহাম্মদ রহিম যোগদান করেছেন',
-          time: '২ ঘন্টা আগে',
-          icon: Users,
-          color: 'text-blue-600',
-          originalTransaction: {
-            id: 'dummy-1',
-            memberName: 'মোহাম্মদ রহিম',
-            transactionType: 'member_join',
-            amount: 0,
-            description: 'নতুন সদস্য যোগদান',
-            createdAt: new Date()
-          }
-        },
-        {
-          id: 2,
-          type: 'deposit',
-          message: 'ফাতেমা খাতুন ৫,০০০ টাকা জমা দিয়েছেন',
-          time: '৪ ঘন্টা আগে',
-          icon: PiggyBank,
-          color: 'text-green-600',
-          originalTransaction: {
-            id: 'dummy-2',
-            memberName: 'ফাতেমা খাতুন',
-            transactionType: 'monthly_deposit',
-            amount: 5000,
-            description: 'মাসিক জমা',
-            createdAt: new Date()
-          }
-        },
+          setRecentActivities(formattedActivities);
+        } else {
+          // Fallback to dummy data if Firebase fails
+          setRecentActivities([
+            {
+              id: 1,
+              type: 'member_join',
+              message: 'নতুন সদস্য মোহাম্মদ রহিম যোগদান করেছেন',
+              time: '২ ঘন্টা আগে',
+              icon: Users,
+              color: 'text-blue-600',
+              originalTransaction: {
+                id: 'dummy-1',
+                memberName: 'মোহাম্মদ রহিম',
+                transactionType: 'member_join',
+                amount: 0,
+                description: 'নতুন সদস্য যোগদান',
+                createdAt: new Date()
+              }
+            },
+            {
+              id: 2,
+              type: 'deposit',
+              message: 'ফাতেমা খাতুন ৫,০০০ টাকা জমা দিয়েছেন',
+              time: '৪ ঘন্টা আগে',
+              icon: PiggyBank,
+              color: 'text-green-600',
+              originalTransaction: {
+                id: 'dummy-2',
+                memberName: 'ফাতেমা খাতুন',
+                transactionType: 'monthly_deposit',
+                amount: 5000,
+                description: 'মাসিক জমা',
+                createdAt: new Date()
+              }
+            },
+            {
+              id: 4,
+              type: 'notice',
+              message: 'মাসিক সভার নোটিশ প্রকাশিত হয়েছে',
+              time: '২ দিন আগে',
+              icon: Bell,
+              color: 'text-orange-600',
+              originalTransaction: {
+                id: 'dummy-4',
+                memberName: 'সমিতি',
+                transactionType: 'other',
+                amount: 0,
+                description: 'মাসিক সভার নোটিশ',
+                createdAt: new Date()
+              }
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching recent activities:', error);
+        setRecentActivities([]);
+      } finally {
+        setActivitiesLoading(false);
+      }
+    };
 
-        {
-          id: 4,
-          type: 'notice',
-          message: 'মাসিক সভার নোটিশ প্রকাশিত হয়েছে',
-          time: '২ দিন আগে',
-          icon: Bell,
-          color: 'text-orange-600',
-          originalTransaction: {
-            id: 'dummy-4',
-            memberName: 'সমিতি',
-            transactionType: 'other',
-            amount: 0,
-            description: 'মাসিক সভার নোটিশ',
-            createdAt: new Date()
-          }
-        },
-      ];
-
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: 'মাসিক সাধারণ সভা',
-      date: '১৫ জুন, ২০২৪',
-      time: 'সকাল ১০:০০',
-      location: 'কমিউনিটি হল',
-    },
-    {
-      id: 2,
-      title: 'নতুন বিনিয়োগ পরিকল্পনা আলোচনা',
-      date: '৫ জুলাই, ২০২৪',
-      time: 'সকাল ১১:০০',
-      location: 'কমিউনিটি হল',
-    },
-  ];
+    fetchRecentActivities();
+  }, []);
 
   // Helper function to create loading skeleton
   const LoadingSkeleton = ({ className = "", height = "h-4" }) => (
@@ -444,13 +459,6 @@ const AdminDashboard = () => {
                 <Bell className="h-5 w-5" />
                 <span className="md-label-medium">কার্যক্রম</span>
               </button>
-              <button 
-                className={`md-tab ${activeTab === 'events' ? 'active' : ''}`}
-                onClick={() => setActiveTab('events')}
-              >
-                <Calendar className="h-5 w-5" />
-                <span className="md-label-medium">ইভেন্ট</span>
-              </button>
             </div>
           </div>
 
@@ -499,93 +507,77 @@ const AdminDashboard = () => {
 
             {activeTab === 'activities' && (
               <div className="md-activities-content">
-                <div className="md-card">
+                <div className="md-card md-activities-card">
                   <div className="md-card-header">
-                    <h3 className="md-title-medium">সাম্প্রতিক কার্যক্রম</h3>
+                    <div className="md-card-header-content">
+                      <h3 className="md-title-medium">সাম্প্রতিক কার্যক্রম</h3>
+                      <p className="md-body-small text-gray-600">সর্বশেষ লেনদেন এবং কার্যক্রম</p>
+                    </div>
                     <button 
-                      className="md-text-button"
+                      className="md-text-button md-button-primary"
                       onClick={() => navigate('/transactions')}
                     >
                       <span className="md-label-large">সব দেখুন</span>
+                      <ArrowUpRight className="h-4 w-4 ml-1" />
                     </button>
                   </div>
-                  <div className="md-list">
-                    {recentActivities.map((activity, index) => (
-                      <div 
-                        key={activity.id} 
-                        className="md-list-item" 
-                        style={{ animationDelay: `${index * 100}ms`, cursor: 'pointer' }}
-                        onClick={(e) => handleTransactionClick(activity.originalTransaction, e)}
-                      >
-                        <div className="md-list-item-leading">
-                          <div className={`md-list-icon ${activity.color}`}>
-                            <activity.icon className="h-5 w-5" />
-                          </div>
-                        </div>
-                        <div className="md-list-item-content">
-                          <div className="md-list-item-headline">{activity.message}</div>
-                          <div className="md-list-item-supporting-text">
-                            <span className="md-badge md-badge-month" style={{
-                              backgroundColor: '#e3f2fd',
-                              color: '#1976d2',
-                              padding: '4px 8px',
-                              borderRadius: '12px',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              display: 'inline-block'
-                            }}>
-                              {activity.time}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="md-list-item-trailing">
-                          <button className="md-icon-button-small">
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
-                        </div>
+                  
+                  {activitiesLoading ? (
+                    <div className="md-activities-loading">
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                        <span className="ml-2 text-gray-600">কার্যক্রম লোড হচ্ছে...</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'events' && (
-              <div className="md-events-content">
-                <div className="md-card">
-                  <div className="md-card-header">
-                    <h3 className="md-title-medium">আসন্ন কার্যক্রম</h3>
-                    <button 
-                      className="md-text-button"
-                      onClick={() => navigate('/transactions')}
-                    >
-                      <span className="md-label-large">সব দেখুন</span>
-                    </button>
-                  </div>
-                  <div className="md-events-list">
-                    {upcomingEvents.map((event, index) => (
-                      <div key={event.id} className="md-event-card" style={{ animationDelay: `${index * 100}ms` }}>
-                        <div className="md-event-content">
-                          <h4 className="md-title-small">{event.title}</h4>
-                          <div className="md-event-details">
-                            <div className="md-event-detail">
-                              <Calendar className="h-4 w-4" />
-                              <span className="md-body-small">{event.date}</span>
-                            </div>
-                            <div className="md-event-detail">
-                              <span className="md-body-small">{event.time}</span>
-                            </div>
-                            <div className="md-event-detail">
-                              <span className="md-body-small">{event.location}</span>
+                    </div>
+                  ) : recentActivities.length === 0 ? (
+                    <div className="md-activities-empty">
+                      <div className="flex flex-col items-center justify-center py-12">
+                        <Bell className="h-12 w-12 text-gray-400 mb-4" />
+                        <h4 className="md-title-small text-gray-600 mb-2">কোন কার্যক্রম নেই</h4>
+                        <p className="md-body-small text-gray-500">এখনও কোন লেনদেন বা কার্যক্রম হয়নি</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="md-list md-activities-list">
+                      {recentActivities.map((activity, index) => (
+                        <div 
+                          key={activity.id} 
+                          className="md-list-item md-activity-item" 
+                          style={{ 
+                            animationDelay: `${index * 100}ms`,
+                            cursor: 'pointer'
+                          }}
+                          onClick={(e) => handleTransactionClick(activity.originalTransaction, e)}
+                        >
+                          <div className="md-list-item-leading">
+                            <div className={`md-list-icon md-activity-icon ${activity.color}`}>
+                              <activity.icon className="h-5 w-5" />
                             </div>
                           </div>
+                          <div className="md-list-item-content">
+                            <div className="md-list-item-headline md-activity-message">
+                              {activity.message}
+                            </div>
+                            <div className="md-list-item-supporting-text">
+                              <span className="md-badge md-badge-time">
+                                {activity.time}
+                              </span>
+                              {activity.originalTransaction?.amount > 0 && (
+                                <span className="md-badge md-badge-amount">
+                                  ৳{activity.originalTransaction.amount.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="md-list-item-trailing">
+                            <button className="md-icon-button-small md-activity-menu">
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
-                        <button className="md-icon-button">
-                          <ArrowUpRight className="h-5 w-5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
