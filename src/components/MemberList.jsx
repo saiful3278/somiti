@@ -555,8 +555,8 @@ const MemberList = () => {
                 </div>
               </div>
 
-              {/* Role Selection - Only visible to Admin */}
-              {user?.role === 'admin' && (
+              {/* Role Selection - Visible to Admin and Cashier */}
+              {(user?.role === 'admin' || user?.role === 'cashier') && (
                 <div className="form-section">
                   <h3 className="form-section-title">
                     <Crown size={18} />
