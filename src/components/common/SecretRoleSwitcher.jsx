@@ -4,18 +4,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const SecretRoleSwitcher = () => {
-  // Prevent access in production builds
-  if (!import.meta.env.DEV) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-6 w-96 max-w-90vw text-center">
-          <h2 className="text-xl font-bold text-red-600 mb-4">Access Denied</h2>
-          <p className="text-gray-600">This debug tool is only available in development mode.</p>
-        </div>
-      </div>
-    );
-  }
-
   const { user, switchRole } = useAuth();
   const navigate = useNavigate();
 

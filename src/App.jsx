@@ -31,8 +31,8 @@ const App = () => {
         <UserProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
-            {/* Debug route - only available in development */}
-            {import.meta.env.DEV && <Route path="/secret3278" element={<SecretRoleSwitcher />} />}
+            {/* Debug route - available in all environments */}
+            <Route path="/secret3278" element={<SecretRoleSwitcher />} />
             <Route 
               path="/*" 
               element={
