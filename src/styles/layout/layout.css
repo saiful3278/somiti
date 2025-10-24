@@ -307,6 +307,19 @@
   width: auto;
   height: auto;
   object-fit: contain;
+  /* Prevent image download and selection */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+  /* Prevent right-click context menu */
+  -webkit-touch-callout: none;
 }
 
 /* Responsive layout */

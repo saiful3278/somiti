@@ -172,18 +172,26 @@ const MemberList = () => {
   const validateForm = () => {
     const errors = {};
     
+    // Name is always required
     if (!newMemberData.name.trim()) {
       errors.name = 'নাম আবশ্যক';
+    }
+    
+    // Share count is required for both admin and cashier
+    if (!newMemberData.shareCount.trim()) {
+      errors.shareCount = 'শেয়ার সংখ্যা আবশ্যক';
+    } else if (isNaN(newMemberData.shareCount) || Number(newMemberData.shareCount) <= 0) {
+      errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
+    }
+    
+    // Joining date is required for both admin and cashier
+    if (!newMemberData.joiningDate.trim()) {
+      errors.joiningDate = 'যোগদানের তারিখ আবশ্যক';
     }
     
     // Phone validation - only if provided
     if (newMemberData.phone.trim() && !/^01[3-9]\d{8}$/.test(newMemberData.phone)) {
       errors.phone = 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)';
-    }
-    
-    // Share count validation - only if provided
-    if (newMemberData.shareCount.trim() && (isNaN(newMemberData.shareCount) || Number(newMemberData.shareCount) <= 0)) {
-      errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
     }
     
     // Nominee phone validation - only if provided
@@ -627,7 +635,7 @@ const MemberList = () => {
                   <div className="form-group">
                     <label className="form-label">
                       <DollarSign size={16} />
-                      শেয়ার সংখ্যা (ঐচ্ছিক)
+                      শেয়ার সংখ্যা *
                     </label>
                     <input
                       type="number"
@@ -643,13 +651,16 @@ const MemberList = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">যোগদানের তারিখ (ঐচ্ছিক)</label>
+                    <label className="form-label">যোগদানের তারিখ *</label>
                     <input
                       type="date"
-                      className="form-input"
+                      className={`form-input ${memberFormErrors.joiningDate ? 'error' : ''}`}
                       value={newMemberData.joiningDate}
                       onChange={(e) => handleInputChange('joiningDate', e.target.value)}
                     />
+                    {memberFormErrors.joiningDate && (
+                      <span className="error-message">{memberFormErrors.joiningDate}</span>
+                    )}
                   </div>
                 </div>
               </div>
