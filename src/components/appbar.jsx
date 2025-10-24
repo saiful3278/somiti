@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import Badge from '@mui/material/Badge';
 import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
-import MenuIcon from '@mui/icons-material/Menu';
+
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
@@ -18,10 +18,6 @@ import { useAuth } from '../contexts/AuthContext';
 import useSidebarLogic from '../hooks/useSidebarLogic';
 
 export default function PrimarySearchAppBar({ 
-  sidebarVisible, 
-  setSidebarVisible, 
-  mobileSidebarOpen, 
-  setMobileSidebarOpen, 
   isMobile 
 }) {
   const { user, logout } = useAuth();
@@ -51,13 +47,7 @@ export default function PrimarySearchAppBar({
     handleMobileMenuClose();
   };
 
-  const handleSidebarToggle = () => {
-    if (isMobile) {
-      setMobileSidebarOpen(true);
-    } else {
-      setSidebarVisible(!sidebarVisible);
-    }
-  };
+
 
   const getCurrentPageTitle = () => {
     const currentItem = navigationItems.find(item => item.href === location.pathname);
@@ -196,28 +186,28 @@ export default function PrimarySearchAppBar({
           px: { xs: 2, md: 3 },
           gap: 1
         }}>
-          {/* Navigation Button */}
+          {/* Logout Button */}
           <IconButton
             size={isMobile ? "medium" : "large"}
             edge="start"
             color="inherit"
-            aria-label="মেনু"
-            onClick={handleSidebarToggle}
+            aria-label="লগ আউট"
+            onClick={handleLogout}
             sx={{ 
               mr: 1,
               p: isMobile ? 1 : 1.5,
               borderRadius: '12px',
               '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                backgroundColor: 'rgba(220, 38, 38, 0.04)',
               },
               '&:active': {
-                backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                backgroundColor: 'rgba(220, 38, 38, 0.08)',
                 transform: 'scale(0.95)',
               },
               transition: 'all 0.15s ease',
             }}
           >
-            <MenuIcon sx={{ fontSize: isMobile ? 20 : 24 }} />
+            <LogOut size={isMobile ? 20 : 24} style={{ color: '#dc2626' }} />
           </IconButton>
 
           {/* Page Title */}
