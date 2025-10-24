@@ -600,16 +600,7 @@ input[placeholder*="Search"]::placeholder {
   position: relative;
 }
 
-.treasury-card-header::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 60px;
-  height: 2px;
-  background: linear-gradient(90deg, #3b82f6, #10b981);
-  border-radius: 1px;
-}
+
 
 .treasury-card-title {
   display: flex;
