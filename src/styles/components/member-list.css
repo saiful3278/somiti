@@ -1141,6 +1141,39 @@
   text-align: right;
 }
 
+/* Copy functionality styles */
+.member-detail-value-with-copy {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+  min-width: 28px;
+  height: 28px;
+}
+
+.copy-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
+}
+
+.copy-btn:active {
+  transform: scale(0.95);
+}
+
 .member-detail-progress {
   margin-top: 16px;
   padding: 16px;

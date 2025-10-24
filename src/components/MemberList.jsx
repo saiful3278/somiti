@@ -51,6 +51,9 @@ const MemberList = () => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [showDetailCard, setShowDetailCard] = useState(false);
 
+  // Copy functionality states
+  const [copiedField, setCopiedField] = useState(null);
+
   // Handle member card click
   const handleMemberClick = (member) => {
     setSelectedMember(member);
@@ -61,6 +64,30 @@ const MemberList = () => {
   const closeDetailCard = () => {
     setShowDetailCard(false);
     setSelectedMember(null);
+  };
+
+  // Copy to clipboard function
+  const copyToClipboard = async (text, fieldType) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldType);
+      setTimeout(() => setCopiedField(null), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      // Fallback for older browsers or when clipboard API fails
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setCopiedField(fieldType);
+        setTimeout(() => setCopiedField(null), 2000);
+      } catch (fallbackErr) {
+        console.error('Fallback copy also failed:', fallbackErr);
+      }
+    }
   };
 
   // Fetch members from Firebase
@@ -773,11 +800,37 @@ const MemberList = () => {
                   <div className="member-detail-grid">
                     <div className="member-detail-item">
                       <span className="member-detail-label">ইমেইল:</span>
-                      <span className="member-detail-value code">{selectedMember.email}</span>
+                      <div className="member-detail-value-with-copy">
+                        <span className="member-detail-value code">{selectedMember.email}</span>
+                        <button
+                          className="copy-btn"
+                          onClick={() => copyToClipboard(selectedMember.email, 'email')}
+                          title="ইমেইল কপি করুন"
+                        >
+                          {copiedField === 'email' ? (
+                            <Check className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                     <div className="member-detail-item">
                       <span className="member-detail-label">পাসওয়ার্ড:</span>
-                      <span className="member-detail-value code">{selectedMember.password}</span>
+                      <div className="member-detail-value-with-copy">
+                        <span className="member-detail-value code">{selectedMember.password}</span>
+                        <button
+                          className="copy-btn"
+                          onClick={() => copyToClipboard(selectedMember.password, 'password')}
+                          title="পাসওয়ার্ড কপি করুন"
+                        >
+                          {copiedField === 'password' ? (
+                            <Check className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

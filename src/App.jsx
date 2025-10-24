@@ -19,6 +19,7 @@ import AddTransactionPage from './pages/AddTransactionPage';
 import CashierSettings from './components/CashierSettings';
 import MemberDashboard from './components/MemberDashboard';
 import ShareTracking from './components/ShareTracking';
+import FinancialSummary from './components/FinancialSummary';
 import NoticeBoard from './components/NoticeBoard';
 import ProfileSettings from './components/ProfileSettings';
 import MemberSettings from './components/MemberSettings';
@@ -74,7 +75,7 @@ const MainApp = () => {
 
         {/* Member Routes */}
         <Route path="/member" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberDashboard /></ProtectedRoute>} />
-        <Route path="/member/share-tracking" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><ShareTracking /></ProtectedRoute>} />
+        <Route path="/member/financial-summary" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><FinancialSummary /></ProtectedRoute>} />
         <Route path="/member/notice-board" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><NoticeBoard /></ProtectedRoute>} />
         <Route path="/member/profile" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><ProfileSettings /></ProtectedRoute>} />
         <Route path="/member/settings" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberSettings /></ProtectedRoute>} />
