@@ -31,6 +31,7 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
       admin: [
         { name: 'কোষাগার', href: '/admin/treasury', icon: TrendingUp },
         { name: 'সদস্য', href: '/admin/members', icon: Users },
+        { name: 'নোটিশ', href: '/admin/notice-board', icon: Bell },
         { name: 'সেটিংস', href: '/admin/settings', icon: Settings }
       ],
       cashier: [

@@ -1,38 +1,36 @@
 import React from 'react';
-import { X } from 'lucide-react';
 
 const Modal = ({ 
   isOpen, 
   onClose, 
   title, 
   children, 
-  size = "md" 
+  size = "default" 
 }) => {
   if (!isOpen) return null;
 
-  const sizeClasses = {
-    sm: "max-w-md",
-    md: "max-w-2xl", 
-    lg: "max-w-4xl",
-    xl: "max-w-6xl"
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
   };
 
+  const modalSizeClass = size === 'large' ? 'modal__content--large' : '';
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div 
-        className={`modal-content ${sizeClasses[size]}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-          <button
+    <div className="modal-overlay" onClick={handleOverlayClick}>
+      <div className={`modal ${modalSizeClass}`}>
+        <div className="modal__header">
+          <h2 className="modal__title">{title}</h2>
+          <button 
+            className="modal__close" 
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            aria-label="Close modal"
           >
-            <X className="h-5 w-5 text-gray-500" />
+            ✕
           </button>
         </div>
-        <div className="p-6">
+        <div className="modal__content">
           {children}
         </div>
       </div>

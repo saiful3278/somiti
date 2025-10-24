@@ -16,6 +16,7 @@ import {
 import { useUser } from '../contexts/UserContext';
 import { TransactionService } from '../firebase/transactionService';
 import { MemberService } from '../firebase/memberService';
+import LoadingAnimation from './common/LoadingAnimation';
 import '../styles/components/FinancialSummary.css';
 
 const FinancialSummary = () => {
@@ -127,9 +128,7 @@ const FinancialSummary = () => {
       <div className="financial-summary">
         <div className="financial-summary__container">
           <div className="financial-summary__loading">
-            <div className="loading-spinner">
-              <div className="loading-spinner__ring"></div>
-            </div>
+            <LoadingAnimation />
           </div>
         </div>
       </div>

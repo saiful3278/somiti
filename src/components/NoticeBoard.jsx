@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Eye,
@@ -19,6 +19,9 @@ import {
 } from 'lucide-react';
 import SearchInput from './common/SearchInput';
 import Modal from './common/Modal';
+import LoadingAnimation from './common/LoadingAnimation';
+import { NoticeService } from '../firebase/noticeService';
+import '../styles/components/notice.css';
 
 const NoticeBoard = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,81 +30,154 @@ const NoticeBoard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedNotice, setSelectedNotice] = useState(null);
+  const [notices, setNotices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    pinned: 0,
+    expiring: 0
+  });
 
-  // Dummy notices data
-  const notices = [
-    {
-      id: 1,
-      title: 'মাসিক সাধারণ সভা - ডিসেম্বর ২০২৪',
-      content: 'আগামী ১৫ ডিসেম্বর ২০২৪ তারিখে সন্ধ্যা ৬টায় সমিতির মাসিক সাধারণ সভা অনুষ্ঠিত হবে। সকল সদস্যদের উপস্থিত থাকার জন্য অনুরোধ করা হচ্ছে।',
-      category: 'meeting',
-      priority: 'high',
-      author: 'মোহাম্মদ রহিম উদ্দিন',
-      authorRole: 'সভাপতি',
-      publishDate: '2024-12-01',
-      expiryDate: '2024-12-15',
-      status: 'active',
-      isPinned: true,
-      views: 45,
-      attachments: ['সভার_এজেন্ডা.pdf'],
-      tags: ['সভা', 'মাসিক', 'উপস্থিতি']
-    },
-    {
-      id: 2,
-      title: 'ঈদ বোনাস বিতরণ সংক্রান্ত',
-      content: 'আসন্ন ঈদুল ফিতর উপলক্ষে সমিতির সকল সদস্যদের মধ্যে বোনাস বিতরণ করা হবে। বিস্তারিত জানতে অফিসে যোগাযোগ করুন।',
-      category: 'announcement',
-      priority: 'medium',
-      author: 'ফাতেমা খাতুন',
-      authorRole: 'সাধারণ সম্পাদক',
-      publishDate: '2024-11-28',
-      expiryDate: '2024-12-20',
-      status: 'active',
-      isPinned: false,
-      views: 32,
-      attachments: [],
-      tags: ['বোনাস', 'ঈদ', 'বিতরণ']
-    },
+  // New notice form state
+  const [newNotice, setNewNotice] = useState({
+    title: '',
+    content: '',
+    category: 'announcement',
+    priority: 'medium',
+    expiryDate: '',
+    tags: '',
+    isPinned: false,
+    attachments: []
+  });
 
-    {
-      id: 4,
-      title: 'অফিস বন্ধের তারিখ',
-      content: 'আগামী ২৫ ডিসেম্বর থেকে ২ জানুয়ারি পর্যন্ত সমিতির অফিস বন্ধ থাকবে। জরুরি প্রয়োজনে মোবাইলে যোগাযোগ করুন।',
-      category: 'information',
-      priority: 'low',
-      author: 'নাসির উদ্দিন আহমেদ',
-      authorRole: 'সহকারী সম্পাদক',
-      publishDate: '2024-11-20',
-      expiryDate: '2025-01-03',
-      status: 'active',
-      isPinned: false,
-      views: 28,
-      attachments: [],
-      tags: ['অফিস', 'বন্ধ', 'ছুটি']
-    },
-    {
-      id: 5,
-      title: 'মাসিক জমার হার বৃদ্ধি',
-      content: 'আগামী জানুয়ারি ২০২৫ থেকে মাসিক জমার হার ১০০০ টাকা থেকে বৃদ্ধি করে ১২০০ টাকা করা হবে।',
-      category: 'policy',
-      priority: 'high',
-      author: 'মোহাম্মদ রহিম উদ্দিন',
-      authorRole: 'সভাপতি',
-      publishDate: '2024-11-15',
-      expiryDate: '2025-01-31',
-      status: 'draft',
-      isPinned: false,
-      views: 15,
-      attachments: ['নীতিমালা_সংশোধনী.pdf'],
-      tags: ['জমা', 'হার', 'বৃদ্ধি']
+  // Load notices on component mount
+  useEffect(() => {
+    loadNotices();
+    loadStats();
+  }, []);
+
+  // Load all notices from Firestore
+  const loadNotices = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await NoticeService.getAllNotices();
+      if (result.success) {
+        setNotices(result.data);
+      } else {
+        setError(result.error);
+        console.error('Failed to load notices:', result.error);
+      }
+    } catch (err) {
+      setError('নোটিশ লোড করতে সমস্যা হয়েছে');
+      console.error('Error loading notices:', err);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  // Load statistics
+  const loadStats = async () => {
+    try {
+      const result = await NoticeService.getNoticesStats();
+      if (result.success) {
+        setStats(result.data);
+      }
+    } catch (err) {
+      console.error('Error loading stats:', err);
+    }
+  };
+
+  // Handle creating new notice
+  const handleCreateNotice = async () => {
+    try {
+      const noticeData = {
+        ...newNotice,
+        tags: newNotice.tags ? newNotice.tags.split(',').map(tag => tag.trim()) : [],
+        author: 'বর্তমান ব্যবহারকারী', // This should come from auth context
+        authorRole: 'সদস্য', // This should come from user profile
+        attachments: newNotice.attachments || []
+      };
+
+      const result = await NoticeService.addNotice(noticeData);
+      if (result.success) {
+        setShowCreateModal(false);
+        setNewNotice({
+          title: '',
+          content: '',
+          category: 'announcement',
+          priority: 'medium',
+          expiryDate: '',
+          tags: '',
+          isPinned: false,
+          attachments: []
+        });
+        // Reload notices and stats
+        await loadNotices();
+        await loadStats();
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('নোটিশ তৈরি করতে সমস্যা হয়েছে');
+      console.error('Error creating notice:', err);
+    }
+  };
+
+  // Handle notice view increment
+  const handleNoticeView = async (notice) => {
+    try {
+      await NoticeService.incrementViews(notice.id);
+      setSelectedNotice({...notice, views: (notice.views || 0) + 1});
+      setShowDetailsModal(true);
+    } catch (err) {
+      console.error('Error incrementing views:', err);
+      setSelectedNotice(notice);
+      setShowDetailsModal(true);
+    }
+  };
+
+  // Handle delete notice
+  const handleDeleteNotice = async (noticeId) => {
+    if (window.confirm('আপনি কি এই নোটিশটি মুছে ফেলতে চান?')) {
+      try {
+        const result = await NoticeService.deleteNotice(noticeId);
+        if (result.success) {
+          await loadNotices();
+          await loadStats();
+        } else {
+          setError(result.error);
+        }
+      } catch (err) {
+        setError('নোটিশ মুছতে সমস্যা হয়েছে');
+        console.error('Error deleting notice:', err);
+      }
+    }
+  };
+
+  // Handle toggle pin
+  const handleTogglePin = async (notice) => {
+    try {
+      const result = await NoticeService.togglePin(notice.id, notice.isPinned);
+      if (result.success) {
+        await loadNotices();
+        await loadStats();
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('পিন স্ট্যাটাস পরিবর্তন করতে সমস্যা হয়েছে');
+      console.error('Error toggling pin:', err);
+    }
+  };
 
   // Categories
   const categories = [
-    { value: 'all', label: 'সকল ক্যাটেগরি', icon: FileText },
-    { value: 'meeting', label: 'সভা', icon: Users },
+    { value: 'all', label: 'সকল বিভাগ' },
     { value: 'announcement', label: 'ঘোষণা', icon: Bell },
+    { value: 'meeting', label: 'সভা', icon: Users },
     { value: 'decision', label: 'সিদ্ধান্ত', icon: CheckCircle },
     { value: 'information', label: 'তথ্য', icon: AlertCircle },
     { value: 'policy', label: 'নীতিমালা', icon: FileText }
@@ -130,34 +206,8 @@ const NoticeBoard = () => {
   const sortedNotices = filteredNotices.sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
-    return new Date(b.publishDate) - new Date(a.publishDate);
+    return new Date(b.publishDate || b.createdAt) - new Date(a.publishDate || a.createdAt);
   });
-
-  const [newNotice, setNewNotice] = useState({
-    title: '',
-    content: '',
-    category: 'announcement',
-    priority: 'medium',
-    expiryDate: '',
-    isPinned: false,
-    tags: '',
-    attachments: []
-  });
-
-  const handleCreateNotice = () => {
-    console.log('Creating notice:', newNotice);
-    setShowCreateModal(false);
-    setNewNotice({
-      title: '',
-      content: '',
-      category: 'announcement',
-      priority: 'medium',
-      expiryDate: '',
-      isPinned: false,
-      tags: '',
-      attachments: []
-    });
-  };
 
   const getPriorityColor = (priority) => {
     switch(priority) {
@@ -178,17 +228,22 @@ const NoticeBoard = () => {
   };
 
   const getCategoryIcon = (category) => {
-    const categoryData = categories.find(cat => cat.value === category);
-    return categoryData ? categoryData.icon : FileText;
+    const categoryObj = categories.find(cat => cat.value === category);
+    return categoryObj ? categoryObj.icon : Bell;
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'তারিখ নেই';
     const date = new Date(dateString);
-    return date.toLocaleDateString('bn-BD', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return date.toLocaleDateString('bn-BD');
+  };
+
+  // Handle form input changes
+  const handleInputChange = (field, value) => {
+    setNewNotice(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const isExpiringSoon = (expiryDate) => {
@@ -199,88 +254,107 @@ const NoticeBoard = () => {
     return diffDays <= 3 && diffDays > 0;
   };
 
+  if (loading) {
+    return (
+      <div className="notice-board">
+        <div className="notice-loading">
+          <LoadingAnimation />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="notice-board">
+        <div className="notice-error">
+          <AlertCircle size={48} />
+          <h3>ত্রুটি ঘটেছে</h3>
+          <p>{error}</p>
+          <button onClick={loadNotices} className="retry-button">
+            পুনরায় চেষ্টা করুন
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">নোটিশ বোর্ড</h1>
-          <p className="text-gray-600 mt-1">সমিতির সকল নোটিশ ও ঘোষণা</p>
+    <div className="notice-board">
+      <div className="notice-board__container">
+        
+        {/* Page Header */}
+        <div className="notice-board__header">
+          <div>
+            <h1 className="notice-board__title">নোটিশ বোর্ড</h1>
+            <p className="notice-board__subtitle">সমিতির সকল নোটিশ ও ঘোষণা</p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="notice-board__create-btn"
+          >
+            <Plus size={16} />
+            নতুন নোটিশ
+          </button>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          নতুন নোটিশ
-        </button>
-      </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-card p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-blue-100">
-              <FileText className="h-6 w-6 text-blue-600" />
+        {/* Summary Cards */}
+        <div className="notice-board__summary">
+          <div className="summary-card">
+            <div className="summary-card__icon summary-card__icon--total">
+              <FileText size={20} />
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">মোট নোটিশ</p>
-              <p className="text-2xl font-bold text-gray-900">{notices.length}</p>
+            <div className="summary-card__content">
+              <h3>{stats.total}</h3>
+              <p>মোট নোটিশ</p>
+            </div>
+          </div>
+          
+          <div className="summary-card">
+            <div className="summary-card__icon summary-card__icon--active">
+              <CheckCircle size={20} />
+            </div>
+            <div className="summary-card__content">
+              <h3>{stats.active}</h3>
+              <p>সক্রিয় নোটিশ</p>
+            </div>
+          </div>
+          
+          <div className="summary-card">
+            <div className="summary-card__icon summary-card__icon--pinned">
+              <Pin size={20} />
+            </div>
+            <div className="summary-card__content">
+              <h3>{stats.pinned}</h3>
+              <p>পিন করা নোটিশ</p>
+            </div>
+          </div>
+          
+          <div className="summary-card">
+            <div className="summary-card__icon summary-card__icon--expiring">
+              <Clock size={20} />
+            </div>
+            <div className="summary-card__content">
+              <h3>{stats.expiring}</h3>
+              <p>শীঘ্রই মেয়াদ শেষ</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-card p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-green-100">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">সক্রিয় নোটিশ</p>
-              <p className="text-2xl font-bold text-gray-900">{notices.filter(n => n.status === 'active').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-card p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-yellow-100">
-              <Pin className="h-6 w-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">পিন করা</p>
-              <p className="text-2xl font-bold text-gray-900">{notices.filter(n => n.isPinned).length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-card p-6">
-          <div className="flex items-center">
-            <div className="p-3 rounded-full bg-red-100">
-              <Clock className="h-6 w-6 text-red-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">শীঘ্রই মেয়াদ শেষ</p>
-              <p className="text-2xl font-bold text-gray-900">{notices.filter(n => isExpiringSoon(n.expiryDate)).length}</p>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-card p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-          <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-            {/* Search */}
+        {/* Filters */}
+        <div className="notice-board__filters">
+          <div className="filters-row">
             <SearchInput
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={setSearchTerm}
               placeholder="নোটিশ খুঁজুন..."
-              className="w-64"
+              className="search-input"
             />
-
-            {/* Category Filter */}
+            
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="filter-select"
             >
               {categories.map(category => (
                 <option key={category.value} value={category.value}>
@@ -288,12 +362,11 @@ const NoticeBoard = () => {
                 </option>
               ))}
             </select>
-
-            {/* Priority Filter */}
+            
             <select
               value={selectedPriority}
               onChange={(e) => setSelectedPriority(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="filter-select"
             >
               {priorities.map(priority => (
                 <option key={priority.value} value={priority.value}>
@@ -302,340 +375,319 @@ const NoticeBoard = () => {
               ))}
             </select>
           </div>
-
-          <div className="text-sm text-gray-600">
-            {filteredNotices.length} টি নোটিশ পাওয়া গেছে
-          </div>
         </div>
-      </div>
 
-      {/* Notices List */}
-      <div className="space-y-4">
-        {sortedNotices.map((notice) => {
-          const CategoryIcon = getCategoryIcon(notice.category);
-          
-          return (
-            <div key={notice.id} className="bg-white rounded-lg shadow-card p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-3">
+        {/* Notices List */}
+        <div className="notice-board__content">
+          {sortedNotices.length === 0 ? (
+            <div className="notice-board__empty">
+              <FileText size={48} />
+              <h3>কোন নোটিশ পাওয়া যায়নি</h3>
+              <p>আপনার অনুসন্ধানের সাথে মিলে এমন কোন নোটিশ নেই।</p>
+            </div>
+          ) : (
+            <div className="notices-grid">
+              {sortedNotices.map(notice => {
+                const CategoryIcon = getCategoryIcon(notice.category);
+                return (
+                  <div key={notice.id} className="notice-card">
                     {notice.isPinned && (
-                      <Pin className="h-4 w-4 text-yellow-500" />
+                      <div className="notice-card__pin">
+                        <Pin size={14} />
+                      </div>
                     )}
-                    <CategoryIcon className="h-5 w-5 text-gray-500" />
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(notice.priority)}`}>
-                      {priorities.find(p => p.value === notice.priority)?.label}
-                    </span>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(notice.status)}`}>
-                      {notice.status === 'active' && 'সক্রিয়'}
-                      {notice.status === 'draft' && 'খসড়া'}
-                      {notice.status === 'expired' && 'মেয়াদ শেষ'}
-                    </span>
-                    {isExpiringSoon(notice.expiryDate) && (
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
-                        শীঘ্রই মেয়াদ শেষ
-                      </span>
-                    )}
-                  </div>
-                  
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{notice.title}</h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{notice.content}</p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        {notice.author} ({notice.authorRole})
+                    
+                    <div className="notice-card__header">
+                      <div className="notice-card__category">
+                        <CategoryIcon size={16} />
+                        <span>{categories.find(cat => cat.value === notice.category)?.label}</span>
                       </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {formatDate(notice.publishDate)}
+                      
+                      <div className="notice-card__actions">
+                        <button
+                          onClick={() => handleTogglePin(notice)}
+                          className={`action-btn ${notice.isPinned ? 'action-btn--pinned' : ''}`}
+                          title={notice.isPinned ? 'আনপিন করুন' : 'পিন করুন'}
+                        >
+                          <Pin size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleNoticeView(notice)}
+                          className="action-btn"
+                          title="বিস্তারিত দেখুন"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteNotice(notice.id)}
+                          className="action-btn action-btn--danger"
+                          title="মুছে ফেলুন"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </div>
-                      <div className="flex items-center">
-                        <Eye className="h-4 w-4 mr-1" />
-                        {notice.views} বার দেখা হয়েছে
-                      </div>
-                      {notice.attachments.length > 0 && (
-                        <div className="flex items-center">
-                          <Paperclip className="h-4 w-4 mr-1" />
-                          {notice.attachments.length} টি ফাইল
-                        </div>
-                      )}
                     </div>
                     
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => {
-                          setSelectedNotice(notice);
-                          setShowDetailsModal(true);
-                        }}
-                        className="text-primary hover:text-blue-600"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button className="text-secondary hover:text-teal-600">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button className="text-red-500 hover:text-red-700">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    <div className="notice-card__content">
+                      <h3 className="notice-card__title">{notice.title}</h3>
+                      <p className="notice-card__excerpt">
+                        {notice.content.length > 120 
+                          ? notice.content.substring(0, 120) + '...' 
+                          : notice.content}
+                      </p>
+                    </div>
+                    
+                    <div className="notice-card__meta">
+                      <div className="notice-meta">
+                        <span className="notice-meta__author">{notice.author}</span>
+                        <span className="notice-meta__role">({notice.authorRole})</span>
+                      </div>
+                      <div className="notice-meta">
+                        <span className="notice-meta__date">
+                          {formatDate(notice.publishDate || notice.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="notice-card__footer">
+                      <div className="notice-badges">
+                        <span className={`priority-badge priority-badge--${notice.priority}`}>
+                          {priorities.find(p => p.value === notice.priority)?.label}
+                        </span>
+                        <span className={`status-badge status-badge--${notice.status}`}>
+                          {notice.status === 'active' ? 'সক্রিয়' : 
+                           notice.status === 'draft' ? 'খসড়া' : 'মেয়াদ শেষ'}
+                        </span>
+                      </div>
+                      
+                      <div className="notice-stats">
+                        <span className="notice-stats__views">
+                          <Eye size={12} />
+                          {notice.views || 0}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Tags */}
-                  {notice.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {notice.tags.map((tag, index) => (
-                        <span key={index} className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+                );
+              })}
             </div>
-          );
-        })}
+          )}
+        </div>
       </div>
 
       {/* Create Notice Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">নতুন নোটিশ তৈরি করুন</h2>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-            
-            <form onSubmit={(e) => { e.preventDefault(); handleCreateNotice(); }} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">নোটিশের শিরোনাম *</label>
-                <input
-                  type="text"
-                  required
-                  value={newNotice.title}
-                  onChange={(e) => setNewNotice({...newNotice, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="নোটিশের শিরোনাম লিখুন"
-                />
+          <Modal onClose={() => setShowCreateModal(false)}>
+            <div className="modal__content">
+              <div className="modal__header">
+                <h2 className="modal__title">নতুন নোটিশ তৈরি করুন</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="modal__close"
+                >
+                  <X size={20} />
+                </button>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">বিস্তারিত বিবরণ *</label>
-                <textarea
-                  required
-                  rows={6}
-                  value={newNotice.content}
-                  onChange={(e) => setNewNotice({...newNotice, content: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="নোটিশের বিস্তারিত বিবরণ লিখুন"
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ক্যাটেগরি *</label>
-                  <select
-                    required
-                    value={newNotice.category}
-                    onChange={(e) => setNewNotice({...newNotice, category: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    {categories.filter(cat => cat.value !== 'all').map(category => (
-                      <option key={category.value} value={category.value}>
-                        {category.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">অগ্রাধিকার *</label>
-                  <select
-                    required
-                    value={newNotice.priority}
-                    onChange={(e) => setNewNotice({...newNotice, priority: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    {priorities.filter(p => p.value !== 'all').map(priority => (
-                      <option key={priority.value} value={priority.value}>
-                        {priority.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">মেয়াদ শেষের তারিখ</label>
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateNotice(); }} className="modal__form">
+                <div className="form-group">
+                  <label className="form-label">নোটিশের শিরোনাম *</label>
                   <input
-                    type="date"
-                    value={newNotice.expiryDate}
-                    onChange={(e) => setNewNotice({...newNotice, expiryDate: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    type="text"
+                    required
+                    value={newNotice.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    className="form-input"
+                    placeholder="নোটিশের শিরোনাম লিখুন"
                   />
                 </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ট্যাগ</label>
-                <input
-                  type="text"
-                  value={newNotice.tags}
-                  onChange={(e) => setNewNotice({...newNotice, tags: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="কমা দিয়ে আলাদা করুন (যেমন: সভা, মাসিক, উপস্থিতি)"
-                />
-              </div>
-              
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isPinned"
-                  checked={newNotice.isPinned}
-                  onChange={(e) => setNewNotice({...newNotice, isPinned: e.target.checked})}
-                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                />
-                <label htmlFor="isPinned" className="ml-2 block text-sm text-gray-900">
-                  এই নোটিশটি পিন করুন (শীর্ষে রাখুন)
-                </label>
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-                >
-                  বাতিল
-                </button>
-                <button
-                  type="button"
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                >
-                  খসড়া হিসেবে সংরক্ষণ
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600"
-                >
-                  প্রকাশ করুন
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                
+                <div className="form-group">
+                  <label className="form-label">বিস্তারিত বিবরণ *</label>
+                  <textarea
+                    required
+                    value={newNotice.content}
+                    onChange={(e) => handleInputChange('content', e.target.value)}
+                    className="form-textarea"
+                    placeholder="নোটিশের বিস্তারিত বিবরণ লিখুন"
+                    rows="4"
+                  />
+                </div>
+                
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">বিভাগ *</label>
+                    <select
+                      required
+                      value={newNotice.category}
+                      onChange={(e) => handleInputChange('category', e.target.value)}
+                      className="form-select"
+                    >
+                      {categories.filter(cat => cat.value !== 'all').map(category => (
+                        <option key={category.value} value={category.value}>
+                          {category.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">অগ্রাধিকার *</label>
+                    <select
+                      required
+                      value={newNotice.priority}
+                      onChange={(e) => handleInputChange('priority', e.target.value)}
+                      className="form-select"
+                    >
+                      {priorities.filter(p => p.value !== 'all').map(priority => (
+                        <option key={priority.value} value={priority.value}>
+                          {priority.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">মেয়াদ শেষের তারিখ</label>
+                    <input
+                      type="date"
+                      value={newNotice.expiryDate}
+                      onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">ট্যাগসমূহ</label>
+                    <input
+                      type="text"
+                      value={newNotice.tags}
+                      onChange={(e) => handleInputChange('tags', e.target.value)}
+                      className="form-input"
+                      placeholder="কমা দিয়ে আলাদা করুন"
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-group">
+                  <label className="form-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={newNotice.isPinned}
+                      onChange={(e) => handleInputChange('isPinned', e.target.checked)}
+                    />
+                    <span className="checkbox-label">এই নোটিশটি পিন করুন</span>
+                  </label>
+                </div>
+                
+                <div className="modal__actions">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="btn btn--secondary"
+                  >
+                    বাতিল
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn--primary"
+                  >
+                    <Send size={16} />
+                    নোটিশ প্রকাশ করুন
+                  </button>
+                </div>
+              </form>
+            </div>
+          </Modal>
+        )}
 
       {/* Notice Details Modal */}
       {showDetailsModal && selectedNotice && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <h2 className="text-xl font-bold text-gray-900">{selectedNotice.title}</h2>
-                {selectedNotice.isPinned && (
-                  <Pin className="h-5 w-5 text-yellow-500" />
-                )}
-              </div>
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-            
-            <div className="space-y-6">
-              {/* Notice Meta Info */}
-              <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(selectedNotice.priority)}`}>
-                    {priorities.find(p => p.value === selectedNotice.priority)?.label}
-                  </span>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedNotice.status)}`}>
-                    {selectedNotice.status === 'active' && 'সক্রিয়'}
-                    {selectedNotice.status === 'draft' && 'খসড়া'}
-                    {selectedNotice.status === 'expired' && 'মেয়াদ শেষ'}
-                  </span>
-                </div>
-                <div className="text-sm text-gray-600">
-                  লেখক: {selectedNotice.author} ({selectedNotice.authorRole})
-                </div>
-                <div className="text-sm text-gray-600">
-                  প্রকাশিত: {formatDate(selectedNotice.publishDate)}
-                </div>
-                {selectedNotice.expiryDate && (
-                  <div className="text-sm text-gray-600">
-                    মেয়াদ শেষ: {formatDate(selectedNotice.expiryDate)}
-                  </div>
-                )}
-                <div className="text-sm text-gray-600">
-                  {selectedNotice.views} বার দেখা হয়েছে
-                </div>
+          <Modal onClose={() => setShowDetailsModal(false)}>
+            <div className="modal__content modal__content--large">
+              <div className="modal__header">
+                <h2 className="modal__title">{selectedNotice.title}</h2>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="modal__close"
+                >
+                  <X size={20} />
+                </button>
               </div>
               
-              {/* Notice Content */}
-              <div className="prose max-w-none">
-                <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-                  {selectedNotice.content}
-                </div>
-              </div>
-              
-              {/* Attachments */}
-              {selectedNotice.attachments.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">সংযুক্ত ফাইল</h4>
-                  <div className="space-y-2">
-                    {selectedNotice.attachments.map((attachment, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center">
-                          <Paperclip className="h-4 w-4 text-gray-500 mr-2" />
-                          <span className="text-sm font-medium text-gray-900">{attachment}</span>
-                        </div>
-                        <button className="text-primary hover:text-blue-600 text-sm">
-                          ডাউনলোড
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Tags */}
-              {selectedNotice.tags.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">ট্যাগ</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedNotice.tags.map((tag, index) => (
-                      <span key={index} className="inline-flex px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">
-                        #{tag}
+              <div className="notice-details">
+                <div className="notice-details__meta">
+                  <div className="notice-meta-grid">
+                    <div className="meta-item">
+                      <span className="meta-label">লেখক:</span>
+                      <span className="meta-value">{selectedNotice.author} ({selectedNotice.authorRole})</span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-label">প্রকাশের তারিখ:</span>
+                      <span className="meta-value">{formatDate(selectedNotice.publishDate || selectedNotice.createdAt)}</span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-label">বিভাগ:</span>
+                      <span className="meta-value">{categories.find(cat => cat.value === selectedNotice.category)?.label}</span>
+                    </div>
+                    <div className="meta-item">
+                      <span className="meta-label">অগ্রাধিকার:</span>
+                      <span className={`priority-badge priority-badge--${selectedNotice.priority}`}>
+                        {priorities.find(p => p.value === selectedNotice.priority)?.label}
                       </span>
-                    ))}
+                    </div>
+                    {selectedNotice.expiryDate && (
+                      <div className="meta-item">
+                        <span className="meta-label">মেয়াদ শেষ:</span>
+                        <span className="meta-value">{formatDate(selectedNotice.expiryDate)}</span>
+                      </div>
+                    )}
+                    <div className="meta-item">
+                      <span className="meta-label">দেখা হয়েছে:</span>
+                      <span className="meta-value">{selectedNotice.views || 0} বার</span>
+                    </div>
                   </div>
                 </div>
-              )}
+                
+                <div className="notice-details__content">
+                  <h3>বিস্তারিত বিবরণ</h3>
+                  <div className="notice-content">
+                    {selectedNotice.content}
+                  </div>
+                </div>
+                
+                {selectedNotice.tags && selectedNotice.tags.length > 0 && (
+                  <div className="notice-details__tags">
+                    <h4>ট্যাগসমূহ</h4>
+                    <div className="tags-list">
+                      {selectedNotice.tags.map((tag, index) => (
+                        <span key={index} className="tag">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {selectedNotice.attachments && selectedNotice.attachments.length > 0 && (
+                  <div className="notice-details__attachments">
+                    <h4>সংযুক্তি</h4>
+                    <div className="attachments-list">
+                      {selectedNotice.attachments.map((attachment, index) => (
+                        <div key={index} className="attachment-item">
+                          <Paperclip size={16} />
+                          <span>{attachment}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            
-            <div className="flex justify-end space-x-3 pt-6">
-              <button
-                onClick={() => setShowDetailsModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-              >
-                বন্ধ করুন
-              </button>
-              <button className="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-teal-600">
-                সম্পাদনা করুন
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </Modal>
+        )}
     </div>
   );
 };

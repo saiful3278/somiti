@@ -6,7 +6,7 @@ const LoadingAnimation = ({
   style = {},
   centered = true 
 }) => {
-  const containerStyle = {
+  const baseStyle = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -18,8 +18,20 @@ const LoadingAnimation = ({
     right: centered ? 0 : 'auto',
     bottom: centered ? 0 : 'auto',
     zIndex: centered ? 9999 : 'auto',
-    backgroundColor: centered ? 'rgba(255, 255, 255, 0.9)' : 'transparent',
     ...style
+  };
+
+  // Always enforce consistent background when centered
+  const containerStyle = centered ? {
+    ...baseStyle,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backdropFilter: 'blur(3px)',
+    WebkitBackdropFilter: 'blur(3px)'
+  } : {
+    ...baseStyle,
+    backgroundColor: 'transparent',
+    backdropFilter: 'none',
+    WebkitBackdropFilter: 'none'
   };
 
   return (

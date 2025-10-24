@@ -26,6 +26,7 @@ import {
 import { MemberService } from '../firebase/memberService';
 import { TransactionService, FundService } from '../firebase/transactionService';
 import TransactionDetailsCard from './common/TransactionDetailsCard';
+import LoadingAnimation from './common/LoadingAnimation';
 import { useUser } from '../contexts/UserContext';
 
 const MemberDashboard = () => {
@@ -471,6 +472,11 @@ const MemberDashboard = () => {
   const LoadingSkeleton = ({ className = "", height = "h-4" }) => (
     <div className={`animate-pulse bg-gray-200 rounded ${height} ${className}`}></div>
   );
+
+  // Show loading animation if user is still loading or initial data is loading
+  if (userLoading || loading.initial) {
+    return <LoadingAnimation />;
+  }
 
   return (
     <div className="md-dashboard">

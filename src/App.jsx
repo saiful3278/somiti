@@ -57,12 +57,13 @@ const MainApp = () => {
 
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/members" element={<ProtectedRoute allowedRoles={['admin', 'member']}><MemberList /></ProtectedRoute>} />
-        <Route path="/admin/member-management" element={<ProtectedRoute allowedRoles={['admin']}><MemberManagement /></ProtectedRoute>} />
+        <Route path="/admin/members" element={<ProtectedRoute allowedRoles={['admin']}><MemberManagement /></ProtectedRoute>} />
         <Route path="/admin/treasury" element={<ProtectedRoute allowedRoles={['admin']}><Treasury /></ProtectedRoute>} />
-        <Route path="/admin/investment" element={<ProtectedRoute allowedRoles={['admin']}><InvestmentManagement /></ProtectedRoute>} />
-        <Route path="/admin/profit-distribution" element={<ProtectedRoute allowedRoles={['admin']}><ProfitDistribution /></ProtectedRoute>} />
+        <Route path="/admin/notice-board" element={<ProtectedRoute allowedRoles={['admin']}><NoticeBoard /></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin']}><AdminSettings /></ProtectedRoute>} />
+        <Route path="/admin/investments" element={<ProtectedRoute allowedRoles={['admin']}><InvestmentManagement /></ProtectedRoute>} />
+        <Route path="/admin/profit-distribution" element={<ProtectedRoute allowedRoles={['admin']}><ProfitDistribution /></ProtectedRoute>} />
+        <Route path="/admin/share-tracking" element={<ProtectedRoute allowedRoles={['admin']}><ShareTracking /></ProtectedRoute>} />
         <Route path="/add-transaction" element={<ProtectedRoute allowedRoles={['admin', 'cashier']}><AddTransactionPage /></ProtectedRoute>} />
 
         {/* Cashier Routes */}
