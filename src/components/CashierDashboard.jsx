@@ -626,7 +626,7 @@ const CashierDashboard = () => {
     return transactions.map(transaction => ({
       id: transaction.id,
       memberName: transaction.memberName || 'অজানা সদস্য',
-      memberId: transaction.memberId || 'N/A',
+      memberId: transaction.somiti_user_id || 'N/A',
       type: transaction.transactionType || transaction.type || 'other',
       amount: transaction.amount || 0,
       paymentMethod: transaction.paymentMethod || 'cash',

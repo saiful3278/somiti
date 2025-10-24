@@ -38,6 +38,8 @@ const MemberDashboard = () => {
     initial: true
   });
   const [error, setError] = useState(null);
+  const [somitiUserId, setSomitiUserId] = useState('');
+  const [joiningDate, setJoiningDate] = useState('');
 
   const [financialSummary, setFinancialSummary] = useState({
     totalShares: 0,
@@ -67,8 +69,8 @@ const MemberDashboard = () => {
         setLoading(prev => ({ ...prev, initial: true }));
         setError(null);
 
-        // Load transactions and fund data in parallel
-        const [transactionsResult, fundResult] = await Promise.all([
+        // Load transactions, fund data, and calculate somiti_user_id in parallel
+        const [transactionsResult, fundResult, membersResult] = await Promise.all([
           TransactionService.getTransactionsByUserId(currentUser.uid).then(result => {
             if (result.success) {
               setTransactions(result.data || []);
@@ -90,6 +92,53 @@ const MemberDashboard = () => {
           }).catch(error => {
             console.error('তহবিল তথ্য লোড করতে ত্রুটি:', error);
             setLoading(prev => ({ ...prev, fundData: false }));
+            return { success: false, error };
+          }),
+
+          // Calculate somiti_user_id
+          MemberService.getActiveMembers().then(result => {
+            if (result.success && result.data) {
+              const allMembers = result.data;
+              
+              const sortedMembers = allMembers.sort((a, b) => {
+                // Ensure we have valid dates
+                const joiningDateA = a.joiningDate || a.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
+                const joiningDateB = b.joiningDate || b.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
+                
+                const dateA = new Date(joiningDateA);
+                const dateB = new Date(joiningDateB);
+                
+                // First sort by joining date
+                if (dateA.getTime() !== dateB.getTime()) {
+                  return dateA - dateB;
+                }
+                
+                // If joining dates are same, sort by createdAt timestamp
+                const createdA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+                const createdB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+                
+                // If creation times are also same, sort by document ID for consistency
+                if (createdA.getTime() === createdB.getTime()) {
+                  return a.id.localeCompare(b.id);
+                }
+                
+                return createdA - createdB;
+              });
+              
+              const currentUserIndex = sortedMembers.findIndex(member => member.id === currentUser.uid);
+              const calculatedSomitiUserId = currentUserIndex !== -1 ? currentUserIndex + 1 : '';
+              setSomitiUserId(calculatedSomitiUserId);
+               
+               // Also get the actual joining date for the current user
+               const currentUserData = sortedMembers.find(member => member.id === currentUser.uid);
+               if (currentUserData) {
+                 const actualJoiningDate = currentUserData.joiningDate || currentUserData.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || '';
+                 setJoiningDate(actualJoiningDate);
+               }
+            }
+            return result;
+          }).catch(error => {
+            console.error('সদস্য তথ্য লোড করতে ত্রুটি:', error);
             return { success: false, error };
           })
         ]);
@@ -435,8 +484,8 @@ const MemberDashboard = () => {
               </div>
               <div className="md-profile-details">
                 <h1 className="md-headline-medium">{currentUser?.name || 'লোড হচ্ছে...'}</h1>
-                <p className="md-body-medium">সদস্য আইডি: {currentUser?.id || 'N/A'}</p>
-                <p className="md-body-small">যোগদানের তারিখ: {currentUser?.joinDate || 'N/A'}</p>
+                <p className="md-body-medium">সদস্য আইডি: {somitiUserId || 'লোড হচ্ছে...'}</p>
+                <p className="md-body-small">যোগদানের তারিখ: {joiningDate || 'লোড হচ্ছে...'}</p>
               </div>
             </div>
             <div className="md-membership-badge">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -56,7 +56,7 @@ const MainApp = () => {
 
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/members" element={<ProtectedRoute allowedRoles={['admin']}><MemberList /></ProtectedRoute>} />
+        <Route path="/admin/members" element={<ProtectedRoute allowedRoles={['admin', 'member']}><MemberList /></ProtectedRoute>} />
         <Route path="/admin/member-management" element={<ProtectedRoute allowedRoles={['admin']}><MemberManagement /></ProtectedRoute>} />
         <Route path="/admin/treasury" element={<ProtectedRoute allowedRoles={['admin']}><Treasury /></ProtectedRoute>} />
         <Route path="/admin/investment" element={<ProtectedRoute allowedRoles={['admin']}><InvestmentManagement /></ProtectedRoute>} />

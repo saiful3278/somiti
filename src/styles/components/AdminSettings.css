@@ -1,0 +1,403 @@
+/* Admin Settings Component - Lightweight & Clean Styles */
+
+.admin-settings {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 1.5rem;
+}
+
+.admin-settings-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.admin-settings-header {
+  background: #dc2626;
+  color: white;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.admin-settings-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.admin-settings-subtitle {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+/* Tab Navigation */
+.admin-settings-tabs {
+  display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+}
+
+.admin-tab {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-tab:hover {
+  background: #f1f5f9;
+  color: #dc2626;
+}
+
+.admin-tab.active {
+  color: #dc2626;
+  background: white;
+  border-bottom: 2px solid #dc2626;
+}
+
+/* Tab Content */
+.admin-tab-content {
+  padding: 1.5rem;
+}
+
+/* Settings Section */
+.settings-section {
+  background: white;
+}
+
+.settings-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.settings-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  background: #dc2626;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.25rem;
+}
+
+.settings-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.settings-section-subtitle {
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Settings Grid */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.settings-group {
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+}
+
+.settings-group-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-field {
+  margin-bottom: 0.875rem;
+}
+
+.settings-field:last-child {
+  margin-bottom: 0;
+}
+
+.settings-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
+}
+
+.settings-value {
+  display: block;
+  font-size: 0.9375rem;
+  color: #1f2937;
+  background: white;
+  padding: 0.625rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+}
+
+/* Settings Items */
+.settings-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.settings-item:last-child {
+  border-bottom: none;
+}
+
+.settings-item-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.settings-item-info p {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 44px;
+  height: 22px;
+  background: #cbd5e1;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.toggle-switch.active {
+  background: #dc2626;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active::after {
+  transform: translateX(22px);
+}
+
+/* Dropdown */
+.settings-dropdown {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.8125rem;
+  color: #374151;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  min-width: 100px;
+}
+
+.settings-dropdown:hover,
+.settings-dropdown:focus {
+  outline: none;
+  border-color: #dc2626;
+}
+
+/* Input Fields */
+.settings-input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.9375rem;
+  color: #1f2937;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: #dc2626;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+
+/* Buttons */
+.settings-button {
+  padding: 0.625rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-button-primary {
+  background: #dc2626;
+  color: white;
+}
+
+.settings-button-primary:hover {
+  background: #b91c1c;
+}
+
+.settings-button-secondary {
+  background: #f8fafc;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.settings-button-secondary:hover {
+  background: #f1f5f9;
+  border-color: #9ca3af;
+}
+
+/* Save Status */
+.save-status {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.save-status.success {
+  background: #10b981;
+}
+
+.save-status.error {
+  background: #ef4444;
+}
+
+/* Admin Notice */
+.admin-notice {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.admin-notice-icon {
+  color: #dc2626;
+  font-size: 1.125rem;
+}
+
+.admin-notice-text {
+  color: #991b1b;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-settings {
+    padding: 1rem;
+  }
+  
+  .admin-settings-title {
+    font-size: 1.5rem;
+  }
+  
+  .admin-tab-content {
+    padding: 1rem;
+  }
+  
+  .settings-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .settings-group {
+    padding: 1rem;
+  }
+  
+  .save-status {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-settings-header {
+    padding: 1.25rem 1rem;
+  }
+  
+  .admin-settings-title {
+    font-size: 1.375rem;
+  }
+  
+  .admin-tab {
+    padding: 0.75rem 0.75rem;
+    font-size: 0.8125rem;
+    min-width: 110px;
+  }
+  
+  .settings-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .settings-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}

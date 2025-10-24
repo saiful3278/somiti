@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Filter, Calendar, TrendingUp, TrendingDown, Wallet, Phone, Calculator, Banknote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { TransactionService } from '../firebase/transactionService';
+import LoadingAnimation from './common/LoadingAnimation';
 
 const Transactions = () => {
   const navigate = useNavigate();
@@ -149,10 +150,7 @@ const Transactions = () => {
       {/* Transactions List */}
       <div className="bg-white rounded-lg shadow-sm">
         {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">লেনদেন লোড হচ্ছে...</p>
-          </div>
+          <LoadingAnimation />
         ) : filteredTransactions.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-gray-600">কোনো লেনদেন পাওয়া যায়নি</p>

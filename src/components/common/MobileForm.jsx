@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ChevronDown, X, Check } from 'lucide-react';
 import MobileCard from './MobileCard';
+import LoadingAnimation from './LoadingAnimation';
 
 // Mobile-optimized Input Field
 export const MobileInput = ({ 

@@ -20,6 +20,7 @@ import SearchInput from './common/SearchInput';
 import TableHeader from './common/TableHeader';
 import Modal from './common/Modal';
 import SuccessAnimation from './common/SuccessAnimation';
+import LoadingAnimation from './common/LoadingAnimation';
 import { MemberService } from '../firebase';
 
 const MemberManagement = () => {
@@ -272,14 +273,7 @@ const MemberManagement = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-          <span className="text-gray-600">সদস্য তালিকা লোড হচ্ছে...</span>
-        </div>
-      </div>
-    );
+    return <LoadingAnimation />;
   }
 
   return (
@@ -406,7 +400,7 @@ const MemberManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                      <div className="text-sm text-gray-500">আইডি: {member.membershipId}</div>
+                      <div className="text-sm text-gray-500">আইডি: {member.somiti_user_id}</div>
                       <div className="text-sm text-gray-500">যোগদান: {member.joinDate}</div>
                     </div>
                   </td>
@@ -657,7 +651,7 @@ const MemberManagement = () => {
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-600">সদস্য আইডি:</span>
-                      <p className="text-sm text-gray-900">{selectedMember.membershipId}</p>
+                      <p className="text-sm text-gray-900">{selectedMember.somiti_user_id}</p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-600">যোগদানের তারিখ:</span>

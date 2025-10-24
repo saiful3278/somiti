@@ -59,7 +59,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
         },
         { 
           name: 'প্রোফাইল সেটিংস', 
-          href: '/admin-settings', 
+          href: '/admin/settings', 
           icon: Settings, 
           section: 'settings'
         }

@@ -35,7 +35,8 @@ export const UserProvider = ({ children }) => {
         let user = result.data.find(member => 
           member.id === selectedUserId || 
           member.membershipId === selectedUserId ||
-          member.memberId === selectedUserId
+          member.memberId === selectedUserId ||
+          member.somiti_user_id === selectedUserId
         );
         
         if (!user) {
@@ -44,6 +45,7 @@ export const UserProvider = ({ children }) => {
 
         setCurrentUser({
           id: user.id || user.membershipId || 'SM-001',
+          uid: user.id || user.membershipId || 'SM-001', // Add uid field for compatibility
           name: user.name || 'অজানা সদস্য',
           joinDate: user.joinDate || '২০২২-০১-১৫',
           phone: user.phone || 'ফোন নম্বর নেই',

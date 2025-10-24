@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Search, Filter, UserPlus, Eye, EyeOff, X, Phone, Mail, MapPin, Save, Loader2, DollarSign, User, Users, Crown, Info, Copy, Check, AlertTriangle, Shield, Lock, Download } from 'lucide-react';
 import { MemberService } from '../firebase/memberService';
 import SuccessAnimation from './common/SuccessAnimation';
+import LoadingAnimation from './common/LoadingAnimation';
 
 import '../styles/components/member-list.css';
 
@@ -70,8 +71,36 @@ const MemberList = () => {
       const result = await MemberService.getActiveMembers();
       
       if (result.success) {
-        setMembers(result.data);
-        setFilteredMembers(result.data);
+        const sortedMembers = result.data.sort((a, b) => {
+          // Ensure we have valid dates
+          const joiningDateA = a.joiningDate || a.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
+          const joiningDateB = b.joiningDate || b.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
+          
+          const dateA = new Date(joiningDateA);
+          const dateB = new Date(joiningDateB);
+          
+          // First sort by joining date
+          if (dateA.getTime() !== dateB.getTime()) {
+            return dateA - dateB;
+          }
+          
+          // If joining dates are same, sort by createdAt timestamp
+          const createdA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+          const createdB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+          
+          // If creation times are also same, sort by document ID for consistency
+          if (createdA.getTime() === createdB.getTime()) {
+            return a.id.localeCompare(b.id);
+          }
+          
+          return createdA - createdB;
+        });
+        const membersWithSomitiId = sortedMembers.map((member, index) => ({
+          ...member,
+          somiti_user_id: index + 1,
+        }));
+        setMembers(membersWithSomitiId);
+        setFilteredMembers(membersWithSomitiId);
       } else {
         setError(result.error);
         console.error('সদস্য তালিকা লোড করতে ত্রুটি:', result.error);
@@ -359,29 +388,12 @@ const MemberList = () => {
       {/* Member Cards - Single Column Layout */}
       <div className="member-cards-container">
         {loading ? (
-          Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="member-card member-card-minimal">
-              <div className="member-serial-number">
-                <div className="h-4 w-10 bg-gray-200 rounded animate-pulse"></div>
-              </div>
-              <div className="member-avatar-placeholder animate-pulse"></div>
-              <div className="member-info">
-                <div className="h-5 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                <div className="member-address mt-2">
-                  <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
-                </div>
-                <div className="member-details-row mt-2">
-                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-                  <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          ))
+          <LoadingAnimation />
         ) : (
           filteredMembers.map((member, index) => {
             const roleInfo = getRoleInfo(member.role);
             const RoleIcon = roleInfo.icon;
-            const displayId = member.memberId || member.membershipId || (index + 1);
+            const displayId = member.somiti_user_id;
 
             return (
               <div 

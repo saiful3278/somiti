@@ -14,6 +14,7 @@ import {
 import { MemberService } from '../firebase/memberService';
 import { TransactionService } from '../firebase/transactionService';
 import SuccessAnimation from './common/SuccessAnimation';
+import LoadingAnimation from './common/LoadingAnimation';
 import '../styles/components/add-transaction-modal.css';
 
 const AddTransaction = ({ isOpen, onClose }) => {
@@ -57,7 +58,7 @@ const AddTransaction = ({ isOpen, onClose }) => {
             id: member.id,
             name: member.name,
             currentShares: member.shareCount || 0,
-            membershipId: member.membershipId || member.memberId || member.id
+            membershipId: member.somiti_user_id
           }));
           setMembers(transformedMembers);
         } else {
@@ -242,8 +243,8 @@ const AddTransaction = ({ isOpen, onClose }) => {
                   </option>
                   {!isLoadingMembers && members.map((member) => (
                     <option key={member.id} value={member.id}>
-                      {member.membershipId || member.id} - {member.name}
-                    </option>
+                        {member.somiti_user_id} - {member.name}
+                      </option>
                   ))}
                 </select>
                 {isLoadingMembers && (
@@ -262,7 +263,7 @@ const AddTransaction = ({ isOpen, onClose }) => {
                   </div>
                   <div className="add-transaction-member-info-row">
                     <span className="add-transaction-member-info-label">সদস্য আইডি:</span>
-                    <span className="add-transaction-member-info-value">{selectedMember.membershipId}</span>
+                    <span className="add-transaction-member-info-value">{selectedMember.somiti_user_id}</span>
                   </div>
                   <div className="add-transaction-member-info-row">
                     <span className="add-transaction-member-info-label">বর্তমান শেয়ার:</span>

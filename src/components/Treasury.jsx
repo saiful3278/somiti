@@ -17,6 +17,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { FundService, TransactionService } from '../firebase';
 import TransactionDetailsCard from './common/TransactionDetailsCard';
+import LoadingAnimation from './common/LoadingAnimation';
 import '../styles/components/treasury.css';
 
 const Treasury = () => {
@@ -263,10 +264,7 @@ const Treasury = () => {
           </div>
           <div>
             {loading.transactions ? (
-              <div className="treasury-loading">
-                <div className="treasury-loading-spinner"></div>
-                <p className="treasury-loading-text">লেনদেন লোড হচ্ছে...</p>
-              </div>
+              <LoadingAnimation />
             ) : treasuryData.recentTransactions.length > 0 ? (
               <div className="treasury-transactions-list">
                 {treasuryData.recentTransactions.map((transaction) => {

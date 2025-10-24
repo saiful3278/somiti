@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn, AlertCircle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, LogIn, AlertCircle, Loader2, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { loginUser } from '../api/auth';
+import LoadingAnimation from '../components/common/LoadingAnimation';
+import '../styles/Login.css';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -68,24 +70,38 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <LogIn className="w-8 h-8 text-white" />
+    <div className="login-container">
+      <div className="login-wrapper">
+        <div className="login-header">
+          {/* Welcome Animation - Centered */}
+          <div className="welcome-animation" style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+            <lottie-player
+              src="/Welcome_login.json"
+              background="transparent"
+              speed="1"
+              style={{width: '400px', height: '120px'}}
+              loop
+              autoplay
+            ></lottie-player>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            সমিতি ওয়েবে স্বাগতম
-          </h1>
-          <p className="text-gray-600">
-            আপনার অ্যাকাউন্টে প্রবেশ করুন
-          </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="login-form-container">
+          {/* Login Animation inside the card */}
+          <div className="login-logo" style={{display: 'flex', justifyContent: 'center', marginBottom: '1rem'}}>
+            <lottie-player
+              src="/login_animation.json"
+              background="transparent"
+              speed="1"
+              style={{width: '120px', height: '120px'}}
+              loop
+              autoplay
+            ></lottie-player>
+          </div>
+          
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">
                 ইমেইল ঠিকানা
               </label>
               <input
@@ -94,15 +110,15 @@ const Login = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                className="form-input"
                 placeholder="আপনার ইমেইল লিখুন"
                 disabled={isSubmitting}
                 required
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
                 পাসওয়ার্ড
               </label>
               <div className="relative">
@@ -112,7 +128,7 @@ const Login = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors pr-10"
+                  className="form-input"
                   placeholder="আপনার পাসওয়ার্ড লিখুন"
                   disabled={isSubmitting}
                   required
@@ -120,7 +136,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+                  className="password-toggle"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -128,8 +144,8 @@ const Login = () => {
             </div>
 
             {error && (
-              <div className="flex items-center text-red-600 bg-red-50 p-3 rounded-lg">
-                <AlertCircle className="h-5 w-5 mr-2" />
+              <div className="error-message">
+                <AlertCircle className="h-5 w-5 error-icon" />
                 <span>{error}</span>
               </div>
             )}
@@ -137,13 +153,13 @@ const Login = () => {
             <div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:bg-blue-400"
+                className="login-button"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <><Loader2 className="animate-spin h-5 w-5 mr-2" /> লগইন করা হচ্ছে...</>
+                  <><Loader2 className="loading-spinner h-5 w-5" /> লগইন করা হচ্ছে...</>
                 ) : (
-                  <><LogIn className="h-5 w-5 mr-2" /> লগইন করুন</>
+                  <><LogIn className="h-5 w-5" /> লগইন করুন</>
                 )}
               </button>
             </div>
