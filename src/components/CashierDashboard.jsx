@@ -833,34 +833,10 @@ const CashierDashboard = () => {
       errors.name = 'নাম আবশ্যক';
     }
     
-    if (!newMemberData.phone.trim()) {
-      errors.phone = 'ফোন নম্বর আবশ্যক';
-    } else if (!/^01[3-9]\d{8}$/.test(newMemberData.phone)) {
-      errors.phone = 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)';
-    }
-    
-    if (!newMemberData.address.trim()) {
-      errors.address = 'ঠিকানা আবশ্যক';
-    }
-    
     if (!newMemberData.shareCount.trim()) {
       errors.shareCount = 'শেয়ার সংখ্যা আবশ্যক';
     } else if (isNaN(newMemberData.shareCount) || Number(newMemberData.shareCount) <= 0) {
       errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
-    }
-    
-    if (!newMemberData.nomineeName.trim()) {
-      errors.nomineeName = 'নমিনির নাম আবশ্যক';
-    }
-    
-    if (!newMemberData.nomineePhone.trim()) {
-      errors.nomineePhone = 'নমিনির ফোন নম্বর আবশ্যক';
-    } else if (!/^01[3-9]\d{8}$/.test(newMemberData.nomineePhone)) {
-      errors.nomineePhone = 'সঠিক নমিনির ফোন নম্বর দিন (01XXXXXXXXX)';
-    }
-    
-    if (!newMemberData.nomineeRelation.trim()) {
-      errors.nomineeRelation = 'নমিনির সাথে সম্পর্ক নির্বাচন আবশ্যক';
     }
     
     return errors;
@@ -1624,7 +1600,7 @@ const CashierDashboard = () => {
                     <div className="form-group">
                       <label className="form-label">
                         <Phone size={16} />
-                        ফোন নম্বর *
+                        ফোন নম্বর (ঐচ্ছিক)
                       </label>
                       <input
                         type="tel"
@@ -1642,7 +1618,7 @@ const CashierDashboard = () => {
                   <div className="form-group">
                     <label className="form-label">
                       <MapPin size={16} />
-                      ঠিকানা *
+                      ঠিকানা (ঐচ্ছিক)
                     </label>
                     <textarea
                       className={`form-textarea ${memberFormErrors.address ? 'error' : ''}`}
@@ -1706,7 +1682,7 @@ const CashierDashboard = () => {
                     <div className="form-group">
                       <label className="form-label">
                         <User size={16} />
-                        নমিনির নাম *
+                        নমিনির নাম (ঐচ্ছিক)
                       </label>
                       <input
                         type="text"
@@ -1723,7 +1699,7 @@ const CashierDashboard = () => {
                     <div className="form-group">
                       <label className="form-label">
                         <Phone size={16} />
-                        নমিনির ফোন *
+                        নমিনির ফোন (ঐচ্ছিক)
                       </label>
                       <input
                         type="tel"
@@ -1739,7 +1715,7 @@ const CashierDashboard = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">নমিনির সাথে সম্পর্ক *</label>
+                    <label className="form-label">নমিনির সাথে সম্পর্ক (ঐচ্ছিক)</label>
                     <select
                       className={`form-select ${memberFormErrors.nomineeRelation ? 'error' : ''}`}
                       value={newMemberData.nomineeRelation}

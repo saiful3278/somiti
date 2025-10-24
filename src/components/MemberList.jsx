@@ -177,16 +177,11 @@ const MemberList = () => {
       errors.name = 'নাম আবশ্যক';
     }
     
-    // Share count is required for both admin and cashier
+    // Share count is always required
     if (!newMemberData.shareCount.trim()) {
       errors.shareCount = 'শেয়ার সংখ্যা আবশ্যক';
     } else if (isNaN(newMemberData.shareCount) || Number(newMemberData.shareCount) <= 0) {
       errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
-    }
-    
-    // Joining date is required for both admin and cashier
-    if (!newMemberData.joiningDate.trim()) {
-      errors.joiningDate = 'যোগদানের তারিখ আবশ্যক';
     }
     
     // Phone validation - only if provided
@@ -651,16 +646,13 @@ const MemberList = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">যোগদানের তারিখ *</label>
+                    <label className="form-label">যোগদানের তারিখ (ঐচ্ছিক)</label>
                     <input
                       type="date"
-                      className={`form-input ${memberFormErrors.joiningDate ? 'error' : ''}`}
+                      className="form-input"
                       value={newMemberData.joiningDate}
                       onChange={(e) => handleInputChange('joiningDate', e.target.value)}
                     />
-                    {memberFormErrors.joiningDate && (
-                      <span className="error-message">{memberFormErrors.joiningDate}</span>
-                    )}
                   </div>
                 </div>
               </div>
