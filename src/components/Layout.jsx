@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Sidebar from './common/Sidebar';
 import BottomNavigation from './common/BottomNavigation';
 import MobileSidebar from './common/MobileSidebar';
+import Footer from './common/Footer';
 import PrimarySearchAppBar from './appbar';
 import AddTransaction from './AddTransaction';
 import useSidebarLogic from '../hooks/useSidebarLogic';
@@ -72,6 +73,7 @@ const Layout = ({ children }) => {
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
+          <Footer />
         </main>
       </div>
 

@@ -6,7 +6,7 @@ main,
 .main-content,
 .app-main,
 [role="main"] {
-  padding-bottom: 80px !important; /* Space for bottom navigation (64px + 16px buffer) */
+  padding-bottom: 25px !important; /* Reduced space - footer handles the spacing */
 }
 
 /* Mobile-specific adjustments */
@@ -16,13 +16,13 @@ main,
   .dashboard-container,
   .content-wrapper,
   .main-wrapper {
-    padding-bottom: 80px !important;
+    padding-bottom: 25px !important;
   }
   
   /* Fix for React Router pages */
   #root > div,
   .app-container > div:last-child {
-    padding-bottom: 80px !important;
+    padding-bottom: 25px !important;
   }
 }
 
@@ -30,7 +30,7 @@ main,
 @media (min-width: 768px) {
   .main-content-with-sidebar-visible,
   .main-content-with-sidebar {
-    padding-bottom: 20px !important; /* Minimal spacing for desktop */
+    padding-bottom: 25px !important; /* Minimal spacing for desktop */
   }
 }
 
@@ -47,6 +47,6 @@ main,
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   main,
   .main-content {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(25px + env(safe-area-inset-bottom)) !important;
   }
 }
