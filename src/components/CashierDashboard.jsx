@@ -1511,7 +1511,7 @@ const CashierDashboard = () => {
                           transaction.type === 'loan' ? 'text-orange-600' :
                           'text-blue-600'
                         }`}>
-                          ৳ {transaction.amount.toLocaleString()}
+                          ৳ {(transaction.amount || 0).toLocaleString()}
                         </div>
                         <div className="text-gray-400 transition-transform duration-200 ${
                           expandedTransaction === transaction.id ? 'rotate-180' : ''

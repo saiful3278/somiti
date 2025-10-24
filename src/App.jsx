@@ -7,7 +7,6 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import AdminDashboard from './components/AdminDashboard';
 import MemberList from './components/MemberList';
-import MemberManagement from './components/MemberManagement';
 import InvestmentManagement from './components/InvestmentManagement';
 import ProfitDistribution from './components/ProfitDistribution';
 import AdminSettings from './components/AdminSettings';
@@ -57,7 +56,7 @@ const MainApp = () => {
 
         {/* Admin Routes */}
         <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
-        <Route path="/admin/members" element={<ProtectedRoute allowedRoles={['admin']}><MemberManagement /></ProtectedRoute>} />
+        <Route path="/admin/members" element={<ProtectedRoute allowedRoles={['admin']}><MemberList /></ProtectedRoute>} />
         <Route path="/admin/treasury" element={<ProtectedRoute allowedRoles={['admin']}><Treasury /></ProtectedRoute>} />
         <Route path="/admin/notice-board" element={<ProtectedRoute allowedRoles={['admin']}><NoticeBoard /></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin']}><AdminSettings /></ProtectedRoute>} />
@@ -78,6 +77,7 @@ const MainApp = () => {
         <Route path="/member" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberDashboard /></ProtectedRoute>} />
         <Route path="/member/financial-summary" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><FinancialSummary /></ProtectedRoute>} />
         <Route path="/member/notice-board" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><NoticeBoard /></ProtectedRoute>} />
+        <Route path="/member/members" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberList /></ProtectedRoute>} />
         <Route path="/member/profile" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><ProfileSettings /></ProtectedRoute>} />
         <Route path="/member/settings" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberSettings /></ProtectedRoute>} />
 

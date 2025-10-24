@@ -193,7 +193,7 @@ const Transactions = () => {
                     <p className={`font-bold ${
                       transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {transaction.type === 'income' ? '+' : '-'}৳ {transaction.amount.toLocaleString()}
+                      {transaction.type === 'income' ? '+' : '-'}৳ {(transaction.amount || 0).toLocaleString()}
                     </p>
                   </div>
                 </div>

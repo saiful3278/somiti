@@ -202,7 +202,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'মোট তহবিল',
-      value: `৳ ${dashboardData.totalFunds.toLocaleString()}`,
+      value: `৳ ${(dashboardData.totalFunds || 0).toLocaleString()}`,
       change: '+১২%',
       changeType: 'increase',
       icon: PiggyBank,
@@ -210,7 +210,7 @@ const AdminDashboard = () => {
     },
     {
       title: 'মাসিক জমা',
-      value: `৳ ${dashboardData.monthlyDeposits.toLocaleString()}`,
+      value: `৳ ${(dashboardData.monthlyDeposits || 0).toLocaleString()}`,
       change: '+৫%',
       changeType: 'increase',
       icon: TrendingUp,
@@ -305,7 +305,7 @@ const AdminDashboard = () => {
         return {
           id: transaction.id || index,
           type: transaction.transactionType,
-          message: `${transaction.memberName || 'সদস্য'} ${transaction.amount.toLocaleString()} টাকা ${transactionInfo.action}`,
+          message: `${transaction.memberName || 'সদস্য'} ${(transaction.amount || 0).toLocaleString()} টাকা ${transactionInfo.action}`,
           time: getMonthName(transaction),
           icon: transactionInfo.icon,
           color: transactionInfo.color,

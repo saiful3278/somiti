@@ -564,7 +564,7 @@ const MemberDashboard = () => {
                   <span className="md-label-small">
                     {loading.member || loading.transactions ? 
                       <LoadingSkeleton className="w-20 h-4" /> : 
-                      `৳ ${financialSummary.shareValue.toLocaleString()}`
+                      `৳ ${(financialSummary.shareValue || 0).toLocaleString()}`
                     }
                   </span>
                 </div>
@@ -584,7 +584,7 @@ const MemberDashboard = () => {
                 <p className="md-display-small">
                   {loading.transactions ? 
                     <LoadingSkeleton className="w-24 h-8" /> : 
-                    `৳ ${financialSummary.shareValue.toLocaleString()}`
+                    `৳ ${(financialSummary.shareValue || 0).toLocaleString()}`
                   }
                 </p>
                 <div className="md-stats-change">
@@ -592,7 +592,7 @@ const MemberDashboard = () => {
                   <span className="md-label-small">
                     {loading.transactions ? 
                       <LoadingSkeleton className="w-16 h-4" /> : 
-                      `মাসিক = ৳${financialSummary.shareValue.toLocaleString()}`
+                      `মাসিক = ৳${(financialSummary.shareValue || 0).toLocaleString()}`
                     }
                   </span>
                 </div>
@@ -614,7 +614,7 @@ const MemberDashboard = () => {
                 <p className={`md-display-small ${financialSummary.hasDue ? 'text-red-600' : ''}`}>
                   {loading.transactions ? 
                     <LoadingSkeleton className="w-20 h-8" /> : 
-                    `৳ ${financialSummary.loanRemaining.toLocaleString()}`
+                    `৳ ${(financialSummary.loanRemaining || 0).toLocaleString()}`
                   }
                 </p>
                 <div className="md-stats-change">
@@ -811,7 +811,7 @@ const MemberDashboard = () => {
                           <div className="md-list-item-trailing">
                             <div className="md-list-item-amount">
                               <p className="md-label-large md-text-on-surface">
-                                -৳ {transaction.amount.toLocaleString()}
+                                -৳ {(transaction.amount || 0).toLocaleString()}
                               </p>
                               <span className={`md-badge ${transaction.status === 'completed' ? 'md-badge-success' : 'md-badge-warning'}`}>
                                 {transaction.status === 'completed' ? 'সম্পন্ন' : 'অপেক্ষমান'}
@@ -884,7 +884,7 @@ const MemberDashboard = () => {
                           </div>
                           <div className="md-list-item-trailing">
                             <div className="md-list-item-amount">
-                              <p className="md-label-large">৳ {payment.amount.toLocaleString()}</p>
+                              <p className="md-label-large">৳ {(payment.amount || 0).toLocaleString()}</p>
                               <span className={`md-badge ${
                                 payment.priority === 'high' ? 'md-badge-error' : 
                                 payment.priority === 'medium' ? 'md-badge-warning' : 'md-badge-success'
@@ -931,7 +931,7 @@ const MemberDashboard = () => {
                           <div className="md-deposit-content">
                             <div className="md-deposit-info">
                               <p className="md-label-large">{deposit.month}</p>
-                              <p className="md-body-medium">৳ {deposit.amount.toLocaleString()}</p>
+                              <p className="md-body-medium">৳ {(deposit.amount || 0).toLocaleString()}</p>
                             </div>
                             <div className="md-deposit-status">
                               {deposit.status === 'paid' ? (

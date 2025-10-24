@@ -303,7 +303,7 @@ const Treasury = () => {
                         </p>
                       </div>
                       <span className={`treasury-transaction-amount ${formattedTransaction.isIncome ? 'positive' : 'negative'}`}>
-                        {formattedTransaction.isIncome ? '+' : '-'}৳ {formattedTransaction.amount.toLocaleString('bn-BD')}
+                        {formattedTransaction.isIncome ? '+' : '-'}৳ {(formattedTransaction.amount || 0).toLocaleString('bn-BD')}
                       </span>
                     </div>
                   );

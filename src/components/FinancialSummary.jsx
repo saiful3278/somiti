@@ -158,7 +158,7 @@ const FinancialSummary = () => {
               </div>
             </div>
             <div className="financial-card__label">মোট তহবিল</div>
-            <div className="financial-card__value">৳ {financialData.totalFund.toLocaleString()}</div>
+            <div className="financial-card__value">৳ {(financialData.totalFund || 0).toLocaleString()}</div>
             <div className="financial-card__description">
               <TrendingUp size={16} />
               <span>সর্বমোট সম্পদ</span>
@@ -176,7 +176,7 @@ const FinancialSummary = () => {
             <div className="financial-card__value">{financialData.totalShares} টি</div>
             <div className="financial-card__description">
               <Target size={16} />
-              <span>মূল্য: ৳ {financialData.shareValue.toLocaleString()}</span>
+              <span>মূল্য: ৳ {(financialData.shareValue || 0).toLocaleString()}</span>
             </div>
           </div>
 
@@ -230,11 +230,11 @@ const FinancialSummary = () => {
             <div className="detail-card__content">
               <div className="detail-item">
                 <span className="detail-item__label">মোট জমা:</span>
-                <span className="detail-item__value">৳ {financialData.totalDeposits.toLocaleString()}</span>
+                <span className="detail-item__value">৳ {(financialData.totalDeposits || 0).toLocaleString()}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-item__label">গড় মাসিক জমা:</span>
-                <span className="detail-item__value">৳ {financialData.monthlyDeposit.toLocaleString()}</span>
+                <span className="detail-item__value">৳ {(financialData.monthlyDeposit || 0).toLocaleString()}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-item__label">পরবর্তী পেমেন্ট:</span>
