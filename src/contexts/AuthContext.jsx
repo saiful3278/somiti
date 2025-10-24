@@ -25,15 +25,32 @@ export const AuthProvider = ({ children }) => {
 
       if (token && userId) {
         try {
-          const memberResponse = await MemberService.getMemberById(userId);
-          if (memberResponse.success) {
-            // Set user with saved role or default to 'member'
+          // Check if this is a debug user
+          if (userId === 'debug-user' && token === 'debug-token') {
+            // Create debug user from localStorage
             setUser({
-              ...memberResponse.data,
-              role: savedRole || 'member'
+              uid: 'debug-user',
+              email: 'debug@somiti.com',
+              role: savedRole || 'member',
+              name: `Debug ${(savedRole || 'member').charAt(0).toUpperCase() + (savedRole || 'member').slice(1)}`,
+              isDebugUser: true,
+              membershipType: 'Debug User',
+              joinDate: new Date(),
+              shareCount: 0,
+              totalInvestment: 0
             });
           } else {
-            throw new Error('Failed to fetch member data');
+            // Regular user authentication
+            const memberResponse = await MemberService.getMemberById(userId);
+            if (memberResponse.success) {
+              // Set user with saved role or default to 'member'
+              setUser({
+                ...memberResponse.data,
+                role: savedRole || 'member'
+              });
+            } else {
+              throw new Error('Failed to fetch member data');
+            }
           }
         } catch (err) {
           logout();

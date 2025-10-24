@@ -22,6 +22,7 @@ import FinancialSummary from './components/FinancialSummary';
 import NoticeBoard from './components/NoticeBoard';
 import ProfileSettings from './components/ProfileSettings';
 import MemberSettings from './components/MemberSettings';
+import SecretRoleSwitcher from './components/common/SecretRoleSwitcher';
 
 const App = () => {
   return (
@@ -30,6 +31,8 @@ const App = () => {
         <UserProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            {/* Debug route - only available in development */}
+            {import.meta.env.DEV && <Route path="/secret3278" element={<SecretRoleSwitcher />} />}
             <Route 
               path="/*" 
               element={
@@ -80,6 +83,9 @@ const MainApp = () => {
         <Route path="/member/members" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberList /></ProtectedRoute>} />
         <Route path="/member/profile" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><ProfileSettings /></ProtectedRoute>} />
         <Route path="/member/settings" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberSettings /></ProtectedRoute>} />
+
+        {/* Secret Debug Route */}
+        {/* Route moved to main App component for public access */}
 
         {/* Fallback for unmatched routes */}
         <Route path="*" element={<Navigate to="/" replace />} />

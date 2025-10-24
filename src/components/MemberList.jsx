@@ -9,6 +9,7 @@ import LoadingAnimation from './common/LoadingAnimation';
 import '../styles/components/member-list.css';
 
 import { registerUser } from '../api/auth';
+import { generateEmailCredentials } from '../utils/transliteration';
 
 const MemberList = () => {
   const { user } = useAuth();
@@ -205,14 +206,8 @@ const MemberList = () => {
     try {
       setSaving(true);
       
-      // Step 1: Generate credentials with new format
-      const randomDigits = Math.floor(Math.random() * 900) + 100; // 100-999
-      const firstName = newMemberData.name.split(' ')[0].toLowerCase();
-
-      const credentials = {
-        email: `${firstName}${randomDigits}@fulmurigram.com`,
-        password: `${firstName}${randomDigits}@123`
-      };
+      // Step 1: Generate credentials with Bangla name support
+      const credentials = generateEmailCredentials(newMemberData.name);
       
       console.log('Generated credentials:', credentials);
 
