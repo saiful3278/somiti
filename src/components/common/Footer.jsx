@@ -4,7 +4,7 @@ const Footer = () => {
   return (
     <footer className="footer">
       <img 
-        src="/src/assets/footer_logo.svg" 
+        src="/footer_logo.svg" 
         alt="Footer Logo" 
         className="footer-logo"
       />
