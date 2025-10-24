@@ -111,6 +111,38 @@ export const generateEmailSafeName = (name) => {
 };
 
 /**
+ * Generates a strong password with mixed characters
+ * @param {string} baseName - Base name for password
+ * @param {number} length - Desired password length (default: 12)
+ * @returns {string} - Strong password
+ */
+const generateStrongPassword = (baseName, length = 12) => {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const symbols = '!@#$%&*';
+  
+  // Start with the base name (first name)
+  const nameLength = Math.min(baseName.length, 6);
+  let password = baseName.substring(0, nameLength);
+  
+  // Ensure we have at least one character from each category after the name
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
+  
+  // Fill remaining length with random characters from all categories
+  const allChars = uppercase + lowercase + numbers + symbols;
+  const remainingLength = length - password.length;
+  
+  for (let i = 0; i < remainingLength; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+  
+  return password;
+};
+
+/**
  * Generates email credentials with Bangla name support
  * @param {string} name - The user's name (can be in Bangla)
  * @returns {object} - Object containing email and password
@@ -119,8 +151,11 @@ export const generateEmailCredentials = (name) => {
   const randomDigits = Math.floor(Math.random() * 900) + 100; // 100-999
   const safeName = generateEmailSafeName(name);
   
+  // Generate a strong password using the safe name as base
+  const strongPassword = generateStrongPassword(safeName, 12);
+  
   return {
     email: `${safeName}${randomDigits}@fulmurigram.com`,
-    password: `${safeName}${randomDigits}@123`
+    password: strongPassword
   };
 };
