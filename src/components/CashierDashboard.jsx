@@ -848,6 +848,16 @@ const CashierDashboard = () => {
       errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
     }
     
+    // Optional phone validation (match MemberList.jsx behavior)
+    if (newMemberData.phone?.trim() && !/^01[3-9]\d{8}$/.test(newMemberData.phone)) {
+      errors.phone = 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)';
+    }
+    
+    // Optional nominee phone validation
+    if (newMemberData.nomineePhone?.trim() && !/^01[3-9]\d{8}$/.test(newMemberData.nomineePhone)) {
+      errors.nomineePhone = 'সঠিক নমিনির ফোন নম্বর দিন (01XXXXXXXXX)';
+    }
+    
     return errors;
   };
 
