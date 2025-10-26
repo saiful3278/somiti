@@ -51,6 +51,9 @@ import TransactionDetailsCard from './common/TransactionDetailsCard';
 import SuccessAnimation from './common/SuccessAnimation';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
 import { MemberService, TransactionService, FundService } from '../firebase';
+// Connect with existing auth and transliteration utilities used by MemberList
+import { registerUser } from '../api/auth';
+import { generateEmailCredentials } from '../utils/transliteration';
 import '../styles/components/cashier-dashboard.css';
 
 const CashierDashboard = () => {
@@ -227,13 +230,19 @@ const CashierDashboard = () => {
     refreshData();
   }, []);
 
-  // Add new member function
-  const handleAddMember = async (memberData) => {
+  // Add new member function (connected to MemberService like MemberList.jsx)
+  const handleAddMember = async (memberData, userId) => {
     try {
       setSaving(true);
       console.log('🚀 handleAddMember called with:', memberData);
-      
-      const addResult = await MemberService.addMember(memberData);
+
+      if (!userId) {
+        console.error('❌ Missing userId for MemberService.addMember');
+        return { success: false, error: 'User ID is required' };
+      }
+
+      // Use the same signature as MemberList: pass userId as Firestore doc ID
+      const addResult = await MemberService.addMember(memberData, userId);
       console.log('📡 MemberService.addMember result:', addResult);
       
       if (addResult.success) {
@@ -857,22 +866,44 @@ const CashierDashboard = () => {
     try {
       setSaving(true);
       console.log('💾 Setting saving to true');
-      
-      // Generate member ID (simple sequential number)
-      const memberId = String(monthlySummary.totalMembers + 1);
-      
+      // Step 1: Generate credentials identical to MemberList.jsx
+      const credentials = generateEmailCredentials(newMemberData.name);
+      console.log('🔐 Generated credentials:', credentials);
+
+      // Step 2: Register user in backend to obtain user_id
+      const registrationResponse = await registerUser(credentials.email, credentials.password);
+
+      if (!registrationResponse?.success) {
+        throw new Error(registrationResponse?.message || 'Backend registration failed');
+      }
+
+      const { user_id } = registrationResponse;
+      console.log('✅ Backend registration successful, user_id:', user_id);
+
+      // Step 3: Prepare member data (match MemberList.jsx fields)
       const memberData = {
-        ...newMemberData,
-        memberId,
+        name: newMemberData.name,
+        phone: newMemberData.phone,
+        address: newMemberData.address,
+        shareCount: newMemberData.shareCount,
+        nomineeName: newMemberData.nomineeName,
+        nomineePhone: newMemberData.nomineePhone,
+        nomineeRelation: newMemberData.nomineeRelation,
+        joiningDate: newMemberData.joiningDate,
+        role: newMemberData.role || 'member',
+        email: credentials.email,
+        password: credentials.password,
+        user_id: user_id,
         status: 'active',
         createdAt: new Date().toISOString(),
-        createdBy: 'ক্যাশিয়ার - আহমেদ'
+        updatedAt: new Date().toISOString(),
+        createdBy: 'ক্যাশিয়ার'
       };
-      
-      console.log('📝 নতুন সদস্য যোগ করা হচ্ছে:', memberData);
-      
-      // Call the existing handleAddMember function
-      const result = await handleAddMember(memberData);
+
+      console.log('📝 নতুন সদস্য যোগ করা হচ্ছে (Firestore):', memberData);
+
+      // Step 4: Save to Firestore using user_id as the document ID
+      const result = await handleAddMember(memberData, user_id);
       console.log('📊 handleAddMember result:', result);
       
       if (result && result.success) {
@@ -899,7 +930,8 @@ const CashierDashboard = () => {
           nomineeName: '',
           nomineePhone: '',
           nomineeRelation: '',
-          joiningDate: new Date().toISOString().split('T')[0]
+          joiningDate: new Date().toISOString().split('T')[0],
+          role: 'member'
         });
         setMemberFormErrors({});
         console.log('🔄 Form reset');
@@ -1751,9 +1783,19 @@ const CashierDashboard = () => {
                     <button
                       type="submit"
                       className="form-btn form-btn-primary"
+                      disabled={saving}
                     >
-                      <Save size={16} />
-                      সংরক্ষণ করুন
+                      {saving ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin" />
+                          সংরক্ষণ করা হচ্ছে...
+                        </>
+                      ) : (
+                        <>
+                          <Save size={16} />
+                          সংরক্ষণ করুন
+                        </>
+                      )}
                     </button>
                   </div>
                 </form>
