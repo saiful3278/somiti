@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
       const memberResponse = await MemberService.getMemberById(userId);
       if (memberResponse.success) {
         const userData = memberResponse.data;
-        const userWithId = { ...userData, id: userId };
+        const userWithId = { ...userData, id: userId, uid: userId }; // Add uid here
         setUser(userWithId);
         localStorage.setItem('somiti_token', token);
         localStorage.setItem('somiti_uid', userId);

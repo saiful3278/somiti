@@ -252,7 +252,7 @@ const FinancialSummary = () => {
               <div className="detail-card__icon">
                 <CheckCircle size={16} />
               </div>
-              স্ট্যাটাস সামারি
+              স্ট্যাটাস সারি
             </div>
           </div>
           

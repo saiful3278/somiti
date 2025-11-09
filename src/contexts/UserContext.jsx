@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { MemberService } from '../firebase/memberService';
+import { useAuth } from './AuthContext'; // Import useAuth
 
 const UserContext = createContext();
 
@@ -12,19 +13,24 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
+  const { user: authUser } = useAuth(); // Get authenticated user
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // For demo purposes, we'll simulate user login
   // In a real app, this would be connected to Firebase Auth
-  const [selectedUserId, setSelectedUserId] = useState('SM-001'); // Default user ID
+  const [selectedUserId, setSelectedUserId] = useState(null); // Default user ID
 
   useEffect(() => {
-    loadCurrentUser();
-  }, [selectedUserId]);
+    if (authUser && authUser.uid) {
+      setSelectedUserId(authUser.uid);
+    }
+  }, [authUser]);
 
-  const loadCurrentUser = async () => {
+  const loadCurrentUser = useCallback(async () => {
+    if (!selectedUserId) return;
+
     try {
       setLoading(true);
       setError(null);
@@ -71,7 +77,11 @@ export const UserProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedUserId]);
+
+  useEffect(() => {
+    loadCurrentUser();
+  }, [loadCurrentUser]);
 
   // Function to simulate user switching (for demo)
   const switchUser = (userId) => {
