@@ -29,9 +29,9 @@ const Layout = ({ children, title, description, keywords, canonicalUrl, jsonLd }
   return (
     <div className="flex h-screen bg-background">
       <Meta
-        title={title || 'ফুলমুড়ী যুব ফাউন্ডেশন'}
-        description={description || 'ফুলমুড়ী যুব ফাউন্ডেশন সমবায় সমিতি লিমিটেড'}
-        keywords={keywords || 'ফুলমুড়ী, ফুলমুড়ী গ্রাম, ফুলমুড়ী যুব ফাউন্ডেশন, Fulmuri, fulmuri gram, fulmuri, fulmuri jubo foundation'}
+        title={title || 'ফুলমুড়ী যুব ফাউন্ডেশন - Fulmuri Youth Foundation'}
+        description={description || 'ফুলমুড়ী যুব ফাউন্ডেশন-এর অফিসিয়াল ওয়েবসাইটে স্বাগতম। আমাদের সম্প্রদায়ের জন্য একটি উন্নত ভবিষ্যৎ গড়তে আমাদের সাথে যোগ দিন।'}
+        keywords={keywords || 'ফুলমুড়ী যুব ফাউন্ডেশন, Fulmuri Youth Foundation, Fulmuri, Youth Foundation, Community Development, Fulmuri Gram'}
         canonicalUrl={canonicalUrl || 'https://fulmurigram.site/'}
         jsonLd={jsonLd}
       />
