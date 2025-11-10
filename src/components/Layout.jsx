@@ -6,8 +6,9 @@ import Footer from './common/Footer';
 import PrimarySearchAppBar from './appbar';
 import AddTransaction from './AddTransaction';
 import useSidebarLogic from '../hooks/useSidebarLogic';
+import Meta from './Meta'; // Import the Meta component
 
-const Layout = ({ children }) => {
+const Layout = ({ children, title, description, keywords, canonicalUrl, jsonLd }) => {
   const { user } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
   const [addTransactionModalOpen, setAddTransactionModalOpen] = useState(false);
@@ -27,6 +28,13 @@ const Layout = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-background">
+      <Meta
+        title={title || 'ফুলমুড়ী যুব ফাউন্ডেশন'}
+        description={description || 'ফুলমুড়ী যুব ফাউন্ডেশন সমবায় সমিতি লিমিটেড'}
+        keywords={keywords || 'ফুলমুড়ী, ফুলমুড়ী গ্রাম, ফুলমুড়ী যুব ফাউন্ডেশন, Fulmuri, fulmuri gram, fulmuri, fulmuri jubo foundation'}
+        canonicalUrl={canonicalUrl || 'https://fulmurigram.site/'}
+        jsonLd={jsonLd}
+      />
       {/* Main Content - Full Width */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Material-UI App Bar */}
