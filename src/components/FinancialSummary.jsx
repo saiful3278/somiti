@@ -16,12 +16,17 @@ import {
 import { useUser } from '../contexts/UserContext';
 import { TransactionService } from '../firebase/transactionService';
 import { MemberService } from '../firebase/memberService';
+// Firestore direct imports for user transactions card
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config.js';
 import LoadingAnimation from './common/LoadingAnimation';
 import '../styles/components/FinancialSummary.css';
 
 const FinancialSummary = () => {
   const { currentUser } = useUser();
   const [loading, setLoading] = useState(true);
+  const [txLoading, setTxLoading] = useState(true);
+  const [userTransactions, setUserTransactions] = useState([]);
   const [financialData, setFinancialData] = useState({
     totalFund: 0,
     totalShares: 0,
@@ -36,91 +41,164 @@ const FinancialSummary = () => {
   });
 
   useEffect(() => {
+    // Helper to safely convert various Firestore date formats to JS Date
+    const toDateSafe = (val) => {
+      try {
+        if (!val) return undefined;
+        if (typeof val?.toDate === 'function') return val.toDate();
+        if (typeof val === 'string') return new Date(val);
+        if (val?.seconds) return new Date(val.seconds * 1000);
+        return new Date(val);
+      } catch (e) {
+        console.warn('FinancialSummary: toDateSafe failed, returning undefined', e);
+        return undefined;
+      }
+    };
+
     const loadFinancialData = async () => {
-      if (!currentUser?.uid) return;
+      const effectiveUserId = currentUser?.uid || currentUser?.id;
+      if (!effectiveUserId) {
+        console.log('FinancialSummary: skip loadFinancialData, no user_id');
+        return;
+      }
 
       try {
         setLoading(true);
+        console.log('FinancialSummary: start loadFinancialData for user_id', effectiveUserId);
 
-        // Get user transactions
-        const transactionsResult = await TransactionService.getTransactionsByUserId(currentUser.uid);
-        
-        if (transactionsResult.success) {
-          const transactions = transactionsResult.data || [];
-          
-          // Calculate financial metrics
-          const monthlyDeposits = transactions.filter(t => t.transactionType === 'monthly_deposit');
-          const shareTransactions = transactions.filter(t => t.transactionType === 'share_purchase');
-          const loanTransactions = transactions.filter(t => t.transactionType === 'loan_disbursement');
-          const loanRepayments = transactions.filter(t => t.transactionType === 'loan_repayment');
-          const profitTransactions = transactions.filter(t => t.transactionType === 'profit_distribution');
+        // 1) Fetch member profile by user_id to read shareCount and joiningDate
+        const memberResult = await MemberService.getMemberById(effectiveUserId);
+        const memberDoc = memberResult?.success ? memberResult.data : null;
+        const shareCountFromMember = Number(memberDoc?.shareCount || 0);
+        const joinDateRaw = memberDoc?.joiningDate ?? memberDoc?.joinDate; // support both field names
+        const memberJoinDate = toDateSafe(joinDateRaw) || new Date(new Date().getFullYear(), 0, 1);
+        console.log('FinancialSummary: member profile loaded', {
+          shareCountFromMember,
+          joiningDate: memberJoinDate?.toISOString?.() || memberJoinDate,
+        });
 
-          // Calculate totals
-          const totalDeposits = monthlyDeposits.reduce((sum, t) => sum + (t.amount || 0), 0);
-          const totalShareValue = shareTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-          const totalLoanTaken = loanTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-          const totalLoanRepaid = loanRepayments.reduce((sum, t) => sum + (t.amount || 0), 0);
-          const totalProfitEarned = profitTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+        // 2) Fetch ALL transactions for this member (use memberId field in transactions)
+        const txQuery = query(
+          collection(db, 'transactions'),
+          where('memberId', '==', effectiveUserId)
+        );
+        const txSnap = await getDocs(txQuery);
+        const transactions = [];
+        txSnap.forEach((doc) => transactions.push({ id: doc.id, ...doc.data() }));
+        console.log('FinancialSummary: transactions fetched', transactions.length);
 
-          // Calculate shares (assuming 500 tk per share)
-          const sharePrice = 500;
-          const totalShares = Math.floor(totalShareValue / sharePrice);
+        // 3) Compute totals required by UI
+        const monthlyDeposits = transactions.filter(t => t.transactionType === 'monthly_deposit');
+        const sharePurchases = transactions.filter(t => t.transactionType === 'share_purchase');
+        const loanDisbursements = transactions.filter(t => t.transactionType === 'loan_disbursement');
+        const loanRepayments = transactions.filter(t => t.transactionType === 'loan_repayment');
+        const profitDistributions = transactions.filter(t => t.transactionType === 'profit_distribution');
 
-          // Calculate due months
-          const currentDate = new Date();
-          const memberJoinDate = currentUser?.joinDate ? new Date(currentUser.joinDate.seconds * 1000) : new Date(currentDate.getFullYear(), 0, 1);
-          
-          // Calculate months from joining to current month
-          const monthsFromJoin = [];
-          const startDate = new Date(memberJoinDate.getFullYear(), memberJoinDate.getMonth(), 1);
-          const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-          
-          for (let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
-            monthsFromJoin.push(new Date(d));
-          }
-          
-          // Get months with successful payments
-          const paidMonths = monthlyDeposits.map(t => {
-            const transactionDate = new Date(t.createdAt?.seconds * 1000);
-            return `${transactionDate.getFullYear()}-${transactionDate.getMonth()}`;
-          });
-          
-          // Calculate missed months (due months)
-          const missedMonths = monthsFromJoin.filter(month => {
-            const monthKey = `${month.getFullYear()}-${month.getMonth()}`;
-            return !paidMonths.includes(monthKey) && month < new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-          });
+        // Total Fund = sum of ALL transaction amounts (as requested)
+        const totalFund = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
-          // Calculate average monthly deposit
-          const avgMonthlyDeposit = monthlyDeposits.length > 0 
-            ? Math.round(totalDeposits / monthlyDeposits.length)
-            : 0;
+        // Deposits and averages for the Monthly Deposits Info card
+        const totalDeposits = monthlyDeposits.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+        const avgMonthlyDeposit = monthlyDeposits.length > 0
+          ? Math.round(totalDeposits / monthlyDeposits.length)
+          : 0;
 
-          // Calculate total fund (deposits + shares + profit - loan remaining)
-          const loanRemaining = totalLoanTaken - totalLoanRepaid;
-          const totalFund = totalDeposits + totalShareValue + totalProfitEarned - loanRemaining;
+        // Shares
+        const totalSharesFromTx = sharePurchases.reduce((sum, t) => sum + (parseInt(t.shareAmount) || 0), 0);
+        const totalShareValue = sharePurchases.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+        const sharePrice = 500; // if needed to derive value
+        const totalShares = shareCountFromMember > 0 ? shareCountFromMember : totalSharesFromTx;
 
-          setFinancialData({
-            totalFund: totalFund,
-            totalShares: totalShares,
-            shareValue: totalShareValue,
-            monthlyDeposit: avgMonthlyDeposit,
-            totalDeposits: totalDeposits,
-            dueMonths: missedMonths.length,
-            nextPaymentDue: currentDate.toLocaleDateString('bn-BD'),
-            loanTaken: totalLoanTaken,
-            loanRemaining: loanRemaining,
-            profitEarned: totalProfitEarned
-          });
+        // Loans & Profit
+        const totalLoanTaken = loanDisbursements.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+        const totalLoanRepaid = loanRepayments.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+        const loanRemaining = totalLoanTaken - totalLoanRepaid;
+        const totalProfitEarned = profitDistributions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+        // 4) Due Months calculation
+        const currentDate = new Date();
+        const monthsFromJoin = [];
+        const startDate = new Date(memberJoinDate.getFullYear(), memberJoinDate.getMonth(), 1);
+        const endDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        for (let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
+          monthsFromJoin.push(new Date(d));
         }
+
+        // Build a set of paid month-year keys from monthly deposit transactions
+        const paidMonthKeys = new Set();
+        monthlyDeposits.forEach((t) => {
+          const dateCandidate = t?.date ? new Date(t.date) : (t.createdAt?.seconds ? new Date(t.createdAt.seconds * 1000) : undefined);
+          const yearInt = dateCandidate?.getFullYear?.() || new Date().getFullYear();
+          const monthInt = (typeof t.month === 'number') ? t.month : (dateCandidate?.getMonth?.() ?? undefined);
+          if (typeof monthInt === 'number') {
+            paidMonthKeys.add(`${yearInt}-${monthInt}`);
+          }
+        });
+
+        const missedMonths = monthsFromJoin.filter((month) => {
+          const key = `${month.getFullYear()}-${month.getMonth()}`;
+          return !paidMonthKeys.has(key) && month <= endDate;
+        });
+        console.log('FinancialSummary: due months computed', missedMonths.length);
+
+        // 5) Update UI state
+        setFinancialData({
+          totalFund: totalFund,
+          totalShares: totalShares,
+          shareValue: totalShareValue || (totalShares * sharePrice),
+          monthlyDeposit: avgMonthlyDeposit,
+          totalDeposits: totalDeposits,
+          dueMonths: missedMonths.length,
+          nextPaymentDue: currentDate.toLocaleDateString('bn-BD'),
+          loanTaken: totalLoanTaken,
+          loanRemaining: loanRemaining,
+          profitEarned: totalProfitEarned
+        });
       } catch (error) {
         console.error('আর্থিক তথ্য লোড করতে ত্রুটি:', error);
       } finally {
         setLoading(false);
+        console.log('FinancialSummary: loadFinancialData completed');
       }
     };
 
     loadFinancialData();
+  }, [currentUser]);
+
+  // Direct Firestore query to load recent user transactions for the card
+  useEffect(() => {
+    const loadUserTransactions = async () => {
+      if (!currentUser?.uid && !currentUser?.id) return;
+      try {
+        setTxLoading(true);
+        const effectiveMemberId = currentUser.uid || currentUser.id;
+        console.log('FinancialSummary: loading recent transactions from Firestore for memberId', effectiveMemberId);
+        // Query Firestore directly by memberId; avoid orderBy to skip composite index requirement
+        const q = query(
+          collection(db, 'transactions'),
+          where('memberId', '==', effectiveMemberId),
+          limit(25)
+        );
+        const snapshot = await getDocs(q);
+        const tx = [];
+        snapshot.forEach(doc => tx.push({ id: doc.id, ...doc.data() }));
+        // Sort by createdAt desc in-memory and take top 5
+        const sorted = tx.sort((a, b) => {
+          const aTs = a.createdAt?.seconds || 0;
+          const bTs = b.createdAt?.seconds || 0;
+          return bTs - aTs;
+        }).slice(0, 5);
+        setUserTransactions(sorted);
+        console.log('FinancialSummary: recent transactions loaded', sorted.length);
+      } catch (error) {
+        console.error('FinancialSummary: Firestore user transactions error', error);
+        setUserTransactions([]);
+      } finally {
+        setTxLoading(false);
+      }
+    };
+
+    loadUserTransactions();
   }, [currentUser]);
 
   if (loading) {
@@ -240,6 +318,51 @@ const FinancialSummary = () => {
                 <span className="detail-item__label">পরবর্তী পেমেন্ট:</span>
                 <span className="detail-item__value">{financialData.nextPaymentDue}</span>
               </div>
+            </div>
+          </div>
+
+          {/* Recent Transactions (directly from Firestore by userId) */}
+          <div className="detail-card">
+            <div className="detail-card__header">
+              <div className="detail-card__title">
+                <div className="detail-card__icon">
+                  <DollarSign size={16} />
+                </div>
+                সাম্প্রতিক লেনদেন
+              </div>
+              <ArrowUpRight size={16} style={{ color: '#94a3b8' }} />
+            </div>
+            <div className="detail-card__content">
+              {txLoading ? (
+                <div className="financial-summary__loading">
+                  {/* Minimal, meaningful animation while loading */}
+                  <LoadingAnimation />
+                </div>
+              ) : userTransactions.length === 0 ? (
+                <div className="detail-item">
+                  <span className="detail-item__label">স্বল্প তথ্য:</span>
+                  <span className="detail-item__value">কোন লেনদেন পাওয়া যায়নি</span>
+                </div>
+              ) : (
+                userTransactions.map((t) => {
+                  // Safely format date/time from Firestore Timestamp
+                  const createdAtDate = t.createdAt?.seconds
+                    ? new Date(t.createdAt.seconds * 1000)
+                    : new Date();
+                  const dateStr = createdAtDate.toLocaleDateString('bn-BD');
+                  const timeStr = createdAtDate.toLocaleTimeString('bn-BD');
+                  const typeLabel = t.transactionType || t.type || 'other';
+                  const amount = t.amount || 0;
+                  return (
+                    <div key={t.id} className="detail-item">
+                      <span className="detail-item__label">
+                        {typeLabel} • <span style={{ color: '#64748b' }}>{dateStr} {timeStr}</span>
+                      </span>
+                      <span className="detail-item__value">৳ {amount.toLocaleString('bn-BD')}</span>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 

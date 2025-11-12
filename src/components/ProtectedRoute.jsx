@@ -7,6 +7,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
+  // Debug: trace protected route evaluation
+  console.log('[ProtectedRoute] evaluating', { loading, hasUser: !!user, role: user?.role, path: location.pathname });
+
   if (loading) {
     return <LoadingAnimation />;
   }

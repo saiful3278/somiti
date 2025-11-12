@@ -8,17 +8,23 @@ import Meta from '../components/Meta'; // Import the Meta component
 import '../styles/Login.css';
 import '../styles/BengaliContent.css';
 
+// Console log for file load (per workspace rule)
+console.log('[Login] File loaded');
+
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, user } = useAuth();
   const navigate = useNavigate();
 
+  // If already authenticated, redirect to role-based dashboard rather than non-existent /dashboard
   if (isAuthenticated()) {
-    return <Navigate to="/dashboard" replace />;
+    const target = user?.role ? `/${user.role}` : '/member';
+    console.log('[Login] Already authenticated, redirecting to:', target);
+    return <Navigate to={target} replace />;
   }
 
   const handleChange = (e) => {
@@ -39,6 +45,7 @@ const Login = () => {
     setError('');
 
     try {
+      console.log('[Login] Submitting login with email:', formData.email);
       const response = await loginUser(formData.email, formData.password);
 
       if (response.success) {
@@ -57,10 +64,10 @@ const Login = () => {
             default:
               navigate('/member', { replace: true });
           }
+          console.log('[Login] Login successful; navigated to role:', role);
         } else {
           setError(result.error || 'লগইন ব্যর্থ হয়েছে');
         }
-        navigate('/dashboard', { replace: true });
       } else {
         setError(response.message || 'লগইন ব্যর্থ হয়েছে');
       }

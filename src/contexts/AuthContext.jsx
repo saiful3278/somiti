@@ -2,6 +2,9 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MemberService } from '../firebase/memberService';
 
+// Console log for file load (per workspace rule)
+console.log('[AuthContext] File loaded');
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -19,6 +22,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const autoLogin = async () => {
+      console.log('[AuthContext] autoLogin start'); // Debug log
       const token = localStorage.getItem('somiti_token');
       const userId = localStorage.getItem('somiti_uid');
       const savedRole = localStorage.getItem('somiti_role');
@@ -39,20 +43,27 @@ export const AuthProvider = ({ children }) => {
               shareCount: 0,
               totalInvestment: 0
             });
+            console.log('[AuthContext] Debug user restored from localStorage');
           } else {
             // Regular user authentication
             const memberResponse = await MemberService.getMemberById(userId);
             if (memberResponse.success) {
               // Set user with saved role or default to 'member'
-              setUser({
+              const restoredUser = {
                 ...memberResponse.data,
-                role: savedRole || 'member'
-              });
+                // Ensure consistent shape across login and autoLogin
+                id: userId,
+                uid: userId,
+                role: savedRole || memberResponse.data.role || 'member'
+              };
+              setUser(restoredUser);
+              console.log('[AuthContext] User restored on refresh:', restoredUser);
             } else {
               throw new Error('Failed to fetch member data');
             }
           }
         } catch (err) {
+          console.error('[AuthContext] autoLogin error, performing logout:', err);
           logout();
         }
       } else {
@@ -69,8 +80,10 @@ export const AuthProvider = ({ children }) => {
         };
         setUser(defaultUser);
         */
+        console.log('[AuthContext] No token found in localStorage');
       }
       setLoading(false);
+      console.log('[AuthContext] autoLogin finished, loading set to false');
     };
 
     autoLogin();
@@ -78,6 +91,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (token, userId) => {
     try {
+      console.log('[AuthContext] login start for userId:', userId);
       const memberResponse = await MemberService.getMemberById(userId);
       if (memberResponse.success) {
         const userData = memberResponse.data;
@@ -87,6 +101,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('somiti_uid', userId);
         // Save the user's role to localStorage for persistence
         localStorage.setItem('somiti_role', userData.role || 'member');
+        console.log('[AuthContext] login success, user set:', userWithId);
         return { user: userWithId }; // Return user data
       } else {
         throw new Error('User data not found in Firestore');
@@ -99,6 +114,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('[AuthContext] logout called');
     setUser(null);
     localStorage.removeItem('somiti_token');
     localStorage.removeItem('somiti_uid');
@@ -110,6 +126,7 @@ export const AuthProvider = ({ children }) => {
       const updatedUser = { ...user, role: newRole };
       setUser(updatedUser);
       localStorage.setItem('somiti_role', newRole);
+      console.log('[AuthContext] switchRole ->', newRole);
       
       // Navigate to the appropriate dashboard based on role
       const roleRoutes = {

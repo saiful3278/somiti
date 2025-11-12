@@ -22,18 +22,27 @@ export const UserProvider = ({ children }) => {
   // In a real app, this would be connected to Firebase Auth
   const [selectedUserId, setSelectedUserId] = useState(null); // Default user ID
 
+  // Align selected user id both for login and refresh (uid or id)
   useEffect(() => {
-    if (authUser && authUser.uid) {
-      setSelectedUserId(authUser.uid);
+    if (authUser) {
+      const resolvedId = authUser.uid || authUser.id;
+      console.log('[UserContext] Resolved selectedUserId from authUser:', resolvedId);
+      if (resolvedId) {
+        setSelectedUserId(resolvedId);
+      }
     }
   }, [authUser]);
 
   const loadCurrentUser = useCallback(async () => {
-    if (!selectedUserId) return;
+    if (!selectedUserId) {
+      console.log('[UserContext] loadCurrentUser skipped: no selectedUserId');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
+      console.log('[UserContext] Loading current user from members with id:', selectedUserId);
 
       const result = await MemberService.getAllMembers();
       if (result.success && result.data.length > 0) {
@@ -76,6 +85,7 @@ export const UserProvider = ({ children }) => {
       setError('ব্যবহারকারীর তথ্য লোড করতে ত্রুটি হয়েছে');
     } finally {
       setLoading(false);
+      console.log('[UserContext] loadCurrentUser finished, loading set to false');
     }
   }, [selectedUserId]);
 
