@@ -20,7 +20,12 @@ import LoadingAnimation from './common/LoadingAnimation';
 import { useUser } from '../contexts/UserContext';
 import '../styles/components/MemberDashboard.css';
 
+// Console log at module load to aid debugging across sessions
+console.log('[MemberDashboard] module loaded');
+
 const MemberDashboard = () => {
+  // Lightweight render trace (timestamped) for debugging without impacting performance
+  console.log('[MemberDashboard] render', { time: new Date().toISOString() });
   const { currentUser, loading: userLoading } = useUser();
   const [loading, setLoading] = useState({ initial: true });
   const [somitiUserId, setSomitiUserId] = useState('');
@@ -32,18 +37,28 @@ const MemberDashboard = () => {
     attendanceRate: 0
   });
 
+  // Log mount/unmount lifecycle
+  useEffect(() => {
+    console.log('[MemberDashboard] mounted');
+    return () => {
+      console.log('[MemberDashboard] unmounted');
+    };
+  }, []);
+
   // Load member data
   useEffect(() => {
     const loadMemberData = async () => {
       if (!currentUser?.uid) return;
 
       try {
+        console.log('[MemberDashboard] loadMemberData:start', { uid: currentUser?.uid });
         setLoading({ initial: true });
 
         // Calculate somiti_user_id
         const membersResult = await MemberService.getActiveMembers();
         if (membersResult.success && membersResult.data) {
           const allMembers = membersResult.data;
+          console.log('[MemberDashboard] activeMembers:fetched', { count: allMembers.length });
           
           const sortedMembers = allMembers.sort((a, b) => {
             // Ensure we have valid dates
@@ -73,6 +88,7 @@ const MemberDashboard = () => {
           const currentUserIndex = sortedMembers.findIndex(member => member.id === currentUser.uid);
           const calculatedSomitiUserId = currentUserIndex !== -1 ? currentUserIndex + 1 : '';
           setSomitiUserId(calculatedSomitiUserId);
+          console.log('[MemberDashboard] somitiUserId:calculated', { somitiUserId: calculatedSomitiUserId });
            
            // Also get the actual joining date for the current user
            const currentUserData = sortedMembers.find(member => member.id === currentUser.uid);
@@ -92,13 +108,19 @@ const MemberDashboard = () => {
                  yearsOfMembership: Math.max(0, yearsOfMembership),
                  attendanceRate: Math.floor(Math.random() * 30) + 70 // Simulated attendance rate 70-100%
                });
+                console.log('[MemberDashboard] stats:updated', {
+                  totalMembers: allMembers.length,
+                  memberRank: calculatedSomitiUserId,
+                  yearsOfMembership: Math.max(0, yearsOfMembership)
+                });
              }
            }
         }
 
         setLoading({ initial: false });
+        console.log('[MemberDashboard] loadMemberData:done');
       } catch (error) {
-        console.error('সদস্য তথ্য লোড করতে ত্রুটি:', error);
+        console.error('[MemberDashboard] সদস্য তথ্য লোড করতে ত্রুটি:', error);
         setLoading({ initial: false });
       }
     };
