@@ -130,8 +130,11 @@ const MemberDashboard = () => {
 
   // Show loading animation if user is still loading or initial data is loading
   if (userLoading || loading.initial) {
+    console.log('[MemberDashboard] loading:active', { userLoading, initialData: loading.initial });
     return <LoadingAnimation />;
   }
+
+  console.log('[MemberDashboard] render:final', { state: { somitiUserId, joiningDate, memberStats } });
 
   return (
     <div className="member-dashboard-home">
@@ -255,7 +258,7 @@ const MemberDashboard = () => {
             </div>
             <div className="benefit-item">
               <Target className="h-4 w-4 text-green-500" />
-              <span>বিনিয়োগের সুযোগ</span>
+              <span>বিনিযোগের সুযোগ</span>
             </div>
             <div className="benefit-item">
               <BookOpen className="h-4 w-4 text-blue-500" />

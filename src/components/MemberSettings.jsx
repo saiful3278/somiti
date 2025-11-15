@@ -7,10 +7,13 @@ import { doc, getDoc, updateDoc, getDocs, collection } from 'firebase/firestore'
 import LoadingAnimation from './common/LoadingAnimation';
 
 const MemberSettings = () => {
+  console.log("MemberSettings component module loaded.");
   const [activeTab, setActiveTab] = useState('profile');
   const [saveStatus, setSaveStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const { currentUser } = useUser();
+
+  console.log("MemberSettings component rendered.");
 
   // Profile data - expanded to include all Firestore fields
   const [profileData, setProfileData] = useState({
@@ -34,11 +37,13 @@ const MemberSettings = () => {
     const fetchMemberData = async () => {
       if (currentUser && currentUser.uid) {
         try {
+          console.log("Fetching member data for UID:", currentUser.uid);
           const memberDocRef = doc(db, 'members', currentUser.uid);
           const memberDocSnap = await getDoc(memberDocRef);
 
           if (memberDocSnap.exists()) {
             const data = memberDocSnap.data();
+            console.log("Member data found:", data);
             
             // Fetch all members to determine the somiti_user_id
             const allMembersSnap = await getDocs(collection(db, 'members'));
@@ -70,6 +75,7 @@ const MemberSettings = () => {
             });
             const currentUserIndex = sortedMembers.findIndex(member => member.id === currentUser.uid);
             const somiti_user_id = currentUserIndex !== -1 ? currentUserIndex + 1 : '';
+            console.log("Calculated somiti_user_id:", somiti_user_id);
 
             setProfileData({
               name: data.name || '',
@@ -98,10 +104,15 @@ const MemberSettings = () => {
         }
       } else {
         setLoading(false);
+        console.log("No current user found.");
       }
     };
 
     fetchMemberData();
+
+    return () => {
+      console.log("MemberSettings component unmounted.");
+    };
   }, [currentUser]);
 
   // Notification settings
@@ -128,10 +139,12 @@ const MemberSettings = () => {
   });
 
   const handleProfileChange = (key, value) => {
+    console.log(`Profile data changed: ${key} = ${value}`);
     setProfileData(prev => ({ ...prev, [key]: value }));
   };
 
   const handleNotificationChange = (key) => {
+    console.log(`Notification setting toggled: ${key}`);
     setNotificationSettings(prev => ({
       ...prev,
       [key]: !prev[key]
@@ -139,10 +152,12 @@ const MemberSettings = () => {
   };
 
   const handleSecurityChange = (key, value) => {
+    console.log(`Security setting changed: ${key} = ${value}`);
     setSecuritySettings(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSystemChange = (key, value) => {
+    console.log(`System preference changed: ${key} = ${value}`);
     setSystemPreferences(prev => ({ ...prev, [key]: value }));
   };
 
@@ -154,6 +169,7 @@ const MemberSettings = () => {
       return;
     }
 
+    console.log("Saving changes for user:", currentUser.uid);
     setSaveStatus('saving');
     try {
       const memberDocRef = doc(db, 'members', currentUser.uid);
@@ -165,6 +181,7 @@ const MemberSettings = () => {
         updatedAt: new Date().toISOString(),
       });
       setSaveStatus('success');
+      console.log("Changes saved successfully.");
     } catch (error) {
       console.error("Error updating document: ", error);
       setSaveStatus('error');
@@ -175,9 +192,7 @@ const MemberSettings = () => {
 
   const tabs = [
     { id: 'profile', label: 'প্রোফাইল', icon: User },
-    { id: 'notifications', label: 'নোটিফিকেশন', icon: Bell },
-    { id: 'security', label: 'নিরাপত্তা', icon: Shield },
-    { id: 'system', label: 'সিস্টেম', icon: Settings }
+    { id: 'system', label: 'সিস্টেম', icon: Settings },
   ];
 
   const notificationItems = [
@@ -188,9 +203,11 @@ const MemberSettings = () => {
   ];
 
   if (loading) {
+    console.log("Loading state is true, showing loading animation.");
     return <LoadingAnimation />;
   }
 
+  console.log("Final render of MemberSettings component.");
   return (
     <div className="member-settings">
       <div className="member-settings-container">
@@ -204,10 +221,13 @@ const MemberSettings = () => {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                console.log(`Switched to tab: ${tab.id}`);
+                setActiveTab(tab.id);
+              }}
               className={`member-tab ${activeTab === tab.id ? 'active' : ''}`}
             >
-              <tab.icon className="w-5 h-5 mr-2 inline" />
+              <tab.icon className="tab-icon" />
               {tab.label}
             </button>
           ))}
@@ -264,9 +284,7 @@ const MemberSettings = () => {
                     profileData.status === 'active' 
                       ? 'profile-status-active' 
                       : 'profile-status-inactive'
-                  }`}>
-                    {profileData.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}
-                  </span>
+                  }`}>{profileData.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span>
                 </div>
 
                 <div className="profile-field profile-field-full">
@@ -278,86 +296,55 @@ const MemberSettings = () => {
               </div>
 
               {/* Share Information */}
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h3 className="text-md font-semibold text-gray-800 mb-3">শেয়ার তথ্য</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">শেয়ার সংখ্যা</label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
-                      {profileData.shareCount || '০'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">যোগদানের তারিখ</label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
-                      {profileData.joiningDate || 'তথ্য নেই'}
-                    </div>
-                  </div>
+              <div className="profile-group">
+                <h3 className="profile-group-title">শেয়ার তথ্য</h3>
+                <div className="profile-field">
+                  <label className="profile-label">শেয়ার সংখ্যা</label>
+                  <span className="profile-value">{profileData.shareCount || '০'}</span>
+                </div>
+                <div className="profile-field">
+                  <label className="profile-label">যোগদানের তারিখ</label>
+                  <span className="profile-value">{profileData.joiningDate || 'তথ্য নেই'}</span>
                 </div>
               </div>
 
               {/* Nominee Information */}
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h3 className="text-md font-semibold text-gray-800 mb-3">নমিনি তথ্য</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">নমিনির নাম</label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
-                      {profileData.nomineeName || 'তথ্য নেই'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">নমিনির ফোন</label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
-                      {profileData.nomineePhone || 'তথ্য নেই'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">নমিনির সাথে সম্পর্ক</label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
-                      {profileData.nomineeRelation || 'তথ্য নেই'}
-                    </div>
-                  </div>
+              <div className="profile-group">
+                <h3 className="profile-group-title">নমিনি তথ্য</h3>
+                <div className="profile-field">
+                  <label className="profile-label">নমিনির নাম</label>
+                  <span className="profile-value">{profileData.nomineeName || 'তথ্য নেই'}</span>
+                </div>
+                <div className="profile-field">
+                  <label className="profile-label">নমিনির ফোন</label>
+                  <span className="profile-value">{profileData.nomineePhone || 'তথ্য নেই'}</span>
+                </div>
+                <div className="profile-field">
+                  <label className="profile-label">নমিনির সাথে সম্পর্ক</label>
+                  <span className="profile-value">{profileData.nomineeRelation || 'তথ্য নেই'}</span>
                 </div>
               </div>
 
               {/* Account Information */}
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h3 className="text-md font-semibold text-gray-800 mb-3">অ্যাকাউন্ট তথ্য</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">ইউজার আইডি</label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900 font-mono text-sm">
-                      {profileData.somiti_user_id || 'তথ্য নেই'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">তৈরির তারিখ</label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
-                      {profileData.createdAt ? new Date(profileData.createdAt).toLocaleDateString('bn-BD') : 'তথ্য নেই'}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">সর্বশেষ আপডেট</label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white text-gray-900">
-                      {profileData.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString('bn-BD') : 'তথ্য নেই'}
-                    </div>
-                  </div>
+              <div className="profile-group">
+                <h3 className="profile-group-title">অ্যাকাউন্ট তথ্য</h3>
+                <div className="profile-field">
+                  <label className="profile-label">ইউজার আইডি</label>
+                  <span className="profile-value profile-value-mono">{profileData.somiti_user_id || 'তথ্য নেই'}</span>
                 </div>
-              </div>
-
-              {/* Information Note */}
-              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-                <div className="flex items-center">
-                  <FileText className="h-5 w-5 text-blue-600 mr-2" />
-                  <p className="text-sm text-blue-800">
-                    এই তথ্যগুলি শুধুমাত্র দেখার জন্য। কোনো পরিবর্তনের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।
-                  </p>
+                <div className="profile-field">
+                  <label className="profile-label">তৈরির তারিখ</label>
+                  <span className="profile-value">
+                    {profileData.createdAt && profileData.createdAt.toDate 
+                      ? new Date(profileData.createdAt.toDate()).toLocaleDateString('bn-BD') 
+                      : 'তথ্য নেই'}
+                  </span>
+                </div>
+                <div className="profile-field">
+                  <label className="profile-label">সর্বশেষ আপডেট</label>
+                  <span className="profile-value">
+                    {profileData.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString('bn-BD') : 'তথ্য নেই'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -366,162 +353,101 @@ const MemberSettings = () => {
 
         {/* Notifications Tab */}
         {activeTab === 'notifications' && (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">নোটিফিকেশন সেটিংস</h2>
-            
-            <div className="space-y-4">
+          <div className="settings-section">
+            <h2 className="settings-section-title">নোটিফিকেশন সেটিংস</h2>
+            <div className="settings-list">
               {notificationItems.map((item) => (
-                <div key={item.key} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                  <div>
-                    <h3 className="font-medium text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-500">{item.desc}</p>
+                <div key={item.key} className="settings-item">
+                  <div className="settings-item-text">
+                    <h3 className="settings-item-title">{item.title}</h3>
+                    <p className="settings-item-description">{item.desc}</p>
                   </div>
-                  <button
-                    onClick={() => handleNotificationChange(item.key)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      notificationSettings[item.key] ? 'bg-red-600' : 'bg-gray-300'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        notificationSettings[item.key] ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
+                  <div className="settings-item-control">
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={notificationSettings[item.key]}
+                        onChange={() => handleNotificationChange(item.key)}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
                 </div>
               ))}
-            </div>
-
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-              <div className="flex items-center">
-                <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                <p className="text-sm text-green-800">সেটিংস স্বয়ংক্রিয়ভাবে সংরক্ষিত হয়</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Security Tab */}
-        {activeTab === 'security' && (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">নিরাপত্তা সেটিংস</h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <h3 className="font-medium text-gray-900">দ্বি-ফ্যাক্টর প্রমাণীকরণ</h3>
-                  <p className="text-sm text-gray-500">অতিরিক্ত নিরাপত্তার জন্য সক্রিয় করুন</p>
-                </div>
-                <button
-                  onClick={() => handleSecurityChange('twoFactorAuth', !securitySettings.twoFactorAuth)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    securitySettings.twoFactorAuth ? 'bg-red-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      securitySettings.twoFactorAuth ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                <div>
-                  <h3 className="font-medium text-gray-900">লগইন সতর্কতা</h3>
-                  <p className="text-sm text-gray-500">নতুন ডিভাইস থেকে লগইনের বিজ্ঞপ্তি</p>
-                </div>
-                <button
-                  onClick={() => handleSecurityChange('loginAlerts', !securitySettings.loginAlerts)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    securitySettings.loginAlerts ? 'bg-red-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      securitySettings.loginAlerts ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">পাসওয়ার্ড মেয়াদ (দিন)</label>
-                <select
-                  value={securitySettings.passwordExpiry}
-                  onChange={(e) => handleSecurityChange('passwordExpiry', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                >
-                  <option value="30">৩০ দিন</option>
-                  <option value="60">৬০ দিন</option>
-                  <option value="90">৯০ দিন</option>
-                  <option value="never">কখনো নয়</option>
-                </select>
-              </div>
             </div>
           </div>
         )}
 
         {/* System Tab */}
         {activeTab === 'system' && (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">সিস্টেম সেটিংস</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ভাষা</label>
-                <select
-                  value={systemPreferences.language}
-                  onChange={(e) => handleSystemChange('language', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                >
-                  <option value="bn">বাংলা</option>
-                  <option value="en">English</option>
-                </select>
+          <div className="settings-section">
+            <h2 className="settings-section-title">সিস্টেম সেটিংস</h2>
+            <div className="settings-grid">
+              <div className="settings-item">
+                <div className="settings-item-text">
+                  <h3 className="settings-item-title">ভাষা</h3>
+                </div>
+                <div className="settings-item-control">
+                  <select
+                    className="settings-dropdown"
+                    value={systemPreferences.language}
+                    onChange={(e) => handleSystemChange('language', e.target.value)}
+                  >
+                    <option value="bn">বাংলা</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">থিম</label>
-                <select
-                  value={systemPreferences.theme}
-                  onChange={(e) => handleSystemChange('theme', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                >
-                  <option value="light">হালকা</option>
-                  <option value="dark">গাঢ়</option>
-                </select>
+              <div className="settings-item">
+                <div className="settings-item-text">
+                  <h3 className="settings-item-title">থিম</h3>
+                </div>
+                <div className="settings-item-control">
+                  <select
+                    className="settings-dropdown"
+                    value={systemPreferences.theme}
+                    onChange={(e) => handleSystemChange('theme', e.target.value)}
+                  >
+                    <option value="light">হালকা</option>
+                    <option value="dark">গাঢ়</option>
+                  </select>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">মুদ্রা</label>
-                <select
-                  value={systemPreferences.currency}
-                  onChange={(e) => handleSystemChange('currency', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                >
-                  <option value="BDT">বাংলাদেশী টাকা (৳)</option>
-                  <option value="USD">US Dollar ($)</option>
-                </select>
+              <div className="settings-item">
+                <div className="settings-item-text">
+                  <h3 className="settings-item-title">মুদ্রা</h3>
+                </div>
+                <div className="settings-item-control">
+                  <select
+                    className="settings-dropdown"
+                    value={systemPreferences.currency}
+                    onChange={(e) => handleSystemChange('currency', e.target.value)}
+                  >
+                    <option value="BDT">বাংলাদেশী টাকা (৳)</option>
+                    <option value="USD">US Dollar ($)</option>
+                  </select>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">তারিখ ফরম্যাট</label>
-                <select
-                  value={systemPreferences.dateFormat}
-                  onChange={(e) => handleSystemChange('dateFormat', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                >
-                  <option value="dd/mm/yyyy">DD/MM/YYYY</option>
-                  <option value="mm/dd/yyyy">MM/DD/YYYY</option>
-                  <option value="yyyy-mm-dd">YYYY-MM-DD</option>
-                </select>
+              <div className="settings-item">
+                <div className="settings-item-text">
+                  <h3 className="settings-item-title">তারিখ ফরম্যাট</h3>
+                </div>
+                <div className="settings-item-control">
+                  <select
+                    className="settings-dropdown"
+                    value={systemPreferences.dateFormat}
+                    onChange={(e) => handleSystemChange('dateFormat', e.target.value)}
+                  >
+                    <option value="dd/mm/yyyy">DD/MM/YYYY</option>
+                    <option value="mm/dd/yyyy">MM/DD/YYYY</option>
+                    <option value="yyyy-mm-dd">YYYY-MM-DD</option>
+                  </select>
+                </div>
               </div>
-
-              <button
-                onClick={saveChanges}
-                className="flex items-center justify-center w-full bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
-              >
-                <Save className="h-4 w-4 mr-2" />
+            </div>
+            <div className="settings-footer">
+              <button onClick={saveChanges} className="btn btn-primary">
+                <Save className="btn-icon" />
                 সেটিংস সংরক্ষণ করুন
               </button>
             </div>
@@ -530,9 +456,18 @@ const MemberSettings = () => {
 
           {/* Save Status */}
           {saveStatus && (
-            <div className="save-status success">
-              <CheckCircle className="h-4 w-4 mr-2" />
-              <span>সংরক্ষিত হয়েছে!</span>
+            <div className={`save-status ${saveStatus === 'success' ? 'success' : 'error'}`}>
+              {saveStatus === 'success' ? (
+                <>
+                  <CheckCircle className="status-icon" />
+                  <span>সংরক্ষিত হয়েছে!</span>
+                </>
+              ) : (
+                <>
+                  <Shield className="status-icon" />
+                  <span>ত্রুটি হয়েছে!</span>
+                </>
+              )}
             </div>
           )}
         </div>

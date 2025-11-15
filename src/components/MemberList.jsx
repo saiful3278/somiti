@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Search, Filter, UserPlus, Eye, EyeOff, X, Phone, Mail, MapPin, Save, Loader2, DollarSign, User, Users, Crown, Info, Copy, Check, AlertTriangle, Shield, Lock, Download } from 'lucide-react';
+import { Search, Filter, UserPlus, Eye, EyeOff, X, Phone, Mail, MapPin, Save, Loader2, DollarSign, User, Users, Crown, Info, Copy, Check, AlertTriangle, Shield, Lock, Download, Calendar } from 'lucide-react';
 import { MemberService } from '../firebase/memberService';
 import SuccessAnimation from './common/SuccessAnimation';
 import LoadingAnimation from './common/LoadingAnimation';
@@ -99,7 +99,7 @@ const MemberList = () => {
       const result = await MemberService.getActiveMembers();
       
       if (result.success) {
-        const sortedMembers = result.data.sort((a, b) => {
+        const sortedMembers = [...result.data].sort((a, b) => {
           // Ensure we have valid dates
           const joiningDateA = a.joiningDate || a.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
           const joiningDateB = b.joiningDate || b.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
@@ -236,7 +236,6 @@ const MemberList = () => {
         joiningDate: newMemberData.joiningDate,
         role: newMemberData.role || 'member',
         email: credentials.email,
-        password: credentials.password,
         user_id: user_id, // Save user_id from backend
         status: 'active',
         createdAt: new Date().toISOString(),
@@ -254,6 +253,7 @@ const MemberList = () => {
           type: 'success'
         });
         setShowSuccessAnimation(true);
+        console.log('MemberList: plaintext password not stored; email saved for credentials');
         // Reset form
         setNewMemberData({
           name: '',
@@ -390,6 +390,8 @@ const MemberList = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="member-search-input pl-10"
+            aria-label="সদস্য অনুসন্ধান"
+            aria-controls="member-cards"
           />
         </div>
 
@@ -398,10 +400,11 @@ const MemberList = () => {
           {filterOptions.map((option) => (
             <button
               key={option.value}
-              onClick={() => setSelectedRole(option.value)}
+              onClick={() => { console.log('MemberList: filter clicked', option.value); setSelectedRole(option.value); }}
               className={`member-filter-btn flex items-center space-x-2 ${
                 selectedRole === option.value ? 'active' : ''
               }`}
+              aria-pressed={selectedRole === option.value}
             >
               <option.icon className="h-4 w-4" />
               <span>{option.label}</span>
@@ -411,19 +414,69 @@ const MemberList = () => {
       </div>
 
       {/* Member Cards - Single Column Layout */}
-      <div className="member-cards-container">
+      <div className="member-cards-container" id="member-cards" role="list">
         {loading ? (
-          <LoadingAnimation />
+          (() => {
+            console.log('MemberList: skeleton cards match actual card size');
+            return (
+              <div className="member-list-loading" role="status" aria-live="polite">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="member-card member-card-minimal skeleton"
+                    role="listitem"
+                    aria-hidden="true"
+                  >
+                    <div className="member-serial-number sk-line" style={{ minWidth: '24px' }} />
+
+                    <div className="sk-avatar" />
+
+                    <div className="member-info">
+                      <h3 className="member-name">
+                        <div className="sk-line" style={{ width: '65%' }} />
+                      </h3>
+
+                      <div className="member-address">
+                        <div className="sk-icon" />
+                        <div className="sk-line" style={{ width: '80%' }} />
+                      </div>
+
+                      <div className="member-details-row">
+                        <div className="sk-pill" style={{ width: '110px' }} />
+                        <span className="sk-pill" style={{ width: '80px' }} />
+                      </div>
+
+                      <div className="member-meta-row">
+                        <div className="sk-icon" />
+                        <div className="sk-line" style={{ width: '40%' }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()
         ) : (
           filteredMembers.map((member, index) => {
             const roleInfo = getRoleInfo(member.role);
             const RoleIcon = roleInfo.icon;
             const displayId = member.somiti_user_id;
+            const joinDateStr = (() => {
+              const jd = member.joiningDate || member.joinDate || member.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || member.createdAt;
+              try {
+                return jd ? new Date(jd).toLocaleDateString('bn-BD') : '';
+              } catch (e) {
+                console.log('MemberList: joinDate in list formatting failed', e);
+                return '';
+              }
+            })();
 
             return (
               <div 
                 key={member.id} 
-                className="member-card member-card-minimal"
+                className={`member-card member-card-minimal ${member.role}`}
+                role="listitem"
+                tabIndex={0}
                 onClick={() => handleMemberClick(member)}
               >
                 <div className="member-serial-number">
@@ -462,6 +515,13 @@ const MemberList = () => {
                       {roleInfo.label}
                     </span>
                   </div>
+
+                  {joinDateStr && (
+                    <div className="member-meta-row">
+                      <Calendar className="w-4 h-4" />
+                      <span>যোগদান: {joinDateStr}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -815,20 +875,7 @@ const MemberList = () => {
                     </div>
                     <div className="member-detail-item">
                       <span className="member-detail-label">পাসওয়ার্ড:</span>
-                      <div className="member-detail-value-with-copy">
-                        <span className="member-detail-value code">{selectedMember.password}</span>
-                        <button
-                          className="copy-btn"
-                          onClick={() => copyToClipboard(selectedMember.password, 'password')}
-                          title="পাসওয়ার্ড কপি করুন"
-                        >
-                          {copiedField === 'password' ? (
-                            <Check className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
+                      <span className="member-detail-value code">••••••••</span>
                     </div>
                   </div>
                 </div>
@@ -864,7 +911,15 @@ const MemberList = () => {
                   <div className="member-detail-item">
                     <span className="member-detail-label">যোগদানের তারিখ:</span>
                     <span className="member-detail-value">
-                      {new Date(selectedMember.joinDate).toLocaleDateString('bn-BD')}
+                      {(() => {
+                        const jd = selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || selectedMember.createdAt;
+                        try {
+                          return jd ? new Date(jd).toLocaleDateString('bn-BD') : 'N/A';
+                        } catch (e) {
+                          console.log('MemberList: joiningDate formatting failed', e);
+                          return 'N/A';
+                        }
+                      })()}
                     </span>
                   </div>
                 </div>

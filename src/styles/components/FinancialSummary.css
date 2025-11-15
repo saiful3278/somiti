@@ -1,4 +1,15 @@
 /* FinancialSummary Light Design Styles */
+:root {
+  --fs-surface: #ffffff;
+  --fs-surface-1: #f8fafc;
+  --fs-muted: #64748b;
+  --fs-on-surface: #1e293b;
+  --fs-primary: #3b82f6;
+  --fs-secondary: #8b5cf6;
+  --fs-success: #10b981;
+  --fs-warning: #ef4444;
+  --fs-shadow: rgba(0, 0, 0, 0.08);
+}
 
 .financial-summary {
   min-height: 100vh;
@@ -63,8 +74,8 @@
   border-radius: 1rem;
   padding: 1.5rem;
   border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px var(--fs-shadow);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
   position: relative;
   overflow: hidden;
 }
@@ -82,7 +93,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(90deg, var(--fs-primary), var(--fs-secondary));
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -109,12 +120,15 @@
   background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
   border: 1px solid rgba(148, 163, 184, 0.2);
   color: #475569;
+  transition: transform .2s ease;
 }
+
+.financial-card:hover .financial-card__icon { transform: translateY(-1px); }
 
 .financial-card__label {
   font-size: 0.75rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--fs-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -123,14 +137,14 @@
 .financial-card__value {
   font-size: 2rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--fs-on-surface);
   margin-bottom: 0.5rem;
   line-height: 1.2;
 }
 
 .financial-card__description {
   font-size: 0.875rem;
-  color: #64748b;
+  color: var(--fs-muted);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -231,6 +245,10 @@
   gap: 0.75rem;
 }
 
+.detail-item:hover {
+  background: rgba(248, 250, 252, 0.95);
+}
+
 .detail-item {
   display: flex;
   justify-content: space-between;
@@ -329,6 +347,9 @@
   color: #10b981;
 }
 
+@keyframes fs-success-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .85; } }
+.status-card--success { animation: fs-success-pulse 2.5s ease-in-out infinite; }
+
 .status-card--info {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(255, 255, 255, 0.9));
   border-color: rgba(59, 130, 246, 0.2);
@@ -405,8 +426,17 @@
 .financial-card:focus,
 .detail-card:focus,
 .status-card:focus {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--fs-primary);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .financial-card,
+  .detail-card,
+  .status-card {
+    transition: none;
+    animation: none;
+  }
 }
 
 /* Print Styles */

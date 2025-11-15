@@ -14,7 +14,6 @@ import {
   Target
 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
-import { TransactionService } from '../firebase/transactionService';
 import { MemberService } from '../firebase/memberService';
 // Firestore direct imports for user transactions card
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
@@ -127,13 +126,14 @@ const FinancialSummary = () => {
         // Build a set of paid month-year keys from monthly deposit transactions
         const paidMonthKeys = new Set();
         monthlyDeposits.forEach((t) => {
-          const dateCandidate = t?.date ? new Date(t.date) : (t.createdAt?.seconds ? new Date(t.createdAt.seconds * 1000) : undefined);
-          const yearInt = dateCandidate?.getFullYear?.() || new Date().getFullYear();
-          const monthInt = (typeof t.month === 'number') ? t.month : (dateCandidate?.getMonth?.() ?? undefined);
-          if (typeof monthInt === 'number') {
+          const candidate = toDateSafe(t?.date) || toDateSafe(t?.createdAt);
+          const yearInt = candidate?.getFullYear?.();
+          const monthInt = (typeof t.month === 'number') ? t.month : candidate?.getMonth?.();
+          if (typeof monthInt === 'number' && typeof yearInt === 'number') {
             paidMonthKeys.add(`${yearInt}-${monthInt}`);
           }
         });
+        console.log('FinancialSummary: paidMonthKeys built', paidMonthKeys.size);
 
         const missedMonths = monthsFromJoin.filter((month) => {
           const key = `${month.getFullYear()}-${month.getMonth()}`;
