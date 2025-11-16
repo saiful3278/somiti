@@ -13,11 +13,13 @@ import {
   Heart,
   Target,
   BookOpen,
-  Bell
+  Bell,
+  Camera
 } from 'lucide-react';
 import { MemberService } from '../firebase/memberService';
 import LoadingAnimation from './common/LoadingAnimation';
 import { useUser } from '../contexts/UserContext';
+import ProfilePhotoModal from './ProfilePhotoModal';
 import '../styles/components/MemberDashboard.css';
 
 // Console log at module load to aid debugging across sessions
@@ -36,6 +38,8 @@ const MemberDashboard = () => {
     yearsOfMembership: 0,
     attendanceRate: 0
   });
+  const [photoURL, setPhotoURL] = useState(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   // Log mount/unmount lifecycle
   useEffect(() => {
@@ -93,6 +97,7 @@ const MemberDashboard = () => {
            // Also get the actual joining date for the current user
            const currentUserData = sortedMembers.find(member => member.id === currentUser.uid);
            if (currentUserData) {
+             setPhotoURL(currentUserData.photoURL || null);
              const actualJoiningDate = currentUserData.joiningDate || currentUserData.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || '';
              if (actualJoiningDate) {
                const joinDate = new Date(actualJoiningDate);
@@ -141,22 +146,52 @@ const MemberDashboard = () => {
       {/* Member Profile Header */}
       <div className="member-profile-header">
         <div className="profile-content">
+          <div 
+            className="profile-avatar" 
+            onClick={() => setIsPhotoModalOpen(true)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && setIsPhotoModalOpen(true)}
+          >
+            {photoURL ? (
+              <>
+                <img src={photoURL} alt="Profile" className="profile-photo" />
+                <div className="photo-overlay">
+                  <Camera className="h-8 w-8" />
+                </div>
+              </>
+            ) : (
+              <>
+                <User className="h-20 w-20" />
+                <div className="photo-overlay">
+                  <Camera className="h-8 w-8" />
+                </div>
+              </>
+            )}
+          </div>
           <div className="profile-info">
-            <div className="profile-avatar">
-              <User className="h-8 w-8" />
-            </div>
             <div className="profile-details">
               <h1>{currentUser?.name || 'লোড হচ্ছে...'}</h1>
-              <p>সদস্য আইডি: {somitiUserId || 'লোড হচ্ছে...'}</p>
-              <p>যোগদানের তারিখ: {joiningDate || 'লোড হচ্ছে...'}</p>
             </div>
           </div>
-          <div className="membership-badge">
-            <p>সদস্যপদের ধরন</p>
-            <p>{currentUser?.membershipType || 'নিয়মিত সদস্য'}</p>
+          <div className="profile-right-info">
+            <p>সদস্য আইডি: {somitiUserId || 'লোড হচ্ছে...'}</p>
+            <p>যোগদানের তারিখ: {joiningDate || 'লোড হচ্ছে...'}</p>
+            <div className="membership-badge">
+              <p>সদস্যপদের ধরন</p>
+              <p>{currentUser?.membershipType || 'নিয়মিত সদস্য'}</p>
+            </div>
           </div>
         </div>
       </div>
+
+      <ProfilePhotoModal 
+        isOpen={isPhotoModalOpen}
+        onClose={() => setIsPhotoModalOpen(false)}
+        userId={currentUser?.uid}
+        currentPhotoURL={photoURL}
+        onPhotoUpdate={(newPhotoURL) => setPhotoURL(newPhotoURL)}
+      />
 
       {/* Member Statistics Cards */}
       <div className="stats-grid">

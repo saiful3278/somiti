@@ -479,49 +479,52 @@ const MemberList = () => {
                 tabIndex={0}
                 onClick={() => handleMemberClick(member)}
               >
-                <div className="member-serial-number">
-                  #{displayId}
+                <div className="member-card-header-row">
+                  <div className="member-serial-badge">
+                    #{displayId}
+                  </div>
+                  <span className={`member-role-badge ${member.role}`}>
+                    <RoleIcon className="w-3 h-3" />
+                    {roleInfo.label}
+                  </span>
                 </div>
 
-                {member.avatar ? (
-                  <img
-                    src={member.avatar}
-                    alt={member.name}
-                    className="member-avatar"
-                  />
-                ) : (
-                  <div className="member-avatar-placeholder">
-                    {getInitials(member.name)}
-                  </div>
-                )}
-
-                <div className="member-info">
-                  <h3 className="member-name">
-                    {member.name}
-                  </h3>
-                  
-                  <div className="member-address">
-                    <MapPin className="w-4 h-4" />
-                    <span>{member.address || 'ঠিকানা যোগ করা হয়নি'}</span>
-                  </div>
-                  
-                  <div className="member-details-row">
-                    <div className="member-share-info">
-                      <DollarSign className="w-4 h-4" />
-                      <span>{member.shareCount} শেয়ার</span>
-                    </div>
-                    <span className={`member-role-badge ${member.role}`}>
-                      <RoleIcon className="w-3 h-3" />
-                      {roleInfo.label}
-                    </span>
-                  </div>
-
-                  {joinDateStr && (
-                    <div className="member-meta-row">
-                      <Calendar className="w-4 h-4" />
-                      <span>যোগদান: {joinDateStr}</span>
+                <div className="member-card-content">
+                  {member.photoURL || member.avatar ? (
+                    <img
+                      src={member.photoURL || member.avatar}
+                      alt={member.name}
+                      className="member-avatar"
+                    />
+                  ) : (
+                    <div className="member-avatar-placeholder">
+                      {getInitials(member.name)}
                     </div>
                   )}
+
+                  <div className="member-info">
+                    <h3 className="member-name">
+                      {member.name}
+                    </h3>
+                    
+                    <div className="member-address">
+                      <MapPin className="w-4 h-4" />
+                      <span>{member.address || 'ঠিকানা যোগ করা হয়নি'}</span>
+                    </div>
+                    
+                    <div className="member-details-row">
+                      <div className="member-share-info">
+                        <DollarSign className="w-4 h-4" />
+                        <span>{member.shareCount} শেয়ার</span>
+                      </div>
+                      {joinDateStr && (
+                        <div className="member-join-date">
+                          <Calendar className="w-4 h-4" />
+                          <span>{joinDateStr}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             );
@@ -824,9 +827,9 @@ const MemberList = () => {
           <div className="member-detail-card" onClick={(e) => e.stopPropagation()}>
             <div className="member-detail-header">
               <div className="member-detail-avatar">
-                {selectedMember.avatar ? (
+                {selectedMember.photoURL || selectedMember.avatar ? (
                   <img
-                    src={selectedMember.avatar}
+                    src={selectedMember.photoURL || selectedMember.avatar}
                     alt={selectedMember.name}
                     className="member-detail-avatar-img"
                   />
