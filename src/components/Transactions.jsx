@@ -3,6 +3,7 @@ import { ArrowLeft, Search, Filter, Calendar, TrendingUp, TrendingDown, Wallet, 
 import { useNavigate } from 'react-router-dom';
 import { TransactionService } from '../firebase/transactionService';
 import LoadingAnimation from './common/LoadingAnimation';
+import '../styles/components/transactions.css';
 
 const Transactions = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Transactions = () => {
 
   // Fetch real transaction data from Firebase
   useEffect(() => {
+    console.log('Transactions page mounted');
     const fetchTransactions = async () => {
       setLoading(true);
       try {
@@ -35,6 +37,7 @@ const Transactions = () => {
               new Date().toLocaleTimeString('bn-BD'))
           }));
           setTransactions(formattedTransactions);
+          console.log('Loaded transactions:', formattedTransactions.length);
         } else {
           console.error('লেনদেন লোড করতে ত্রুটি:', result.error);
           setTransactions([]);
@@ -79,33 +82,30 @@ const Transactions = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="transactions-page">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <button 
-            onClick={() => navigate(-1)}
-            className="p-2 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
+      <div className="transactions-header">
+        <div className="transactions-title-row">
+          <button onClick={() => navigate(-1)} className="back-btn">
+            <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">সকল লেনদেন</h1>
+          <h1 className="transactions-title">সকল লেনদেন</h1>
         </div>
 
 
 
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="transactions-filters">
+          <div className="filters-grid">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="বিবরণ বা সদস্য খুঁজুন..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="transactions-input pl-10"
               />
             </div>
 
@@ -113,7 +113,7 @@ const Transactions = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="transactions-select"
             >
               <option value="all">সব ধরনের</option>
               <option value="income">আয়</option>
@@ -124,7 +124,7 @@ const Transactions = () => {
             <select
               value={filterMethod}
               onChange={(e) => setFilterMethod(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="transactions-select"
             >
               <option value="all">সব পদ্ধতি</option>
               <option value="cash">নগদ</option>
@@ -139,7 +139,7 @@ const Transactions = () => {
                 setFilterType('all');
                 setFilterMethod('all');
               }}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="filters-clear"
             >
               ফিল্টার মুছুন
             </button>
@@ -148,51 +148,41 @@ const Transactions = () => {
       </div>
 
       {/* Transactions List */}
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="transactions-list">
         {loading ? (
-          <LoadingAnimation />
+          <div className="transactions-loading"><LoadingAnimation /></div>
         ) : filteredTransactions.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-gray-600">কোনো লেনদেন পাওয়া যায়নি</p>
-          </div>
+          <div className="transactions-empty">কোনো লেনদেন পাওয়া যায়নি</div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div>
             {filteredTransactions.map((transaction) => (
-              <div key={transaction.id} className="p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+              <div key={transaction.id} className="transaction-item">
+                <div className="item-row">
+                  <div className="item-left">
+                    <div className={`transaction-icon ${
+                      transaction.type === 'income' ? 'income' : 'expense'
                     }`}>
                       {transaction.type === 'income' ? (
-                        <TrendingUp className={`h-4 w-4 ${
-                          transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                        }`} />
+                        <TrendingUp className={`h-4 w-4 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`} />
                       ) : (
-                        <TrendingDown className={`h-4 w-4 ${
-                          transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                        }`} />
+                        <TrendingDown className={`h-4 w-4 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`} />
                       )}
                     </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{transaction.description}</h3>
-                      <p className="text-sm text-gray-600">{transaction.member}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="transaction-text">
+                      <h3>{transaction.description}</h3>
+                      <p>{transaction.member}</p>
+                      <div className="transaction-meta">
+                        <div className="chip">
                           {getPaymentIcon(transaction.method)}
                           <span>{transaction.method}</span>
                         </div>
-                        <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs text-gray-500">{transaction.date}</span>
-                        <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs text-gray-500">{transaction.time}</span>
+                        <div className="chip">{transaction.date}</div>
+                        <div className="chip">{transaction.time}</div>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-bold ${
-                      transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                  <div className="item-right">
+                    <p className={`amount ${transaction.type === 'income' ? 'income' : 'expense'}`}>
                       {transaction.type === 'income' ? '+' : '-'}৳ {(transaction.amount || 0).toLocaleString()}
                     </p>
                   </div>
