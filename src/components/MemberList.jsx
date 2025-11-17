@@ -51,20 +51,130 @@ const MemberList = () => {
   // Floating detail card states
   const [selectedMember, setSelectedMember] = useState(null);
   const [showDetailCard, setShowDetailCard] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editMemberData, setEditMemberData] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Copy functionality states
   const [copiedField, setCopiedField] = useState(null);
 
   // Handle member card click
   const handleMemberClick = (member) => {
+    console.log('MemberList: member clicked', { id: member.id, email: member.email, password: member.password });
     setSelectedMember(member);
     setShowDetailCard(true);
+    setIsEditing(false);
+    setEditMemberData({
+      name: member.name || '',
+      phone: member.phone || '',
+      address: member.address || '',
+      shareCount: String(member.shareCount || ''),
+      joiningDate: (member.joiningDate || member.joinDate || member.createdAt) ? new Date(member.joiningDate || member.joinDate || member.createdAt?.toDate?.() || member.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      nomineeName: member.nomineeName || '',
+      nomineePhone: member.nomineePhone || '',
+      nomineeRelation: member.nomineeRelation || '',
+      role: member.role || 'member',
+      status: member.status || 'active'
+    });
+    setShowDeleteConfirm(false);
   };
 
   // Close detail card
   const closeDetailCard = () => {
     setShowDetailCard(false);
     setSelectedMember(null);
+    setIsEditing(false);
+    setEditMemberData(null);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleEditInputChange = (field, value) => {
+    console.log('MemberList: edit field change', { field, value });
+    setEditMemberData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const validateEditForm = () => {
+    const errors = {};
+    if (!editMemberData?.name?.trim()) {
+      errors.name = 'নাম আবশ্যক';
+    }
+    if (!String(editMemberData?.shareCount || '').trim()) {
+      errors.shareCount = 'শেয়ার সংখ্যা আবশ্যক';
+    } else if (isNaN(editMemberData.shareCount) || Number(editMemberData.shareCount) <= 0) {
+      errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
+    }
+    if ((editMemberData?.phone || '').trim() && !/^01[3-9]\d{8}$/.test(editMemberData.phone)) {
+      errors.phone = 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)';
+    }
+    if ((editMemberData?.nomineePhone || '').trim() && !/^01[3-9]\d{8}$/.test(editMemberData.nomineePhone)) {
+      errors.nomineePhone = 'সঠিক নমিনির ফোন নম্বর দিন';
+    }
+    return errors;
+  };
+
+  const handleSaveMember = async () => {
+    try {
+      console.log('MemberList: handleSaveMember called', editMemberData);
+      const errors = validateEditForm();
+      if (Object.keys(errors).length > 0) {
+        console.log('MemberList: edit validation errors', errors);
+        setError('ফর্মের তথ্য ঠিক করুন');
+        return;
+      }
+      const updateData = {
+        name: editMemberData.name,
+        phone: editMemberData.phone,
+        address: editMemberData.address,
+        shareCount: Number(editMemberData.shareCount),
+        joiningDate: editMemberData.joiningDate,
+        nomineeName: editMemberData.nomineeName,
+        nomineePhone: editMemberData.nomineePhone,
+        nomineeRelation: editMemberData.nomineeRelation,
+        role: editMemberData.role,
+        status: editMemberData.status
+      };
+      console.log('MemberList: updating member', { id: selectedMember.id, updateData });
+      const result = await MemberService.updateMember(selectedMember.id, updateData);
+      if (result.success) {
+        console.log('MemberList: member updated successfully');
+        setIsEditing(false);
+        await fetchMembers();
+        setSelectedMember(prev => ({ ...prev, ...updateData }));
+        setShowSuccessAnimation(true);
+        setSuccessAnimationData({ title: 'আপডেট সফল', message: 'সদস্য তথ্য আপডেট হয়েছে', type: 'success' });
+        setError(null);
+      } else {
+        console.log('MemberList: member update failed', result.error);
+        setError(result.error || 'আপডেট করতে সমস্যা হয়েছে');
+      }
+    } catch (e) {
+      console.log('MemberList: member update exception', e);
+      setError('আপডেট করতে সমস্যা হয়েছে');
+    }
+  };
+
+  const handleDeleteMember = async () => {
+    try {
+      console.log('MemberList: handleDeleteMember called', { id: selectedMember.id });
+      const result = await MemberService.deleteMember(selectedMember.id);
+      if (result.success) {
+        console.log('MemberList: member deleted successfully');
+        setShowDetailCard(false);
+        setIsEditing(false);
+        setSelectedMember(null);
+        setShowDeleteConfirm(false);
+        await fetchMembers();
+        setShowSuccessAnimation(true);
+        setSuccessAnimationData({ title: 'মুছে ফেলা হয়েছে', message: 'সদস্য সফলভাবে মুছে ফেলা হয়েছে', type: 'success' });
+        setError(null);
+      } else {
+        console.log('MemberList: member delete failed', result.error);
+        setError(result.error || 'মুছতে সমস্যা হয়েছে');
+      }
+    } catch (e) {
+      console.log('MemberList: member delete exception', e);
+      setError('মুছতে সমস্যা হয়েছে');
+    }
   };
 
   // Copy to clipboard function
@@ -215,6 +325,14 @@ const MemberList = () => {
       console.log('Generated credentials:', credentials);
 
       // Step 2: Register user in the backend
+      console.log('MemberList: duplicate check input', { email: credentials.email, phone: newMemberData.phone, name: newMemberData.name });
+      const dupResult = await MemberService.isDuplicateMember({ phone: newMemberData.phone, email: credentials.email, name: newMemberData.name });
+      console.log('MemberList: duplicate check result', dupResult);
+      if (dupResult?.exists) {
+        setError(`এই সদস্য ইতিমধ্যে আছে (${dupResult.by})`);
+        return;
+      }
+
       const registrationResponse = await registerUser(credentials.email, credentials.password);
 
       if (!registrationResponse.success) {
@@ -236,6 +354,7 @@ const MemberList = () => {
         joiningDate: newMemberData.joiningDate,
         role: newMemberData.role || 'member',
         email: credentials.email,
+        password: credentials.password,
         user_id: user_id, // Save user_id from backend
         status: 'active',
         createdAt: new Date().toISOString(),
@@ -878,7 +997,20 @@ const MemberList = () => {
                     </div>
                     <div className="member-detail-item">
                       <span className="member-detail-label">পাসওয়ার্ড:</span>
-                      <span className="member-detail-value code">••••••••</span>
+                      <div className="member-detail-value-with-copy">
+                        <span className="member-detail-value code">{selectedMember.password}</span>
+                        <button
+                          className="copy-btn"
+                          onClick={() => copyToClipboard(selectedMember.password || '', 'password')}
+                          title="পাসওয়ার্ড কপি করুন"
+                        >
+                          {copiedField === 'password' ? (
+                            <Check className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -892,11 +1024,19 @@ const MemberList = () => {
                 <div className="member-detail-grid">
                   <div className="member-detail-item">
                     <span className="member-detail-label">ফোন:</span>
-                    <span className="member-detail-value">{selectedMember.phone}</span>
+                    {isEditing ? (
+                      <input className="member-edit-input" value={editMemberData.phone} onChange={(e) => handleEditInputChange('phone', e.target.value)} />
+                    ) : (
+                      <span className="member-detail-value">{selectedMember.phone}</span>
+                    )}
                   </div>
                   <div className="member-detail-item">
                     <span className="member-detail-label">ঠিকানা:</span>
-                    <span className="member-detail-value">{selectedMember.address}</span>
+                    {isEditing ? (
+                      <textarea className="member-edit-textarea" value={editMemberData.address} onChange={(e) => handleEditInputChange('address', e.target.value)} />
+                    ) : (
+                      <span className="member-detail-value">{selectedMember.address}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -909,21 +1049,29 @@ const MemberList = () => {
                 <div className="member-detail-grid">
                   <div className="member-detail-item">
                     <span className="member-detail-label">মোট শেয়ার:</span>
-                    <span className="member-detail-value">{selectedMember.shareCount} টি</span>
+                    {isEditing ? (
+                      <input type="number" className="member-edit-input" value={editMemberData.shareCount} onChange={(e) => handleEditInputChange('shareCount', e.target.value)} />
+                    ) : (
+                      <span className="member-detail-value">{selectedMember.shareCount} টি</span>
+                    )}
                   </div>
                   <div className="member-detail-item">
                     <span className="member-detail-label">যোগদানের তারিখ:</span>
-                    <span className="member-detail-value">
-                      {(() => {
-                        const jd = selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || selectedMember.createdAt;
-                        try {
-                          return jd ? new Date(jd).toLocaleDateString('bn-BD') : 'N/A';
-                        } catch (e) {
-                          console.log('MemberList: joiningDate formatting failed', e);
-                          return 'N/A';
-                        }
-                      })()}
-                    </span>
+                    {isEditing ? (
+                      <input type="date" className="member-edit-input" value={editMemberData.joiningDate} onChange={(e) => handleEditInputChange('joiningDate', e.target.value)} />
+                    ) : (
+                      <span className="member-detail-value">
+                        {(() => {
+                          const jd = selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || selectedMember.createdAt;
+                          try {
+                            return jd ? new Date(jd).toLocaleDateString('bn-BD') : 'N/A';
+                          } catch (e) {
+                            console.log('MemberList: joiningDate formatting failed', e);
+                            return 'N/A';
+                          }
+                        })()}
+                      </span>
+                    )}
                   </div>
                 </div>
                 
@@ -953,20 +1101,92 @@ const MemberList = () => {
                   <div className="member-detail-grid">
                     <div className="member-detail-item">
                       <span className="member-detail-label">নমিনির নাম:</span>
-                      <span className="member-detail-value">{selectedMember.nomineeName}</span>
+                      {isEditing ? (
+                        <input className="member-edit-input" value={editMemberData.nomineeName} onChange={(e) => handleEditInputChange('nomineeName', e.target.value)} />
+                      ) : (
+                        <span className="member-detail-value">{selectedMember.nomineeName}</span>
+                      )}
                     </div>
                     <div className="member-detail-item">
                       <span className="member-detail-label">সম্পর্ক:</span>
-                      <span className="member-detail-value">{selectedMember.nomineeRelation}</span>
+                      {isEditing ? (
+                        <select className="member-edit-input" value={editMemberData.nomineeRelation} onChange={(e) => handleEditInputChange('nomineeRelation', e.target.value)}>
+                          <option value="">সম্পর্ক নির্বাচন করুন</option>
+                          <option value="পিতা">পিতা</option>
+                          <option value="মাতা">মাতা</option>
+                          <option value="স্বামী">স্বামী</option>
+                          <option value="স্ত্রী">স্ত্রী</option>
+                          <option value="ভাই">ভাই</option>
+                          <option value="বোন">বোন</option>
+                          <option value="ছেলে">ছেলে</option>
+                          <option value="মেয়ে">মেয়ে</option>
+                          <option value="অন্যান্য">অন্যান্য</option>
+                        </select>
+                      ) : (
+                        <span className="member-detail-value">{selectedMember.nomineeRelation}</span>
+                      )}
                     </div>
                     <div className="member-detail-item">
                       <span className="member-detail-label">ফোন:</span>
-                      <span className="member-detail-value">{selectedMember.nomineePhone}</span>
+                      {isEditing ? (
+                        <input className="member-edit-input" value={editMemberData.nomineePhone} onChange={(e) => handleEditInputChange('nomineePhone', e.target.value)} />
+                      ) : (
+                        <span className="member-detail-value">{selectedMember.nomineePhone}</span>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
             </div>
+            {(user?.role === 'admin' || user?.role === 'cashier') && (
+              <div className="member-detail-footer">
+                <div className="md-footer-left">
+                  {!isEditing ? (
+                    <button type="button" className="edit-btn" onClick={() => { console.log('MemberList: enter edit mode (footer)'); setIsEditing(true); }}>
+                      <span>সম্পাদনা</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button type="button" className="save-btn" onClick={handleSaveMember}>
+                        <span>সংরক্ষণ</span>
+                      </button>
+                      <button type="button" className="cancel-btn" onClick={() => { console.log('MemberList: cancel edit (footer)'); setIsEditing(false); setEditMemberData({
+                        name: selectedMember.name || '',
+                        phone: selectedMember.phone || '',
+                        address: selectedMember.address || '',
+                        shareCount: String(selectedMember.shareCount || ''),
+                        joiningDate: (selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt) ? new Date(selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt?.toDate?.() || selectedMember.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                        nomineeName: selectedMember.nomineeName || '',
+                        nomineePhone: selectedMember.nomineePhone || '',
+                        nomineeRelation: selectedMember.nomineeRelation || '',
+                        role: selectedMember.role || 'member',
+                        status: selectedMember.status || 'active'
+                      }); }}>
+                        <span>বাতিল</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="md-footer-right">
+                  <button type="button" className="delete-btn" onClick={() => { console.log('MemberList: delete button clicked'); setShowDeleteConfirm(true); }}>
+                    <span>মুছুন</span>
+                  </button>
+                  {showDeleteConfirm && (
+                    <div className="delete-confirm-popup">
+                      <div className="delete-confirm-text">You're going to delete "{selectedMember.name}" from database.</div>
+                      <div className="delete-confirm-actions">
+                        <button type="button" className="delete-btn" onClick={() => { console.log('MemberList: confirm delete'); handleDeleteMember(); }}>
+                          <span>Confirm</span>
+                        </button>
+                        <button type="button" className="cancel-btn" onClick={() => { console.log('MemberList: cancel delete'); setShowDeleteConfirm(false); }}>
+                          <span>Cancel</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

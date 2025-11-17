@@ -196,4 +196,41 @@ export class MemberService {
       return { success: false, error: error.message };
     }
   }
+
+  static async isDuplicateMember({ phone, email, name }) {
+    try {
+      console.log('MemberService: isDuplicateMember input', { phone, email, name });
+      if (email) {
+        const qEmail = query(collection(db, MEMBERS_COLLECTION), where('email', '==', email));
+        const snapEmail = await getDocs(qEmail);
+        if (!snapEmail.empty) {
+          const doc = snapEmail.docs[0];
+          console.log('MemberService: duplicate by email', { id: doc.id });
+          return { exists: true, by: 'email', match: { id: doc.id, ...doc.data() } };
+        }
+      }
+      if (phone) {
+        const qPhone = query(collection(db, MEMBERS_COLLECTION), where('phone', '==', phone));
+        const snapPhone = await getDocs(qPhone);
+        if (!snapPhone.empty) {
+          const doc = snapPhone.docs[0];
+          console.log('MemberService: duplicate by phone', { id: doc.id });
+          return { exists: true, by: 'phone', match: { id: doc.id, ...doc.data() } };
+        }
+      }
+      if (name) {
+        const allSnap = await getDocs(collection(db, MEMBERS_COLLECTION));
+        const found = allSnap.docs.map(d => ({ id: d.id, ...d.data() })).find(m => (m.name || '').trim() === name.trim());
+        if (found) {
+          console.log('MemberService: duplicate by name', { id: found.id });
+          return { exists: true, by: 'name', match: found };
+        }
+      }
+      console.log('MemberService: no duplicate found');
+      return { exists: false };
+    } catch (error) {
+      console.error('MemberService: duplicate check error', error);
+      return { exists: false, error: error.message };
+    }
+  }
 }

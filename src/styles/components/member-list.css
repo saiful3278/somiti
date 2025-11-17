@@ -1252,6 +1252,134 @@
   color: #374151;
 }
 
+/* Footer actions at bottom of detail card */
+.member-detail-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+
+.md-footer-left,
+.md-footer-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.md-footer-right {
+  position: relative;
+}
+
+.delete-confirm-popup {
+  position: absolute;
+  right: 0;
+  bottom: 44px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+  padding: 12px;
+  width: 280px;
+  z-index: 10;
+}
+
+.delete-confirm-text {
+  font-size: 13px;
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.edit-btn,
+.save-btn,
+.cancel-btn,
+.delete-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:hover,
+.cancel-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+}
+
+.save-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #7f1d1d;
+}
+
+.delete-btn:active {
+  transform: scale(0.98);
+}
+
+/* Inline edit inputs inside detail grid */
+.member-edit-input,
+.member-edit-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+  color: #111827;
+  transition: all 0.2s ease;
+}
+
+.member-edit-input:focus,
+.member-edit-textarea:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.member-edit-textarea {
+  min-height: 64px;
+}
+
 .member-detail-content {
   padding: 24px;
 }

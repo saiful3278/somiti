@@ -880,7 +880,14 @@ const CashierDashboard = () => {
       const credentials = generateEmailCredentials(newMemberData.name);
       console.log('🔐 Generated credentials:', credentials);
 
-      // Step 2: Register user in backend to obtain user_id
+      console.log('CashierDashboard: duplicate check input', { email: credentials.email, phone: newMemberData.phone, name: newMemberData.name });
+      const dupResult = await MemberService.isDuplicateMember({ phone: newMemberData.phone, email: credentials.email, name: newMemberData.name });
+      console.log('CashierDashboard: duplicate check result', dupResult);
+      if (dupResult?.exists) {
+        setError(`এই সদস্য ইতিমধ্যে আছে (${dupResult.by})`);
+        return;
+      }
+
       const registrationResponse = await registerUser(credentials.email, credentials.password);
 
       if (!registrationResponse?.success) {
