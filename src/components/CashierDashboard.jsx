@@ -19,6 +19,7 @@ import {
   Wallet,
   CheckCircle,
   Clock,
+  Camera,
   PieChart as PieChartIcon,
   BarChart3,
   Target,
@@ -46,6 +47,9 @@ import {
   UserPlus,
   Loader2
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useUser } from '../contexts/UserContext';
+import ProfilePhotoModal from './ProfilePhotoModal';
 import SearchInput from './common/SearchInput';
 import TransactionDetailsCard from './common/TransactionDetailsCard';
 import SuccessAnimation from './common/SuccessAnimation';
@@ -55,9 +59,65 @@ import { MemberService, TransactionService, FundService } from '../firebase';
 import { registerUser } from '../api/auth';
 import { generateEmailCredentials } from '../utils/transliteration';
 import '../styles/components/cashier-dashboard.css';
+import '../styles/components/CashierProfileCard.css';
 
 const CashierDashboard = () => {
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
+  const { currentUser, loading: userLoading } = useUser();
+  const [photoURL, setPhotoURL] = useState(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [somitiUserId, setSomitiUserId] = useState('');
+  console.log('[CashierDashboard] Contexts', { authUser, currentUser, userLoading });
+
+  useEffect(() => {
+    if (currentUser) {
+      const url = currentUser.photoURL || null;
+      setPhotoURL(url);
+      console.log('[CashierDashboard] avatar init from currentUser', { photoURL: url });
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    const computeSerial = async () => {
+      if (!currentUser?.uid) return;
+      try {
+        console.log('[CashierDashboard] computeSerial:start', { uid: currentUser?.uid });
+        let membersResult = await MemberService.getActiveMembers?.();
+        if (!membersResult?.success) {
+          membersResult = await MemberService.getAllMembers();
+        }
+        if (membersResult.success && membersResult.data) {
+          const allMembers = membersResult.data;
+          console.log('[CashierDashboard] members:fetched', { count: allMembers.length });
+
+          const sortedMembers = allMembers.sort((a, b) => {
+            const joiningDateA = a.joiningDate || a.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
+            const joiningDateB = b.joiningDate || b.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
+            const dateA = new Date(joiningDateA);
+            const dateB = new Date(joiningDateB);
+            if (dateA.getTime() !== dateB.getTime()) {
+              return dateA - dateB;
+            }
+            const createdA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+            const createdB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+            if (createdA.getTime() === createdB.getTime()) {
+              return (a.id || '').localeCompare(b.id || '');
+            }
+            return createdA - createdB;
+          });
+
+          const currentUserIndex = sortedMembers.findIndex(member => member.id === currentUser.uid);
+          const calculatedSerial = currentUserIndex !== -1 ? String(currentUserIndex + 1) : '';
+          setSomitiUserId(calculatedSerial);
+          console.log('[CashierDashboard] computeSerial:done', { somitiUserId: calculatedSerial });
+        }
+      } catch (err) {
+        console.error('[CashierDashboard] computeSerial:error', err);
+      }
+    };
+    computeSerial();
+  }, [currentUser]);
   const [loading, setLoading] = useState({
     members: true,
     transactions: true,
@@ -995,10 +1055,58 @@ const CashierDashboard = () => {
     <>
       <div className="treasury-container cashier-dashboard">
       <div className="p-4">
-      <div className="treasury-header">
-        <h1 className="treasury-title">ক্যাশিয়ার ড্যাশবোর্ড</h1>
-        <p className="treasury-subtitle">আর্থিক লেনদেন ও তহবিল ব্যবস্থাপনা</p>
+      <div className="treasury-card cashier-profile-card mb-3">
+        <div className="flex items-center gap-4">
+          <div
+            className="profile-avatar w-16 h-16 rounded-full overflow-hidden flex items-center justify-center"
+            role="button"
+            tabIndex={0}
+            onClick={() => { console.log('[CashierDashboard] open photo modal'); setIsPhotoModalOpen(true); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') { console.log('[CashierDashboard] open photo modal via keyboard'); setIsPhotoModalOpen(true); } }}
+          >
+            {photoURL ? (
+              <>
+                <img src={photoURL} alt="avatar" className="profile-photo" />
+                <div className="photo-overlay">
+                  <Camera className="h-6 w-6 text-black" />
+                </div>
+              </>
+            ) : (
+              <>
+                {console.log('[CashierDashboard] render fallback avatar')}
+                <Camera className="avatar-bg-icon h-6 w-6" />
+                <User className="h-8 w-8 text-slate-400" />
+                <div className="photo-overlay">
+                  <Camera className="h-6 w-6 text-black" />
+                </div>
+              </>
+            )}
+          </div>
+          <div className="flex-1">
+            <div className="profile-content-box">
+              <div className="flex items-center gap-2">
+                <h2 className="profile-name text-xl font-extrabold">
+                  {(currentUser && currentUser.name) || (authUser && authUser.name) || 'ক্যাশিয়ার'}
+                </h2>
+                <span className="profile-role px-2 py-0.5 text-xs rounded-full">ক্যাশিয়ার</span>
+              </div>
+              <div className="profile-meta text-sm flex gap-4 flex-wrap">
+                <span className="flex items-center gap-1">
+                  আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+        </div>
       </div>
+      <ProfilePhotoModal
+        isOpen={isPhotoModalOpen}
+        onClose={() => { console.log('[CashierDashboard] close photo modal'); setIsPhotoModalOpen(false); }}
+        userId={currentUser?.uid}
+        currentPhotoURL={photoURL}
+        onPhotoUpdate={(newPhotoURL) => { console.log('[CashierDashboard] photo updated', { newPhotoURL }); setPhotoURL(newPhotoURL); }}
+      />
 
       {/* Central Action Buttons */}
       <div className="flex flex-col items-center gap-2 mb-3">

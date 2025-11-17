@@ -1,25 +1,11 @@
 import React, { useState } from 'react';
-import { Bell, Settings, Save, CheckCircle, Shield, DollarSign } from 'lucide-react';
+import { Settings, Save, CheckCircle, DollarSign } from 'lucide-react';
 import '../styles/components/CashierSettings.css';
 
 const CashierSettings = () => {
-  const [activeTab, setActiveTab] = useState('notifications');
+  const [activeTab, setActiveTab] = useState('system');
   const [saveStatus, setSaveStatus] = useState('');
-
-  // Notification settings
-  const [notificationSettings, setNotificationSettings] = useState({
-    transactionAlerts: true,
-    dailyReports: true,
-    paymentReminders: true,
-    lowBalanceAlerts: true
-  });
-
-  // Security settings
-  const [securitySettings, setSecuritySettings] = useState({
-    twoFactorAuth: true,
-    sessionTimeout: '30',
-    transactionPin: true
-  });
+  console.log('CashierSettings render', { activeTab });
 
   // System preferences
   const [systemPreferences, setSystemPreferences] = useState({
@@ -29,23 +15,13 @@ const CashierSettings = () => {
     receiptPrint: 'auto'
   });
 
-  const handleNotificationChange = (key) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
-
-  const handleSecurityChange = (key, value) => {
-    setSecuritySettings(prev => ({ ...prev, [key]: value }));
-  };
-
   const handleSystemChange = (key, value) => {
     setSystemPreferences(prev => ({ ...prev, [key]: value }));
   };
 
   const saveChanges = () => {
     setSaveStatus('saving');
+    console.log('CashierSettings saveChanges', { systemPreferences });
     setTimeout(() => {
       setSaveStatus('success');
       setTimeout(() => setSaveStatus(''), 2000);
@@ -53,16 +29,7 @@ const CashierSettings = () => {
   };
 
   const tabs = [
-    { id: 'notifications', label: 'নোটিফিকেশন', icon: Bell },
-    { id: 'security', label: 'নিরাপত্তা', icon: Shield },
     { id: 'system', label: 'সিস্টেম', icon: Settings }
-  ];
-
-  const notificationItems = [
-    { key: 'transactionAlerts', title: 'লেনদেন সতর্কতা', desc: 'নতুন লেনদেন ও আর্থিক কার্যক্রম' },
-    { key: 'dailyReports', title: 'দৈনিক রিপোর্ট', desc: 'দৈনিক কার্যক্রমের সারসংক্ষেপ' },
-    { key: 'paymentReminders', title: 'পেমেন্ট রিমাইন্ডার', desc: 'পেমেন্ট ও জমার তারিখ মনে করিয়ে দেওয়া' },
-    { key: 'lowBalanceAlerts', title: 'কম ব্যালেন্স সতর্কতা', desc: 'অ্যাকাউন্টে কম ব্যালেন্সের সতর্কতা' }
   ];
 
   return (
@@ -91,108 +58,6 @@ const CashierSettings = () => {
         {/* Content */}
         <div className="cashier-tab-content">
         
-        {/* Notifications Tab */}
-        {activeTab === 'notifications' && (
-          <div className="settings-section">
-            <div className="settings-section-header">
-              <div className="settings-icon">
-                <Bell />
-              </div>
-              <div>
-                <h2 className="settings-section-title">নোটিফিকেশন সেটিংস</h2>
-                <p className="settings-section-subtitle">আপনার নোটিফিকেশন পছন্দ পরিচালনা করুন</p>
-              </div>
-            </div>
-            
-            <div className="settings-grid">
-              <div className="settings-group">
-                <h3 className="settings-group-title">
-                  <Bell className="h-4 w-4" />
-                  সতর্কতা সেটিংস
-                </h3>
-                {notificationItems.map((item) => (
-                  <div key={item.key} className="settings-item">
-                    <div className="settings-item-info">
-                      <h4>{item.title}</h4>
-                      <p>{item.desc}</p>
-                    </div>
-                    <button
-                      onClick={() => handleNotificationChange(item.key)}
-                      className={`toggle-switch ${notificationSettings[item.key] ? 'active' : ''}`}
-                    >
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="cashier-notice">
-              <CheckCircle className="cashier-notice-icon" />
-              <p className="cashier-notice-text">সেটিংস স্বয়ংক্রিয়ভাবে সংরক্ষিত হয়</p>
-            </div>
-          </div>
-        )}
-
-        {/* Security Tab */}
-        {activeTab === 'security' && (
-          <div className="settings-section">
-            <div className="settings-section-header">
-              <div className="settings-icon">
-                <Shield />
-              </div>
-              <div>
-                <h2 className="settings-section-title">নিরাপত্তা সেটিংস</h2>
-                <p className="settings-section-subtitle">আপনার অ্যাকাউন্টের নিরাপত্তা পরিচালনা করুন</p>
-              </div>
-            </div>
-            
-            <div className="settings-grid">
-              <div className="settings-group">
-                <h3 className="settings-group-title">
-                  <Shield className="h-4 w-4" />
-                  নিরাপত্তা বিকল্প
-                </h3>
-                
-                <div className="settings-item">
-                  <div className="settings-item-info">
-                    <h4>দ্বি-ফ্যাক্টর প্রমাণীকরণ</h4>
-                    <p>অতিরিক্ত নিরাপত্তার জন্য সক্রিয় করুন</p>
-                  </div>
-                  <button
-                    onClick={() => handleSecurityChange('twoFactorAuth', !securitySettings.twoFactorAuth)}
-                    className={`toggle-switch ${securitySettings.twoFactorAuth ? 'active' : ''}`}
-                  >
-                  </button>
-                </div>
-
-                <div className="settings-item">
-                  <div className="settings-item-info">
-                    <h4>লেনদেন পিন</h4>
-                    <p>লেনদেনের জন্য পিন প্রয়োজন</p>
-                  </div>
-                  <button
-                    onClick={() => handleSecurityChange('transactionPin', !securitySettings.transactionPin)}
-                    className={`toggle-switch ${securitySettings.transactionPin ? 'active' : ''}`}
-                  >
-                  </button>
-                </div>
-
-                <div className="settings-field">
-                  <label className="settings-label">সেশন টাইমআউট (মিনিট)</label>
-                  <select
-                    value={securitySettings.sessionTimeout}
-                    onChange={(e) => handleSecurityChange('sessionTimeout', e.target.value)}
-                    className="settings-dropdown"
-                  >
-                    <option value="15">১৫ মিনিট</option>
-                    <option value="30">৩০ মিনিট</option>
-                    <option value="60">৬০ মিনিট</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* System Tab */}
         {activeTab === 'system' && (
