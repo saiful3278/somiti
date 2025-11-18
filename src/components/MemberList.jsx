@@ -280,16 +280,6 @@ const MemberList = () => {
       errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
     }
     
-    // Phone validation - only if provided
-    if (newMemberData.phone.trim() && !/^01[3-9]\d{8}$/.test(newMemberData.phone)) {
-      errors.phone = 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)';
-    }
-    
-    // Nominee phone validation - only if provided
-    if (newMemberData.nomineePhone.trim() && !/^01[3-9]\d{8}$/.test(newMemberData.nomineePhone)) {
-      errors.nomineePhone = 'সঠিক নমিনির ফোন নম্বর দিন';
-    }
-    
     return errors;
   };
 
@@ -358,6 +348,8 @@ const MemberList = () => {
           type: 'success'
         });
         setShowSuccessAnimation(true);
+        console.log('MemberList: auto-closing add member modal after success');
+        setShowAddMemberModal(false);
         console.log('MemberList: plaintext password not stored; email saved for credentials');
         // Reset form
         setNewMemberData({
