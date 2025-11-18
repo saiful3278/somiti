@@ -64,38 +64,23 @@ const MemberDashboard = () => {
           const allMembers = membersResult.data;
           console.log('[MemberDashboard] activeMembers:fetched', { count: allMembers.length });
           
-          const sortedMembers = allMembers.sort((a, b) => {
-            // Ensure we have valid dates
-            const joiningDateA = a.joiningDate || a.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
-            const joiningDateB = b.joiningDate || b.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
-            
-            const dateA = new Date(joiningDateA);
-            const dateB = new Date(joiningDateB);
-            
-            // First sort by joining date
-            if (dateA.getTime() !== dateB.getTime()) {
-              return dateA - dateB;
-            }
-            
-            // If joining dates are same, sort by createdAt timestamp
+          const sortedByCreatedAt = [...allMembers].sort((a, b) => {
             const createdA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
             const createdB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
-            
-            // If creation times are also same, sort by document ID for consistency
-            if (createdA.getTime() === createdB.getTime()) {
-              return a.id.localeCompare(b.id);
+            if (createdA.getTime() !== createdB.getTime()) {
+              return createdA - createdB;
             }
-            
-            return createdA - createdB;
+            return (a.id || '').localeCompare(b.id || '');
           });
+          console.log('[MemberDashboard] somitiUserId ordered by createdAt ascending');
           
-          const currentUserIndex = sortedMembers.findIndex(member => member.id === currentUser.uid);
+          const currentUserIndex = sortedByCreatedAt.findIndex(member => member.id === currentUser.uid);
           const calculatedSomitiUserId = currentUserIndex !== -1 ? currentUserIndex + 1 : '';
           setSomitiUserId(calculatedSomitiUserId);
           console.log('[MemberDashboard] somitiUserId:calculated', { somitiUserId: calculatedSomitiUserId });
            
            // Also get the actual joining date for the current user
-           const currentUserData = sortedMembers.find(member => member.id === currentUser.uid);
+           const currentUserData = sortedByCreatedAt.find(member => member.id === currentUser.uid);
            if (currentUserData) {
              setPhotoURL(currentUserData.photoURL || null);
              const actualJoiningDate = currentUserData.joiningDate || currentUserData.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || '';
