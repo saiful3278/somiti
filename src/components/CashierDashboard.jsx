@@ -1073,12 +1073,8 @@ const CashierDashboard = () => {
               </>
             ) : (
               <>
-                {console.log('[CashierDashboard] render fallback avatar')}
-                <Camera className="avatar-bg-icon h-6 w-6" />
-                <User className="h-8 w-8 text-slate-400" />
-                <div className="photo-overlay">
-                  <Camera className="h-6 w-6 text-black" />
-                </div>
+                {console.log('[CashierDashboard] render fallback avatar (camera centered)')}
+                <Camera className="h-6 w-6 text-black" />
               </>
             )}
           </div>

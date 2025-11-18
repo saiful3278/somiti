@@ -209,34 +209,20 @@ const MemberList = () => {
       const result = await MemberService.getActiveMembers();
       
       if (result.success) {
-        const sortedMembers = [...result.data].sort((a, b) => {
-          // Ensure we have valid dates
-          const joiningDateA = a.joiningDate || a.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
-          const joiningDateB = b.joiningDate || b.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
-          
-          const dateA = new Date(joiningDateA);
-          const dateB = new Date(joiningDateB);
-          
-          // First sort by joining date
-          if (dateA.getTime() !== dateB.getTime()) {
-            return dateA - dateB;
-          }
-          
-          // If joining dates are same, sort by createdAt timestamp
+        const sortedByCreatedAt = [...result.data].sort((a, b) => {
           const createdA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
           const createdB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
-          
-          // If creation times are also same, sort by document ID for consistency
-          if (createdA.getTime() === createdB.getTime()) {
-            return a.id.localeCompare(b.id);
+          if (createdA.getTime() !== createdB.getTime()) {
+            return createdA - createdB;
           }
-          
-          return createdA - createdB;
+          return (a.id || '').localeCompare(b.id || '');
         });
-        const membersWithSomitiId = sortedMembers.map((member, index) => ({
+        console.log('MemberList: somiti_user_id assigned by createdAt ascending order');
+        const membersWithSomitiId = sortedByCreatedAt.map((member, index) => ({
           ...member,
           somiti_user_id: index + 1,
         }));
+        console.log('MemberList: somiti_user_id preview', membersWithSomitiId.slice(0, 5).map(m => ({ id: m.id, somiti_user_id: m.somiti_user_id })));
         setMembers(membersWithSomitiId);
         setFilteredMembers(membersWithSomitiId);
       } else {
