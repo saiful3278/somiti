@@ -494,27 +494,10 @@ const MemberList = () => {
             placeholder="সদস্যের নাম বা ফোন নম্বর দিয়ে খুঁজুন..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="member-search-input pl-10"
+            className="member-search-input"
             aria-label="সদস্য অনুসন্ধান"
             aria-controls="member-cards"
           />
-        </div>
-
-        {/* Filter Buttons */}
-        <div className="member-filter-buttons">
-          {filterOptions.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => { console.log('MemberList: filter clicked', option.value); setSelectedRole(option.value); }}
-              className={`member-filter-btn flex items-center space-x-2 ${
-                selectedRole === option.value ? 'active' : ''
-              }`}
-              aria-pressed={selectedRole === option.value}
-            >
-              <option.icon className="h-4 w-4" />
-              <span>{option.label}</span>
-            </button>
-          ))}
         </div>
       </div>
 

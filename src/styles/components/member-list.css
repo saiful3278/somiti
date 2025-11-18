@@ -70,20 +70,20 @@
 }
 
 .member-search-container {
-  background: linear-gradient(135deg, #fefefe 0%, #f9fafb 100%);
-  border-radius: 1.5rem !important;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
-  position: sticky;
-  top: 0.5rem;
-  z-index: 5;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 0;
+  position: static;
+  top: auto;
+  z-index: auto;
 }
 
 .member-search-input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0;
   border: 1px solid #e5e7eb; /* Lighter border */
   border-radius: 1rem !important; /* Smaller border radius */
   font-size: 0.95rem; /* Slightly smaller font */
