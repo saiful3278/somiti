@@ -3,6 +3,7 @@ import { ArrowLeft, Search, Filter, Calendar, TrendingUp, TrendingDown, Wallet, 
 import { useNavigate } from 'react-router-dom';
 import { TransactionService } from '../firebase/transactionService';
 import LoadingAnimation from './common/LoadingAnimation';
+import TransactionDetailsCard from './common/TransactionDetailsCard';
 import '../styles/components/transactions.css';
 
 const Transactions = () => {
@@ -12,6 +13,16 @@ const Transactions = () => {
   const [filterType, setFilterType] = useState('all'); // all, income, expense
   const [filterMethod, setFilterMethod] = useState('all'); // all, cash, bkash, bank
   const [transactions, setTransactions] = useState([]);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [showTransactionCard, setShowTransactionCard] = useState(false);
+  const [cardPosition, setCardPosition] = useState({ x: 0, y: 0 });
+
+  const formatListDate = (dateObj) => {
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = dateObj.toLocaleString('en-US', { month: 'long' }).toUpperCase();
+    const year = dateObj.getFullYear();
+    return `${day} ${month} ${year}`;
+  };
 
   // Fetch real transaction data from Firebase
   useEffect(() => {
@@ -22,20 +33,20 @@ const Transactions = () => {
         const result = await TransactionService.getAllTransactions();
         if (result.success) {
           // Format the data to match our component structure
-          const formattedTransactions = result.data.map(transaction => ({
-            id: transaction.id,
-            type: transaction.type || 'income',
-            amount: transaction.amount || 0,
-            method: transaction.paymentMethod || transaction.method || 'নগদ',
-            description: transaction.description || transaction.note || '',
-            member: transaction.memberName || transaction.member || 'অজানা',
-            date: transaction.date || (transaction.createdAt ? 
-              new Date(transaction.createdAt.seconds * 1000).toLocaleDateString('bn-BD') : 
-              new Date().toLocaleDateString('bn-BD')),
-            time: transaction.time || (transaction.createdAt ? 
-              new Date(transaction.createdAt.seconds * 1000).toLocaleTimeString('bn-BD') : 
-              new Date().toLocaleTimeString('bn-BD'))
-          }));
+          const formattedTransactions = result.data.map(transaction => {
+            const baseDate = transaction.date
+              ? new Date(transaction.date)
+              : (transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000) : new Date());
+            return {
+              id: transaction.id,
+              type: transaction.type || 'income',
+              amount: transaction.amount || 0,
+              method: transaction.paymentMethod || transaction.method || 'নগদ',
+              description: transaction.description || transaction.note || '',
+              member: transaction.memberName || transaction.member || 'অজানা',
+              date: formatListDate(baseDate)
+            };
+          });
           setTransactions(formattedTransactions);
           console.log('Loaded transactions:', formattedTransactions.length);
         } else {
@@ -156,7 +167,36 @@ const Transactions = () => {
         ) : (
           <div>
             {filteredTransactions.map((transaction) => (
-              <div key={transaction.id} className="transaction-item">
+              <div
+                key={transaction.id}
+                className="transaction-item"
+                onClick={(e) => {
+                  const normalizeMethod = (method) => {
+                    const m = (method || '').toLowerCase();
+                    if (m.includes('নগদ') || m.includes('cash')) return 'cash';
+                    if (m.includes('বিকাশ') || m.includes('bkash') || m.includes('mobile')) return 'mobile_banking';
+                    if (m.includes('ব্যাংক') || m.includes('bank')) return 'bank_transfer';
+                    if (m.includes('কার্ড') || m.includes('card')) return 'card';
+                    return method || 'cash';
+                  };
+                  const safe = {
+                    id: transaction.id,
+                    memberName: transaction.member,
+                    type: transaction.type || 'other',
+                    amount: transaction.amount || 0,
+                    paymentMethod: normalizeMethod(transaction.method),
+                    description: transaction.description || '',
+                    date: transaction.date,
+                    time: transaction.time,
+                    reference: transaction.reference || transaction.id,
+                    processedBy: transaction.processedBy || 'ক্যাশিয়ার'
+                  };
+                  console.log('Transactions: open details', safe);
+                  setCardPosition({ x: e.clientX, y: e.clientY });
+                  setSelectedTransaction(safe);
+                  setShowTransactionCard(true);
+                }}
+              >
                 <div className="item-row">
                   <div className="item-left">
                     <div className={`transaction-icon ${
@@ -170,14 +210,14 @@ const Transactions = () => {
                     </div>
                     <div className="transaction-text">
                       <h3>{transaction.description}</h3>
-                      <p>{transaction.member}</p>
+                      <p className="member-name">{transaction.member}</p>
                       <div className="transaction-meta">
                         <div className="chip">
                           {getPaymentIcon(transaction.method)}
                           <span>{transaction.method}</span>
                         </div>
                         <div className="chip">{transaction.date}</div>
-                        <div className="chip">{transaction.time}</div>
+                        
                       </div>
                     </div>
                   </div>
@@ -192,6 +232,16 @@ const Transactions = () => {
           </div>
         )}
       </div>
+      <TransactionDetailsCard
+        transaction={selectedTransaction}
+        isVisible={showTransactionCard}
+        onClose={() => {
+          console.log('Transactions: close details');
+          setShowTransactionCard(false);
+          setSelectedTransaction(null);
+        }}
+        position={cardPosition}
+      />
     </div>
   );
 };
