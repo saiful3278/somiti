@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import { MemberService } from '../firebase/memberService';
 import { TransactionService } from '../firebase/transactionService';
-import SuccessAnimation from './common/SuccessAnimation';
 import LoadingAnimation from './common/LoadingAnimation';
+import { toast } from 'react-hot-toast';
 import '../styles/components/add-transaction-modal.css';
 
 const AddTransaction = ({ isOpen, onClose }) => {
@@ -24,13 +24,7 @@ const AddTransaction = ({ isOpen, onClose }) => {
   const [members, setMembers] = useState([]);
   const [isLoadingMembers, setIsLoadingMembers] = useState(true);
   
-  // Success animation state
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-  const [successAnimationData, setSuccessAnimationData] = useState({
-    title: '',
-    message: '',
-    type: 'transaction'
-  });
+  
   
   const [transactionData, setTransactionData] = useState({
     memberId: '',
@@ -155,33 +149,23 @@ const AddTransaction = ({ isOpen, onClose }) => {
       
       if (result.success) {
         console.log('Transaction saved successfully with ID:', result.id);
-        
-        // Show success animation
-        setSuccessAnimationData({
-          title: 'লেনদেন সফল!',
-          message: `${selectedMember?.name || 'সদস্য'} এর জন্য ${transactionData.amount} টাকার লেনদেন সফলভাবে সংরক্ষিত হয়েছে।`,
-          type: 'transaction'
+        console.log('AddTransaction: toast success - লেনদেন সফল');
+        toast.success(`${selectedMember?.name || 'সদস্য'} এর জন্য ${transactionData.amount} টাকার লেনদেন সফলভাবে সংরক্ষিত হয়েছে।`);
+        setTransactionData({
+          memberId: '',
+          memberName: '',
+          transactionType: 'monthly_deposit',
+          amount: '',
+          shareAmount: '',
+          paymentMethod: 'cash',
+          paymentReference: '',
+          description: '',
+          date: new Date().toISOString().split('T')[0],
+          month: new Date().getMonth(),
+          notes: ''
         });
-        setShowSuccessAnimation(true);
-        
-        // Reset form and close modal after animation
-        setTimeout(() => {
-          setTransactionData({
-            memberId: '',
-            memberName: '',
-            transactionType: 'monthly_deposit',
-            amount: '',
-            shareAmount: '',
-            paymentMethod: 'cash',
-            paymentReference: '',
-            description: '',
-            date: new Date().toISOString().split('T')[0],
-            month: new Date().getMonth(),
-            notes: ''
-          });
-          setSubmitStatus(null);
-          onClose(); // Close the modal
-        }, 3500); // Wait for animation to complete
+        setSubmitStatus(null);
+        onClose();
       } else {
         console.error('Failed to save transaction:', result.error);
         setSubmitStatus('error');
@@ -476,16 +460,7 @@ const AddTransaction = ({ isOpen, onClose }) => {
         </div>
       </div>
       
-      {/* Success Animation */}
-      <SuccessAnimation
-        isVisible={showSuccessAnimation}
-        onClose={() => setShowSuccessAnimation(false)}
-        title={successAnimationData.title}
-        message={successAnimationData.message}
-        type={successAnimationData.type}
-        autoClose={true}
-        duration={3000}
-      />
+      
     </div>
   );
 };

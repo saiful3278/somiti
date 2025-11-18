@@ -52,7 +52,7 @@ import { useUser } from '../contexts/UserContext';
 import ProfilePhotoModal from './ProfilePhotoModal';
 import SearchInput from './common/SearchInput';
 import TransactionDetailsCard from './common/TransactionDetailsCard';
-import SuccessAnimation from './common/SuccessAnimation';
+import { toast } from 'react-hot-toast';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
 import { MemberService, TransactionService, FundService } from '../firebase';
 // Connect with existing auth and transliteration utilities used by MemberList
@@ -147,13 +147,7 @@ const CashierDashboard = () => {
   // Spinner state for light transaction refresh
   const [refreshingTransactions, setRefreshingTransactions] = useState(false);
   
-  // Success animation state
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-  const [successAnimationData, setSuccessAnimationData] = useState({
-    title: '',
-    message: '',
-    type: 'default'
-  });
+  
   
   // Transaction History state variables
   const [transactionFilter, setTransactionFilter] = useState('all'); // 'all', 'completed', 'pending', 'failed'
@@ -984,20 +978,9 @@ const CashierDashboard = () => {
       console.log('📊 handleAddMember result:', result);
       
       if (result && result.success) {
-        console.log('✅ Member added successfully, showing animation');
-        
-        // Show success animation immediately
-        const animationData = {
-          title: 'সদস্য যোগ করা হয়েছে!',
-          message: `${newMemberData.name} সফলভাবে সমিতিতে যোগদান করেছেন।`,
-          type: 'member'
-        };
-        console.log('🎉 Setting animation data:', animationData);
-        
-        setSuccessAnimationData(animationData);
-        setShowSuccessAnimation(true);
-        console.log('🎬 Animation state set to true');
-        
+        console.log('✅ Member added successfully');
+        console.log('CashierDashboard: toast success - সদস্য যোগ');
+        toast.success(`${newMemberData.name} সফলভাবে সমিতিতে যোগদান করেছেন।`);
         // Reset form
         setNewMemberData({
           name: '',
@@ -1012,21 +995,13 @@ const CashierDashboard = () => {
         });
         setMemberFormErrors({});
         console.log('🔄 Form reset');
-        
-        // Close modal after animation duration and reload members in background
-        setTimeout(async () => {
-          setShowAddMemberModal(false);
-          console.log('🚪 Modal closed after animation');
-          
-          // Reload members in background after modal closes
-          const updatedMembersResult = await MemberService.getAllMembers();
-          console.log('📋 Updated members result:', updatedMembersResult);
-          
-          if (updatedMembersResult.success) {
-            setMembers(updatedMembersResult.data || []);
-            console.log('👥 Members list updated');
-          }
-        }, 3500); // Wait for animation to complete
+        setShowAddMemberModal(false);
+        const updatedMembersResult = await MemberService.getAllMembers();
+        console.log('📋 Updated members result:', updatedMembersResult);
+        if (updatedMembersResult.success) {
+          setMembers(updatedMembersResult.data || []);
+          console.log('👥 Members list updated');
+        }
       } else {
         console.error('❌ সদস্য যোগ করতে ত্রুটি:', result?.error || 'Unknown error');
         // You could show an error animation here too
@@ -1935,16 +1910,7 @@ const CashierDashboard = () => {
           position={cardPosition}
         />
 
-      {/* Success Animation */}
-      <SuccessAnimation
-        isVisible={showSuccessAnimation}
-        onClose={() => setShowSuccessAnimation(false)}
-        title={successAnimationData.title}
-        message={successAnimationData.message}
-        type={successAnimationData.type}
-        autoClose={true}
-        duration={3000}
-      />
+      
     </>
   );
 };

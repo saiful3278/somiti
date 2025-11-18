@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import BottomNavigation from './common/BottomNavigation';
@@ -28,6 +29,8 @@ const Layout = ({ children, title, description, keywords, canonicalUrl, jsonLd }
 
   return (
     <div className="flex h-screen bg-background">
+      {console.log('Layout: Toaster mounted')}
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <Meta
         title={title || 'ফুলমুড়ী যুব ফাউন্ডেশন - Fulmuri Youth Foundation'}
         description={description || 'ফুলমুড়ী যুব ফাউন্ডেশন-এর অফিসিয়াল ওয়েবসাইটে স্বাগতম। আমাদের সম্প্রদায়ের জন্য একটি উন্নত ভবিষ্যৎ গড়তে আমাদের সাথে যোগ দিন।'}

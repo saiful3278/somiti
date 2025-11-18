@@ -3,8 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Search, Filter, UserPlus, Eye, EyeOff, X, Phone, Mail, MapPin, Save, Loader2, DollarSign, User, Users, Crown, Info, Copy, Check, AlertTriangle, Shield, Lock, Download, Calendar } from 'lucide-react';
 import { MemberService } from '../firebase/memberService';
-import SuccessAnimation from './common/SuccessAnimation';
 import LoadingAnimation from './common/LoadingAnimation';
+import { toast } from 'react-hot-toast';
 
 import '../styles/components/member-list.css';
 
@@ -40,13 +40,7 @@ const MemberList = () => {
 
   const [addMemberSucceeded, setAddMemberSucceeded] = useState(false);
 
-  // Success Animation states
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-  const [successAnimationData, setSuccessAnimationData] = useState({
-    title: '',
-    message: '',
-    type: 'success'
-  });
+  
 
   // Floating detail card states
   const [selectedMember, setSelectedMember] = useState(null);
@@ -140,8 +134,8 @@ const MemberList = () => {
         setIsEditing(false);
         await fetchMembers();
         setSelectedMember(prev => ({ ...prev, ...updateData }));
-        setShowSuccessAnimation(true);
-        setSuccessAnimationData({ title: 'আপডেট সফল', message: 'সদস্য তথ্য আপডেট হয়েছে', type: 'success' });
+        console.log('MemberList: toast success - আপডেট সফল');
+        toast.success('সদস্য তথ্য আপডেট হয়েছে');
         setError(null);
       } else {
         console.log('MemberList: member update failed', result.error);
@@ -164,8 +158,8 @@ const MemberList = () => {
         setSelectedMember(null);
         setShowDeleteConfirm(false);
         await fetchMembers();
-        setShowSuccessAnimation(true);
-        setSuccessAnimationData({ title: 'মুছে ফেলা হয়েছে', message: 'সদস্য সফলভাবে মুছে ফেলা হয়েছে', type: 'success' });
+        console.log('MemberList: toast success - মুছে ফেলা হয়েছে');
+        toast.success('সদস্য সফলভাবে মুছে ফেলা হয়েছে');
         setError(null);
       } else {
         console.log('MemberList: member delete failed', result.error);
@@ -342,12 +336,9 @@ const MemberList = () => {
 
       if (addResult && addResult.success) {
         setAddMemberSucceeded(true);
-        setSuccessAnimationData({
-          title: 'সফল!',
-          message: `${memberData.name} সফলভাবে সদস্য হিসেবে যোগ হয়েছেন`,
-          type: 'success'
-        });
-        setShowSuccessAnimation(true);
+        console.log('MemberList: toast success - সদস্য যোগ');
+        toast.success(`${memberData.name} সফলভাবে সদস্য হিসেবে যোগ হয়েছেন`);
+        await fetchMembers();
         console.log('MemberList: auto-closing add member modal after success');
         setShowAddMemberModal(false);
         console.log('MemberList: plaintext password not stored; email saved for credentials');
@@ -365,7 +356,7 @@ const MemberList = () => {
         });
         setMemberFormErrors({});
         
-        // Reload members after success animation closes (handled in SuccessAnimation onClose)
+        
       } else {
         console.error('সদস্য যোগ করতে ত্রুটি:', addResult?.error);
         setAddMemberSucceeded(false);
@@ -427,11 +418,7 @@ const MemberList = () => {
     { value: 'member', label: 'সদস্য', icon: User }
   ];
 
-  // Debug logs for state changes - moved to top level
-  useEffect(() => {
-    console.log('showSuccessAnimation changed:', showSuccessAnimation);
-    console.log('successAnimationData changed:', successAnimationData);
-  }, [showSuccessAnimation, successAnimationData]);
+  
 
   if (error) {
     return (
@@ -1152,19 +1139,7 @@ const MemberList = () => {
         </div>
       )}
 
-      {/* Success Animation */}
-      <SuccessAnimation
-        isVisible={showSuccessAnimation}
-        onClose={() => {
-          setShowSuccessAnimation(false);
-          fetchMembers();
-        }}
-        title={successAnimationData.title}
-        message={successAnimationData.message}
-        type={successAnimationData.type}
-        autoClose={true}
-        duration={3000}
-      />
+      
     </div>
   );
 };
