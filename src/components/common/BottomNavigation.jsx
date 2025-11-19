@@ -9,7 +9,8 @@ import {
   Bell,
   Settings,
   DollarSign,
-  Plus
+  Plus,
+  Table
 } from 'lucide-react';
 
 const BottomNavigation = ({ onOpenAddTransaction }) => {
@@ -18,6 +19,7 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
 
   // Define navigation items based on user role
   const getNavigationItems = () => {
+    console.log('[BottomNavigation] building items for role', user?.role);
     const commonItems = [
       { 
         name: 'হোম', 
@@ -37,6 +39,7 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
       cashier: [
         { name: 'লেনদেন', href: '/cashier/transactions', icon: DollarSign },
         { name: 'নতুন', href: '/cashier/add-transaction', icon: Plus },
+        { name: 'টেবিল', href: '/cashier/unified-finance', icon: Table },
         { name: 'সদস্য', href: '/cashier/members', icon: Users },
         { name: 'সেটিংস', href: '/cashier/settings', icon: Settings }
       ],

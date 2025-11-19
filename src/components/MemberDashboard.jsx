@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   User, 
   Calendar, 
@@ -21,9 +21,17 @@ import LoadingAnimation from './common/LoadingAnimation';
 import { useUser } from '../contexts/UserContext';
 import ProfilePhotoModal from './ProfilePhotoModal';
 import '../styles/components/MemberDashboard.css';
+import '../styles/components/UnifiedMembersFinanceCard.css';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase/config.js';
 
 // Console log at module load to aid debugging across sessions
 console.log('[MemberDashboard] module loaded');
+
+const monthLabelsBn = [
+  'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
+  'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
+];
 
 const MemberDashboard = () => {
   // Lightweight render trace (timestamped) for debugging without impacting performance
@@ -40,6 +48,10 @@ const MemberDashboard = () => {
   });
   const [photoURL, setPhotoURL] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [ownTransactions, setOwnTransactions] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(undefined);
+  const nowYear = useMemo(() => new Date().getFullYear(), []);
+  const nowMonth = useMemo(() => new Date().getMonth(), []);
 
   // Log mount/unmount lifecycle
   useEffect(() => {
@@ -117,6 +129,91 @@ const MemberDashboard = () => {
 
     loadMemberData();
   }, [currentUser]);
+
+  // Subscribe to current user's transactions (realtime)
+  useEffect(() => {
+    const uid = currentUser?.uid || currentUser?.id;
+    if (!uid) return;
+    console.log('[MemberDashboard] ownTransactions:subscribe', { uid });
+    const q = query(collection(db, 'transactions'), where('memberId', '==', uid));
+    const unsub = onSnapshot(q, (snap) => {
+      const tx = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      console.log('[MemberDashboard] ownTransactions:update', { count: tx.length });
+      setOwnTransactions(tx);
+    }, (err) => {
+      console.error('[MemberDashboard] ownTransactions:error', err);
+      setOwnTransactions([]);
+    });
+    return () => {
+      console.log('[MemberDashboard] ownTransactions:unsub');
+      unsub && unsub();
+    };
+  }, [currentUser]);
+
+  const availableYears = useMemo(() => {
+    const years = new Set();
+    ownTransactions.forEach((t) => {
+      const d = (typeof t.date?.toDate === 'function') ? t.date.toDate() : (t.date?.seconds ? new Date(t.date.seconds * 1000) : (t.date ? new Date(t.date) : (t.createdAt?.seconds ? new Date(t.createdAt.seconds * 1000) : undefined)));
+      const y = d?.getFullYear?.();
+      if (typeof y === 'number') years.add(y);
+    });
+    const arr = Array.from(years).sort((a, b) => b - a);
+    console.log('[MemberDashboard] ownTransactions:availableYears', arr);
+    return arr;
+  }, [ownTransactions]);
+
+  useEffect(() => {
+    if (!selectedYear) {
+      const def = availableYears.includes(nowYear) ? nowYear : availableYears[0];
+      if (def) {
+        setSelectedYear(def);
+        console.log('[MemberDashboard] ownTransactions:selectedYear:default', def);
+      }
+    } else {
+      if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
+        setSelectedYear(availableYears[0]);
+        console.log('[MemberDashboard] ownTransactions:selectedYear:adjusted', availableYears[0]);
+      }
+    }
+  }, [availableYears, selectedYear, nowYear]);
+
+  const ownAggregation = useMemo(() => {
+    const monthlyTotals = Array(12).fill(0);
+    let totalPaid = 0;
+    ownTransactions.forEach((t) => {
+      const dateObj = (typeof t.date?.toDate === 'function') ? t.date.toDate() : (t.date?.seconds ? new Date(t.date.seconds * 1000) : (t.date ? new Date(t.date) : (t.createdAt?.seconds ? new Date(t.createdAt.seconds * 1000) : undefined)));
+      const yearInt = dateObj?.getFullYear?.();
+      const monthInt = typeof t.month === 'number' ? t.month : dateObj?.getMonth?.();
+      if (typeof yearInt !== 'number' || typeof monthInt !== 'number') return;
+      if (typeof selectedYear === 'number' && yearInt !== selectedYear) return;
+      const amount = Number(t.amount) || 0;
+      monthlyTotals[monthInt] += amount;
+      totalPaid += amount;
+    });
+    console.log('[MemberDashboard] ownAggregation built', { totalPaid });
+    return { monthlyTotals, totalPaid };
+  }, [ownTransactions, selectedYear]);
+
+  const shareCount = Number(currentUser?.shareCount || 0);
+  const monthlyRate = shareCount * 500;
+  const joinRaw = currentUser?.joiningDate || currentUser?.joinDate || null;
+  const joinDate = joinRaw ? new Date(joinRaw) : undefined;
+  const joinYear = joinDate?.getFullYear?.();
+  const joinMonth = joinDate?.getMonth?.();
+  let monthsDueCount = 0;
+  if (typeof selectedYear === 'number' && typeof joinYear === 'number') {
+    if (selectedYear < nowYear) {
+      if (joinYear < selectedYear) monthsDueCount = 12;
+      else if (joinYear === selectedYear && typeof joinMonth === 'number') monthsDueCount = 12 - joinMonth;
+    } else if (selectedYear === nowYear) {
+      if (joinYear < selectedYear) monthsDueCount = nowMonth + 1;
+      else if (joinYear === selectedYear && typeof joinMonth === 'number') monthsDueCount = Math.max(0, (nowMonth - joinMonth + 1));
+    } else {
+      monthsDueCount = 0;
+    }
+  }
+  const plannedDue = monthlyRate * Math.max(0, monthsDueCount);
+  const totalDueOwn = plannedDue - (ownAggregation.totalPaid || 0);
 
   // Show loading animation if user is still loading or initial data is loading
   if (userLoading || loading.initial) {
@@ -341,6 +438,90 @@ const MemberDashboard = () => {
             <p>
               আমাদের সমিতিতে আপনার অংশগ্রহণের জন্য ধন্যবাদ। আপনার আর্থিক লক্ষ্য অর্জনে আমরা আপনার পাশে আছি।
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Own Finance Table */}
+      <div className="unified-finance-card" style={{ marginTop: '16px' }}>
+        <div className="unified-finance-card__container">
+          <div className="unified-finance-card__header">
+            <h1 className="unified-finance-card__title">আমার আর্থিক টেবিল</h1>
+            <p className="unified-finance-card__subtitle">শুধু আমার ডাটা</p>
+            <div className="year-switcher">
+              <span className="year-label">বছর</span>
+              <select
+                className="year-select"
+                value={selectedYear ?? ''}
+                onChange={(e) => {
+                  const next = parseInt(e.target.value, 10);
+                  setSelectedYear(next);
+                  console.log('[MemberDashboard] own year selected', next);
+                }}
+              >
+                {availableYears.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+            <div className="overall-summary">
+              <div className="summary-item">
+                <span className="summary-label">শেয়ার</span>
+                <span className="summary-value">{shareCount}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">মোট জমা</span>
+                <span className="summary-value summary-value-paid">৳ {Math.max(0, ownAggregation.totalPaid || 0).toLocaleString('bn-BD')}</span>
+              </div>
+              <div className="summary-item">
+                <span className="summary-label">মোট বকেয়া</span>
+                <span className="summary-value summary-value-due">৳ {Math.max(0, totalDueOwn).toLocaleString('bn-BD')}</span>
+              </div>
+            </div>
+          </div>
+          <div className="unified-finance-card__table-wrapper">
+            <table className="unified-finance-table">
+              <thead>
+                <tr>
+                  <th>সদস্য ID</th>
+                  <th>সদস্য নাম</th>
+                  <th>শেয়ার</th>
+                  {monthLabelsBn.map((m, idx) => (
+                    <th key={idx}>{m}</th>
+                  ))}
+                  <th>মোট জমা</th>
+                  <th>মোট বকেয়া</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="cell-id">{somitiUserId || '-'}</td>
+                  <td className="cell-name">{currentUser?.name || 'অজানা'}</td>
+                  <td className="cell-share">{shareCount}</td>
+                  {ownAggregation.monthlyTotals.map((amt, idx) => {
+                    const joinKey = (joinYear || selectedYear || nowYear) * 12 + (joinMonth || 0);
+                    const cellKey = (selectedYear || nowYear) * 12 + idx;
+                    const isBeforeJoin = cellKey < joinKey;
+                    const isFutureMonth = (typeof selectedYear === 'number') && (selectedYear > nowYear || (selectedYear === nowYear && idx > nowMonth));
+                    return (
+                      <td key={idx} className="cell-month">
+                        {isBeforeJoin ? (
+                          ''
+                        ) : isFutureMonth ? (
+                          <span className="dash-cell">-</span>
+                        ) : amt > 0 ? (
+                          <span className="amount-cell">৳ {amt.toLocaleString('bn-BD')}</span>
+                        ) : (
+                          <span className="zero-cell">৳ 0</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                  <td className="cell-total-paid">৳ {Math.max(0, ownAggregation.totalPaid || 0).toLocaleString('bn-BD')}</td>
+                  <td className="cell-total-due">৳ {Math.max(0, totalDueOwn).toLocaleString('bn-BD')}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

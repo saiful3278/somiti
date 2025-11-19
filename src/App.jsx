@@ -23,6 +23,7 @@ import NoticeBoard from './components/NoticeBoard';
 import ProfileSettings from './components/ProfileSettings';
 import MemberSettings from './components/MemberSettings';
 import SecretRoleSwitcher from './components/common/SecretRoleSwitcher';
+import UnifiedMembersFinanceCardPage from './pages/UnifiedMembersFinanceCardPage';
 
 const App = () => {
   return (
@@ -75,6 +76,7 @@ const MainApp = () => {
         <Route path="/cashier/add-transaction" element={<ProtectedRoute allowedRoles={['cashier']}><AddTransactionPage /></ProtectedRoute>} />
         <Route path="/cashier/members" element={<ProtectedRoute allowedRoles={['cashier']}><MemberList /></ProtectedRoute>} />
         <Route path="/cashier/settings" element={<ProtectedRoute allowedRoles={['cashier']}><CashierSettings /></ProtectedRoute>} />
+        <Route path="/cashier/unified-finance" element={<ProtectedRoute allowedRoles={['cashier']}><UnifiedMembersFinanceCardPage /></ProtectedRoute>} />
 
         {/* Member Routes */}
         <Route path="/member" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberDashboard /></ProtectedRoute>} />
