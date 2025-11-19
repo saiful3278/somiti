@@ -1,0 +1,37 @@
+/* Member Table Styles */
+
+.member-table { padding: 16px; }
+.member-table__container { background: #ffffff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); padding: 16px; }
+.member-table__header { margin-bottom: 10px; }
+.member-table__title { font-size: 20px; font-weight: 700; margin: 0 0 4px 0; }
+.member-table__subtitle { color: #64748b; margin: 0; }
+.member-table__wrapper { overflow-x: auto; }
+.member-table__table { width: 100%; border-collapse: collapse; }
+.member-table__table thead th { background: #f8fafc; font-weight: 600; font-size: 12px; color: #0f172a; padding: 8px; border-bottom: 1px solid #e2e8f0; }
+.member-table__table tbody td { padding: 8px; border-bottom: 1px solid #f1f5f9; font-size: 12px; white-space: nowrap; }
+.cell-serial { font-weight: 700; color: #334155; }
+.cell-name { font-weight: 600; }
+.cell-share { font-weight: 600; color: #166534; }
+.member-table__loading { display: flex; align-items: center; justify-content: center; min-height: 200px; }
+
+/* Rich table enhancements */
+.member-table__table--rich tbody tr:hover { background: #f8fafc; transition: background 120ms ease-in-out; }
+
+.badge { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; line-height: 1; border: 1px solid transparent; }
+.badge--type { background: #eef2ff; color: #3730a3; border-color: #c7d2fe; }
+.badge--pos { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+.badge--neg { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+.badge--method { background: #f1f5f9; color: #0f172a; border-color: #e2e8f0; }
+.badge--status { background: #f8fafc; color: #0f172a; border-color: #e2e8f0; text-transform: capitalize; }
+.status--completed { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+.status--pending { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+.status--failed, .status--error { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+.cell-type { font-weight: 600; }
+.cell-amount { font-weight: 700; letter-spacing: 0.2px; }
+.amount-positive { color: #166534; }
+.amount-negative { color: #b91c1c; }
+.amount-neutral { color: #334155; }
+
+.cell-date { color: #334155; }
+.cell-ref { color: #475569; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }

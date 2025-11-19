@@ -44,6 +44,7 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
         { name: 'সেটিংস', href: '/cashier/settings', icon: Settings }
       ],
       member: [
+        { name: 'টেবিল', href: '/member/table', icon: Table },
         { name: 'আর্থিক', href: '/member/financial-summary', icon: PieChart },
         { name: 'নোটিশ', href: '/member/notice-board', icon: Bell },
         { name: 'সদস্য', href: '/member/members', icon: Users },

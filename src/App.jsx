@@ -24,6 +24,7 @@ import ProfileSettings from './components/ProfileSettings';
 import MemberSettings from './components/MemberSettings';
 import SecretRoleSwitcher from './components/common/SecretRoleSwitcher';
 import UnifiedMembersFinanceCardPage from './pages/UnifiedMembersFinanceCardPage';
+import MemberTablePage from './pages/MemberTablePage';
 
 const App = () => {
   return (
@@ -81,6 +82,7 @@ const MainApp = () => {
         {/* Member Routes */}
         <Route path="/member" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberDashboard /></ProtectedRoute>} />
         <Route path="/member/financial-summary" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><FinancialSummary /></ProtectedRoute>} />
+        <Route path="/member/table" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberTablePage /></ProtectedRoute>} />
         <Route path="/member/notice-board" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><NoticeBoard /></ProtectedRoute>} />
         <Route path="/member/members" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><MemberList /></ProtectedRoute>} />
         <Route path="/member/profile" element={<ProtectedRoute allowedRoles={['member', 'admin', 'cashier']}><ProfileSettings /></ProtectedRoute>} />
