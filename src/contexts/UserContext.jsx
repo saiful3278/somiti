@@ -58,9 +58,10 @@ export const UserProvider = ({ children }) => {
           user = result.data[0]; // Fallback to first member
         }
 
+        console.log('[UserContext] Loaded user.photoURL', user.photoURL);
         setCurrentUser({
           id: user.id || user.membershipId || 'SM-001',
-          uid: user.id || user.membershipId || 'SM-001', // Add uid field for compatibility
+          uid: user.id || user.membershipId || 'SM-001',
           name: user.name || 'অজানা সদস্য',
           joinDate: user.joinDate || '২০২২-০১-১৫',
           phone: user.phone || 'ফোন নম্বর নেই',
@@ -75,7 +76,8 @@ export const UserProvider = ({ children }) => {
           nid: user.nid || '',
           emergencyContact: user.emergencyContact || '',
           monthlyDeposit: user.monthlyDeposit || 0,
-          totalDeposit: user.totalDeposit || 0
+          totalDeposit: user.totalDeposit || 0,
+          photoURL: user.photoURL || ''
         });
       } else {
         setError('কোনো সদস্যের তথ্য পাওয়া যায়নি');
