@@ -7,4 +7,7 @@ export default defineConfig({
   server: {
     allowedHosts: ['chilly-rules-speak.loca.lt'],
   },
+  optimizeDeps: {
+    include: ['react-hot-toast']
+  }
 })
