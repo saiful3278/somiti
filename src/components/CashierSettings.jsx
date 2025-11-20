@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Settings, Save, CheckCircle, DollarSign } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Save, CheckCircle, DollarSign, FileText } from 'lucide-react';
 import '../styles/components/CashierSettings.css';
+import { fetchLoginHistory } from '../firebase/loginHistoryService';
 
 const CashierSettings = () => {
   const [activeTab, setActiveTab] = useState('system');
@@ -14,6 +15,22 @@ const CashierSettings = () => {
     currency: 'BDT',
     receiptPrint: 'auto'
   });
+
+  const [loginHistory, setLoginHistory] = useState([]);
+  const [loginHistoryError, setLoginHistoryError] = useState('');
+
+  useEffect(() => {
+    const loadLoginHistory = async () => {
+      const uid = localStorage.getItem('somiti_uid')
+      const { data, error } = await fetchLoginHistory(uid)
+      if (error) {
+        setLoginHistoryError('লগইন ইতিহাস লোড করা যায়নি')
+      } else {
+        setLoginHistory(data || [])
+      }
+    }
+    loadLoginHistory()
+  }, [])
 
   const handleSystemChange = (key, value) => {
     setSystemPreferences(prev => ({ ...prev, [key]: value }));
@@ -29,7 +46,8 @@ const CashierSettings = () => {
   };
 
   const tabs = [
-    { id: 'system', label: 'সিস্টেম', icon: Settings }
+    { id: 'system', label: 'সিস্টেম', icon: Settings },
+    { id: 'history', label: 'লগইন ইতিহাস', icon: FileText }
   ];
 
   return (
@@ -46,7 +64,7 @@ const CashierSettings = () => {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => { console.log('CashierSettings tab switch', tab.id); setActiveTab(tab.id); }}
               className={`cashier-tab ${activeTab === tab.id ? 'active' : ''}`}
             >
               <tab.icon className="h-4 w-4 mr-2" />
@@ -136,6 +154,68 @@ const CashierSettings = () => {
                   সেটিংস সংরক্ষণ করুন
                 </button>
               </div>
+            </div>
+
+            <div className="settings-section" style={{ marginTop: '24px' }}>
+              <h2 className="settings-section-title">লগইন ইতিহাস</h2>
+              {loginHistoryError && (
+                <div className="inline-error">
+                  <span>{loginHistoryError}</span>
+                </div>
+              )}
+              <div className="settings-grid">
+                <div className="settings-group">
+                  {loginHistory.length === 0 ? (
+                    <div className="settings-field">
+                      <label className="settings-label">ইতিহাস</label>
+                      <div className="settings-value">কোনো ইতিহাস পাওয়া যায়নি অথবা সেশন নেই</div>
+                    </div>
+                  ) : (
+                    loginHistory.map((row, idx) => (
+                      <div key={idx} className="settings-field">
+                        <label className="settings-label">{row.created_at?.toDate ? new Date(row.created_at.toDate()).toLocaleString('bn-BD') : (row.created_at ? new Date(row.created_at).toLocaleString('bn-BD') : '')}</label>
+                        <div className="settings-value">
+                          ডিভাইস: {row.meta?.ua || 'অজানা'} | আইপি: {row.ip || 'অজানা'} | {(row.meta?.country || '')}{row.meta?.city ? ', ' + row.meta.city : ''}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="settings-section">
+            <div className="settings-section-header">
+              <div className="settings-icon">
+                <FileText />
+              </div>
+              <div>
+                <h2 className="settings-section-title">লগইন ইতিহাস</h2>
+                <p className="settings-section-subtitle">সাম্প্রতিক লগইন তথ্য</p>
+              </div>
+            </div>
+            {loginHistoryError && (
+              <div className="inline-error">
+                <span>{loginHistoryError}</span>
+              </div>
+            )}
+            <div className="history-list">
+              {loginHistory.length === 0 ? (
+                <div className="history-item">
+                  <div className="history-meta-line">কোনো ইতিহাস পাওয়া যায়নি অথবা সেশন নেই</div>
+                </div>
+              ) : (
+                loginHistory.map((row, idx) => (
+                  <div key={idx} className="history-item">
+                    <div className="history-date">{row.created_at?.toDate ? new Date(row.created_at.toDate()).toLocaleString('bn-BD') : (row.created_at ? new Date(row.created_at).toLocaleString('bn-BD') : '')}</div>
+                    <div className="history-meta-line">ডিভাইস: {row.meta?.ua || 'অজানা'}</div>
+                    <div className="history-meta-line">আইপি: {row.ip || 'অজানা'} | {(row.meta?.country || '')}{row.meta?.city ? ', ' + row.meta.city : ''}</div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

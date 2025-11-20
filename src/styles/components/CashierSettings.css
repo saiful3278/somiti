@@ -7,18 +7,19 @@
 }
 
 .cashier-settings-container {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+  border: 1px solid #e2e8f0;
   overflow: hidden;
 }
 
 .cashier-settings-header {
-  background: #059669;
+  background: linear-gradient(135deg, #059669, #10b981);
   color: white;
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   text-align: center;
 }
 
@@ -38,9 +39,10 @@
 /* Tab Navigation */
 .cashier-settings-tabs {
   display: flex;
-  background: #f8fafc;
+  background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   overflow-x: auto;
+  padding: 0 0.75rem;
 }
 
 .cashier-tab {
@@ -49,15 +51,17 @@
   padding: 0.875rem 1rem;
   background: transparent;
   border: none;
+  border-bottom: 3px solid transparent;
   cursor: pointer;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #64748b;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 .cashier-tab:hover {
@@ -67,8 +71,9 @@
 
 .cashier-tab.active {
   color: #059669;
-  background: white;
-  border-bottom: 2px solid #059669;
+  background: #ffffff;
+  border-bottom-color: #059669;
+  border-bottom-width: 3px;
 }
 
 /* Tab Content */
@@ -124,9 +129,10 @@
 
 .settings-group {
   background: #f8fafc;
-  border-radius: 6px;
+  border-radius: 10px;
   padding: 1.25rem;
   border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 }
 
 .settings-group-title {
@@ -159,10 +165,10 @@
   display: block;
   font-size: 0.9375rem;
   color: #1f2937;
-  background: white;
+  background: #f8fafc;
   padding: 0.625rem 0.75rem;
-  border-radius: 4px;
-  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 /* Settings Items */
@@ -277,6 +283,7 @@
 .settings-button-primary {
   background: #059669;
   color: white;
+  box-shadow: 0 4px 10px rgba(5,150,105,0.25);
 }
 
 .settings-button-primary:hover {
@@ -297,15 +304,15 @@
 /* Save Status */
 .save-status {
   position: fixed;
-  top: 1.5rem;
-  right: 1.5rem;
+  top: 1.25rem;
+  right: 1.25rem;
   padding: 0.75rem 1rem;
-  border-radius: 6px;
+  border-radius: 8px;
   color: white;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.875rem;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -450,4 +457,41 @@
   .transaction-stats {
     grid-template-columns: 1fr;
   }
+}
+.history-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.history-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.history-item:hover {
+  background: #f8fafc;
+}
+
+.history-date {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #059669;
+  margin-bottom: 0.25rem;
+}
+
+.history-meta-line {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+.inline-error {
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
 }

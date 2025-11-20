@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MemberService } from '../firebase/memberService';
+import { recordLogin } from '../firebase/loginHistoryService';
 
 // Console log for file load (per workspace rule)
 console.log('[AuthContext] File loaded');
@@ -102,6 +103,11 @@ export const AuthProvider = ({ children }) => {
         // Save the user's role to localStorage for persistence
         localStorage.setItem('somiti_role', userData.role || 'member');
         console.log('[AuthContext] login success, user set:', userWithId);
+        try {
+          await recordLogin(userId, 'local')
+        } catch (e) {
+          console.log('[AuthContext] login-history invocation failed')
+        }
         return { user: userWithId }; // Return user data
       } else {
         throw new Error('User data not found in Firestore');

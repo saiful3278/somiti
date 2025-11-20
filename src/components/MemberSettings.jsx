@@ -5,12 +5,15 @@ import { useUser } from '../contexts/UserContext';
 import { db } from '../firebase/config';
 import { doc, getDoc, updateDoc, getDocs, collection } from 'firebase/firestore';
 import LoadingAnimation from './common/LoadingAnimation';
+import { fetchLoginHistory } from '../firebase/loginHistoryService';
 
 const MemberSettings = () => {
   console.log("MemberSettings component module loaded.");
   const [activeTab, setActiveTab] = useState('profile');
   const [saveStatus, setSaveStatus] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loginHistory, setLoginHistory] = useState([]);
+  const [loginHistoryError, setLoginHistoryError] = useState('');
   const { currentUser } = useUser();
 
   console.log("MemberSettings component rendered.");
@@ -110,6 +113,18 @@ const MemberSettings = () => {
 
     fetchMemberData();
 
+    const loadLoginHistory = async () => {
+      const uid = currentUser?.uid || localStorage.getItem('somiti_uid')
+      const { data, error } = await fetchLoginHistory(uid)
+      if (error) {
+        setLoginHistoryError('লগইন ইতিহাস লোড করা যায়নি')
+      } else {
+        setLoginHistory(data || [])
+      }
+    }
+
+    loadLoginHistory();
+
     return () => {
       console.log("MemberSettings component unmounted.");
     };
@@ -193,6 +208,7 @@ const MemberSettings = () => {
   const tabs = [
     { id: 'profile', label: 'প্রোফাইল', icon: User },
     { id: 'system', label: 'সিস্টেম', icon: Settings },
+    { id: 'history', label: 'লগইন ইতিহাস', icon: FileText },
   ];
 
   const notificationItems = [
@@ -450,6 +466,32 @@ const MemberSettings = () => {
                 <Save className="btn-icon" />
                 সেটিংস সংরক্ষণ করুন
               </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="settings-section">
+            <h2 className="settings-section-title">লগইন ইতিহাস</h2>
+            {loginHistoryError && (
+              <div className="inline-error">
+                <span>{loginHistoryError}</span>
+              </div>
+            )}
+            <div className="history-list">
+              {loginHistory.length === 0 ? (
+                <div className="history-item">
+                  <div className="history-meta-line">কোনো ইতিহাস পাওয়া যায়নি বা সেশন নেই</div>
+                </div>
+              ) : (
+                loginHistory.map((row, idx) => (
+                  <div key={idx} className="history-item">
+                    <div className="history-date">{row.created_at?.toDate ? new Date(row.created_at.toDate()).toLocaleString('bn-BD') : (row.created_at ? new Date(row.created_at).toLocaleString('bn-BD') : '')}</div>
+                    <div className="history-meta-line">ডিভাইস: {row.meta?.ua || 'অজানা'}</div>
+                    <div className="history-meta-line">আইপি: {row.ip || 'অজানা'} | {row.meta?.country || ''}{row.meta?.city ? ', ' + row.meta.city : ''}</div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}

@@ -747,7 +747,34 @@ const CashierDashboard = () => {
 
   const handlePrintReceipt = (transactionId) => {
     console.log('Printing receipt for transaction:', transactionId);
-    // In a real app, this would generate and print a receipt
+    const tx = recentTransactions.find(t => (t.id === transactionId) || (t.reference === transactionId));
+    if (!tx) {
+      console.log('CashierDashboard: transaction not found for print', transactionId);
+      return;
+    }
+    const safe = {
+      id: tx.id,
+      memberName: tx.memberName,
+      type: tx.type || 'other',
+      amount: tx.amount || 0,
+      paymentMethod: tx.paymentMethod || 'cash',
+      description: tx.description || '',
+      date: tx.date,
+      time: tx.time,
+      reference: tx.reference || tx.id,
+      processedBy: tx.processedBy || 'ক্যাশিয়ার',
+      transactionId: tx.reference || tx.id,
+      status: tx.status || 'completed'
+    };
+    setSelectedTransaction(safe);
+    setShowTransactionCard(true);
+    setTimeout(() => {
+      try {
+        window.print();
+      } catch (e) {
+        console.log('CashierDashboard: window.print failed', e);
+      }
+    }, 200);
   };
 
   // Lightweight refresh dedicated for transaction list only (used inside Transaction History card)
@@ -936,10 +963,15 @@ const CashierDashboard = () => {
     <>
       <div className="treasury-container cashier-dashboard">
       <div className="p-4">
+      {console.log('[CashierDashboard] render profile header v2')}
       <div className="treasury-card cashier-profile-card mb-3">
+        <div className="cashier-profile-banner">
+          {console.log('[CashierDashboard] banner render')}
+          <div className="banner-accent" />
+        </div>
         <div className="flex items-center gap-4">
           <div
-            className="profile-avatar w-16 h-16 rounded-full overflow-hidden flex items-center justify-center"
+            className="profile-avatar avatar-ring w-24 h-24 rounded-full overflow-hidden flex items-center justify-center"
             role="button"
             tabIndex={0}
             onClick={() => { console.log('[CashierDashboard] open photo modal'); setIsPhotoModalOpen(true); }}
@@ -949,13 +981,13 @@ const CashierDashboard = () => {
               <>
                 <img src={photoURL} alt="avatar" className="profile-photo" />
                 <div className="photo-overlay">
-                  <Camera className="h-6 w-6 text-black" />
+                  <Camera className="h-8 w-8 text-black" />
                 </div>
               </>
             ) : (
               <>
                 {console.log('[CashierDashboard] render fallback avatar (camera centered)')}
-                <Camera className="h-6 w-6 text-black" />
+                <Camera className="h-8 w-8 text-black" />
               </>
             )}
           </div>
@@ -965,12 +997,25 @@ const CashierDashboard = () => {
                 <h2 className="profile-name text-xl font-extrabold">
                   {(currentUser && currentUser.name) || (authUser && authUser.name) || 'ক্যাশিয়ার'}
                 </h2>
-                <span className="profile-role px-2 py-0.5 text-xs rounded-full">ক্যাশিয়ার</span>
+                <span className="profile-role px-3 py-1.5 text-sm rounded-full">
+                  <User className="badge-icon" />
+                  ক্যাশিয়ার
+                </span>
               </div>
               <div className="profile-meta text-sm flex gap-4 flex-wrap">
                 <span className="flex items-center gap-1">
                   আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}
                 </span>
+              </div>
+              {console.log('[CashierDashboard] render profile chips')}
+              <div className="profile-chips">
+                <span className="chip">আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}</span>
+                <span className="chip">{currentUser?.status || 'সক্রিয়'}</span>
+              </div>
+              <div className="profile-actions">
+                <button type="button" className="action-icon" title="সেটিংস" onClick={() => console.log('[CashierDashboard] settings clicked') }>
+                  <Settings className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
