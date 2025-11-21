@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,6 +6,7 @@ import { loginUser } from '../api/auth';
 import LoadingAnimation from '../components/common/LoadingAnimation';
 import Meta from '../components/Meta'; // Import the Meta component
 import '../styles/Login.css';
+import BubbleBackground from '../components/ui/BubbleBackground';
 import '../styles/BengaliContent.css';
 
 // Console log for file load (per workspace rule)
@@ -19,6 +20,21 @@ const Login = () => {
 
   const { isAuthenticated, login, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const logMetrics = () => {
+      console.log('[Login] viewport metrics', {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        dpr: window.devicePixelRatio
+      });
+    };
+    logMetrics();
+    window.addEventListener('resize', logMetrics);
+    return () => {
+      window.removeEventListener('resize', logMetrics);
+    };
+  }, []);
 
   // If already authenticated, redirect to role-based dashboard rather than non-existent /dashboard
   if (isAuthenticated()) {
@@ -78,8 +94,10 @@ const Login = () => {
     }
   };
 
+  console.log('[Login] Bubble background enabled');
   return (
-    <div className="login-container">
+    <BubbleBackground interactive={true} colors={{ first: '18,113,255', second: '221,74,255', third: '0,220,255', fourth: '200,50,50', fifth: '180,180,50', sixth: '140,100,255' }}>
+      <div className="login-container">
       <Meta
         title="লগইন - ফুলমুড়ী যুব ফাউন্ডেশন"
         description="ফুলমুড়ী যুব ফাউন্ডেশন-এর অ্যাকাউন্টে লগইন করুন"
@@ -182,7 +200,8 @@ const Login = () => {
       <div className="bengali-content">
            <p>ওয়েবসাইটে সংরক্ষিত রয়েছে সমিতির নোটিশ, আপডেট, এবং কার্যক্রম সম্পর্কিত তথ্য, যা অনুমোদন ছাড়া প্রবেশ করা সম্ভব নয়। ফুলমুড়ী যুব ফাউন্ডেশনের এই অনলাইন প্ল্যাঠফর্ম নিশ্চিত করে যে শুধুমাত্র অনুমোদিত সদস্যরাই সব তথ্য অ্যাক্সেস করতে পারে।</p>
       </div>
-    </div>
+      </div>
+    </BubbleBackground>
   );
 };
 

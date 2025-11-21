@@ -2,7 +2,7 @@
 .login-container {
   height: 100vh;
   overflow: hidden;
-  background: #ffffff !important;
+  background: transparent !important;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,8 +16,8 @@
 }
 
 .login-wrapper {
-  max-width: 24rem;
-  width: 100%;
+  width: min(100vw, 360px);
+  max-width: 360px;
   animation: slideUp 0.6s ease-out;
 }
 
@@ -52,8 +52,8 @@
 }
 
 .login-form-container {
-  background: white;
-  border-radius: 1rem;
+  background: transparent;
+  border-radius: 2rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   padding: 1.25rem;
   animation: fadeInUp 0.8s ease-out 0.6s both;
@@ -61,6 +61,9 @@
   border: 1px solid transparent;
   margin-top: -1rem;
   position: relative;
+  font-size: 14px;
+  max-height: 88vh;
+  overflow: visible;
 }
 
 .login-form-container::before {
@@ -72,7 +75,7 @@
   bottom: -1px;
   background: linear-gradient(45deg, #FFD700, #4169E1, #32CD32, #FF8C00, #FFD700);
   background-size: 400% 400%;
-  border-radius: 1.5rem;
+  border-radius: inherit;
   z-index: -1;
   animation: gradientAnimation 3s ease infinite;
 }
@@ -85,7 +88,7 @@
   right: 0;
   bottom: 0;
   background: white;
-  border-radius: calc(1.5rem - 1px);
+  border-radius: inherit;
   z-index: -1;
 }
 
@@ -105,6 +108,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  max-height: calc(88vh - 4rem);
+  overflow-y: auto;
 }
 
 .form-group {
@@ -113,7 +118,7 @@
 
 .form-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.9em;
   font-weight: 500;
   color: #374151;
   margin-bottom: 0.5rem;
@@ -125,7 +130,7 @@
   padding: 0.4rem;
   border: 2px solid #d1d5db;
   border-radius: 1.5rem;
-  font-size: 0.85rem;
+  font-size: 0.95em;
   transition: all 0.3s ease;
   background: #fafafa;
   user-select: text;
@@ -186,9 +191,10 @@
   width: 100%;
   background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 0.5rem;
   font-weight: 600;
+  font-size: 0.95em;
   border: none;
   cursor: pointer;
   display: flex;
@@ -238,11 +244,21 @@
   }
   
   .login-form-container {
-    padding: 1.25rem;
+    padding: 1rem;
+    border-radius: 1.25rem;
   }
   
-  .login-title {
-    font-size: 1.25rem;
+}
+
+@media (max-width: 360px) {
+  .login-wrapper {
+    width: 98vw;
+  }
+}
+
+@media (min-width: 1280px) {
+  .login-wrapper {
+    max-width: 360px;
   }
 }
 
@@ -265,7 +281,7 @@
 
 /* Glass morphism effect for modern look */
 .login-form-container {
-  background: rgba(255, 255, 255, 0.95);
+  background: transparent;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }

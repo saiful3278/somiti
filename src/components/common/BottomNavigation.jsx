@@ -38,7 +38,6 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
       ],
       cashier: [
         { name: 'লেনদেন', href: '/cashier/transactions', icon: DollarSign },
-        { name: 'নতুন', href: '/cashier/add-transaction', icon: Plus },
         { name: 'টেবিল', href: '/cashier/unified-finance', icon: Table },
         { name: 'সদস্য', href: '/cashier/members', icon: Users },
         { name: 'সেটিংস', href: '/cashier/settings', icon: Settings }

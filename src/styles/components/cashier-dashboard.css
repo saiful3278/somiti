@@ -880,6 +880,59 @@ input[placeholder*="Search"]::placeholder {
   }
 }
 
+/* Floating Action Button for Cashier Dashboard */
+.cashier-fab {
+  position: fixed;
+  right: 16px;
+  bottom: 80px;
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 40;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: cashierFabPulse 2.4s ease-in-out infinite;
+}
+
+.cashier-fab:hover {
+  box-shadow: 0 16px 32px rgba(16, 185, 129, 0.45);
+  transform: translateY(-2px);
+}
+
+.cashier-fab:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .cashier-fab {
+    right: 12px;
+    bottom: 84px;
+    width: 52px;
+    height: 52px;
+  }
+}
+
+.cashier-fab-icon {
+  transition: transform 0.25s ease;
+}
+
+.cashier-fab:hover .cashier-fab-icon {
+  transform: rotate(90deg) scale(1.08);
+}
+
+@keyframes cashierFabPulse {
+  0% { transform: translateY(0) scale(1); box-shadow: 0 10px 25px rgba(16,185,129,0.35); }
+  50% { transform: translateY(-1px) scale(1.04); box-shadow: 0 14px 28px rgba(16,185,129,0.4); }
+  100% { transform: translateY(0) scale(1); box-shadow: 0 10px 25px rgba(16,185,129,0.35); }
+}
+
 @media (max-width: 480px) {
   .treasury-title {
     font-size: 1.75rem;

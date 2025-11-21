@@ -1030,9 +1030,7 @@ const CashierDashboard = () => {
         onPhotoUpdate={(newPhotoURL) => { console.log('[CashierDashboard] photo updated', { newPhotoURL }); setPhotoURL(newPhotoURL); }}
       />
 
-      {/* Central Action Buttons */}
       <div className="flex flex-col items-center gap-2 mb-3">
-        {/* Refresh Button */}
         <button 
           onClick={refreshData}
           disabled={loading.initial}
@@ -1043,16 +1041,6 @@ const CashierDashboard = () => {
           <span className="text-sm font-medium">
             {loading.initial ? 'লোড হচ্ছে...' : 'রিফ্রেশ করুন'}
           </span>
-        </button>
-        
-        {/* Add Member Button */}
-        <button 
-          onClick={() => setShowAddMemberModal(true)}
-          className="icon-action-btn green flex items-center gap-2 w-48 justify-center"
-          title="নতুন সদস্য যোগ করুন"
-        >
-          <UserPlus className="h-4 w-4" />
-          <span className="text-sm font-medium">নতুন সদস্য</span>
         </button>
       </div>
         
@@ -1594,6 +1582,17 @@ const CashierDashboard = () => {
           onClose={closeTransactionCard}
           position={cardPosition}
         />
+
+      {console.log('[CashierDashboard] render floating add button')}
+      <button
+        className="cashier-fab"
+        aria-label="নতুন লেনদেন"
+        onClick={() => { console.log('[CashierDashboard] FAB clicked -> navigate add transaction'); navigate('/cashier/add-transaction'); }}
+        onMouseEnter={() => { console.log('[CashierDashboard] FAB mouse enter'); }}
+        onMouseLeave={() => { console.log('[CashierDashboard] FAB mouse leave'); }}
+      >
+        <Plus className="h-6 w-6 text-white cashier-fab-icon" />
+      </button>
 
       
     </>
