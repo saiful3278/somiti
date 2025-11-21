@@ -68,6 +68,7 @@ const CashierDashboard = () => {
   const [photoURL, setPhotoURL] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [somitiUserId, setSomitiUserId] = useState('');
+  const avatarRef = React.useRef(null);
   console.log('[CashierDashboard] Contexts', { authUser, currentUser, userLoading });
 
   useEffect(() => {
@@ -118,6 +119,64 @@ const CashierDashboard = () => {
     };
     computeSerial();
   }, [currentUser]);
+
+  useEffect(() => {
+    if (!avatarRef.current) return;
+    if (!photoURL) {
+      console.log('[CashierDashboard] avatar glow disabled (no photoURL)');
+      try {
+        avatarRef.current.classList.remove('avatar-glow-on');
+        avatarRef.current.style.removeProperty('--glow-start');
+        avatarRef.current.style.removeProperty('--glow-end');
+      } catch (e) {
+        console.log('[CashierDashboard] avatar glow cleanup error', e);
+      }
+      return;
+    }
+
+    console.log('[CashierDashboard] avatar glow init for photo', { photoURL });
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = photoURL;
+    img.onload = () => {
+      try {
+        const size = 32;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, size, size);
+        const { data } = ctx.getImageData(0, 0, size, size);
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i]; g += data[i + 1]; b += data[i + 2]; count++;
+        }
+        r = Math.round(r / count); g = Math.round(g / count); b = Math.round(b / count);
+        const brighten = (v) => Math.min(255, Math.round(v * 1.15));
+        const dim = (v) => Math.max(0, Math.round(v * 0.85));
+        const start = `rgba(${brighten(r)}, ${brighten(g)}, ${brighten(b)}, 0.65)`;
+        const end = `rgba(${dim(r)}, ${dim(g)}, ${dim(b)}, 0.18)`;
+        console.log('[CashierDashboard] avatar glow colors', { r, g, b, start, end });
+        avatarRef.current.style.setProperty('--glow-start', start);
+        avatarRef.current.style.setProperty('--glow-end', end);
+        avatarRef.current.classList.add('avatar-glow-on');
+      } catch (e) {
+        console.log('[CashierDashboard] avatar glow compute error, applying fallback gradient', e);
+        const start = 'rgba(59, 130, 246, 0.65)';
+        const end = 'rgba(14, 165, 233, 0.18)';
+        avatarRef.current.style.setProperty('--glow-start', start);
+        avatarRef.current.style.setProperty('--glow-end', end);
+        avatarRef.current.classList.add('avatar-glow-on');
+      }
+    };
+    img.onerror = (e) => {
+      console.log('[CashierDashboard] avatar image load error, applying fallback gradient', e);
+      const start = 'rgba(59, 130, 246, 0.65)';
+      const end = 'rgba(14, 165, 233, 0.18)';
+      avatarRef.current.style.setProperty('--glow-start', start);
+      avatarRef.current.style.setProperty('--glow-end', end);
+      avatarRef.current.classList.add('avatar-glow-on');
+    };
+  }, [photoURL]);
   const [loading, setLoading] = useState({
     members: true,
     transactions: true,
@@ -963,63 +1022,52 @@ const CashierDashboard = () => {
     <>
       <div className="treasury-container cashier-dashboard">
       <div className="p-4">
-      {console.log('[CashierDashboard] render profile header v2')}
-      <div className="treasury-card cashier-profile-card mb-3">
-        <div className="cashier-profile-banner">
-          {console.log('[CashierDashboard] banner render')}
-          <div className="banner-accent" />
-        </div>
+      {console.log('[CashierDashboard] render profile header v3')}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm mb-3 p-4">
         <div className="flex items-center gap-4">
           <div
-            className="profile-avatar avatar-ring w-24 h-24 rounded-full overflow-hidden flex items-center justify-center"
+            className="cashier-header-avatar rounded-full flex items-center justify-center border-2 border-black bg-white transition"
             role="button"
             tabIndex={0}
+            aria-label="প্রোফাইল ছবি পরিবর্তন"
             onClick={() => { console.log('[CashierDashboard] open photo modal'); setIsPhotoModalOpen(true); }}
             onKeyDown={(e) => { if (e.key === 'Enter') { console.log('[CashierDashboard] open photo modal via keyboard'); setIsPhotoModalOpen(true); } }}
+            ref={avatarRef}
           >
             {photoURL ? (
-              <>
-                <img src={photoURL} alt="avatar" className="profile-photo" />
-                <div className="photo-overlay">
-                  <Camera className="h-8 w-8 text-black" />
-                </div>
-              </>
+              <img src={photoURL} alt="avatar" className="cashier-header-photo w-full h-full object-cover" />
             ) : (
-              <>
-                {console.log('[CashierDashboard] render fallback avatar (camera centered)')}
-                <Camera className="h-8 w-8 text-black" />
-              </>
+              <Camera className="h-7 w-7 text-black" />
             )}
           </div>
-          <div className="flex-1">
-            <div className="profile-content-box">
-              <div className="flex items-center gap-2">
-                <h2 className="profile-name text-xl font-extrabold">
-                  {(currentUser && currentUser.name) || (authUser && authUser.name) || 'ক্যাশিয়ার'}
-                </h2>
-                <span className="profile-role px-3 py-1.5 text-sm rounded-full">
-                  <User className="badge-icon" />
-                  ক্যাশিয়ার
-                </span>
-              </div>
-              <div className="profile-meta text-sm flex gap-4 flex-wrap">
-                <span className="flex items-center gap-1">
-                  আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}
-                </span>
-              </div>
-              {console.log('[CashierDashboard] render profile chips')}
-              <div className="profile-chips">
-                <span className="chip">আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}</span>
-                <span className="chip">{currentUser?.status || 'সক্রিয়'}</span>
-              </div>
-              <div className="profile-actions">
-                <button type="button" className="action-icon" title="সেটিংস" onClick={() => console.log('[CashierDashboard] settings clicked') }>
-                  <Settings className="h-4 w-4" />
-                </button>
-              </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold truncate">
+                {(currentUser && currentUser.name) || (authUser && authUser.name) || 'ক্যাশিয়ার'}
+              </h2>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full bg-blue-50 text-blue-700">
+                <User className="h-3.5 w-3.5" />
+                ক্যাশিয়ার
+              </span>
+            </div>
+
+            <div className="mt-1 text-sm text-gray-600 flex gap-4 flex-wrap">
+              <span className="flex items-center gap-1">আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}</span>
+            </div>
+
+            {console.log('[CashierDashboard] render profile chips v3')}
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}</span>
+              <span className="px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">{currentUser?.status || 'সক্রিয়'}</span>
             </div>
           </div>
-          
+
+          <div className="shrink-0">
+            <button type="button" className="p-2 rounded-full hover:bg-gray-100" title="সেটিংস" onClick={() => console.log('[CashierDashboard] settings clicked')}>
+              <Settings className="h-5 w-5 text-gray-700" />
+            </button>
+          </div>
         </div>
       </div>
       <ProfilePhotoModal

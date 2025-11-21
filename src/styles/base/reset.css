@@ -26,6 +26,17 @@ html {
   touch-action: manipulation;
 }
 
+/* Global responsive root font-size for small phones */
+@media (max-width: 375px) {
+  html { font-size: 93.75%; /* 15px */ }
+}
+@media (max-width: 360px) {
+  html { font-size: 87.5%; /* 14px */ }
+}
+@media (max-width: 340px) {
+  html { font-size: 81.25%; /* 13px */ }
+}
+
 body {
   margin: 0;
   font-family: var(--font-family-primary);

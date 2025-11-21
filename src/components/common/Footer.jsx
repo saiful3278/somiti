@@ -1,6 +1,7 @@
 import React from 'react';
 
 const Footer = () => {
+  console.log('Footer rendered');
   // Prevent right-click context menu
   const handleContextMenu = (e) => {
     e.preventDefault();
