@@ -304,6 +304,11 @@ const MemberList = () => {
       sphereProgressRef.current = p;
       sphereEl.style.opacity = String(1 - p);
       sphereEl.style.transform = `translate3d(0, -${p * 40}px, 0)`;
+      const pe = p >= 0.9 ? 'none' : 'auto';
+      if (sphereEl.style.pointerEvents !== pe) {
+        sphereEl.style.pointerEvents = pe;
+        console.log('MemberList: sphere pointer-events toggled', { progress: p, pointerEvents: pe });
+      }
     };
     const onScroll = () => {
       const top = el.scrollTop || 0;
