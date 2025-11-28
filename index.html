@@ -18,7 +18,27 @@
   </head>
   <body class="font-bengali">
     <div id="root"></div>
-    <script src="/env.js"></script>
+    <script>
+      console.log('[env] optional loader init');
+      (function () {
+        var href = '/env.js';
+        fetch(href, { method: 'HEAD' })
+          .then(function (res) {
+            if (res && res.ok) {
+              var s = document.createElement('script');
+              s.src = href;
+              s.defer = true;
+              document.head.appendChild(s);
+              console.log('[env] env.js loaded');
+            } else {
+              console.log('[env] env.js not found, using import.meta.env');
+            }
+          })
+          .catch(function () {
+            console.log('[env] env.js check failed, using import.meta.env');
+          });
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
     <noscript>এই ওয়েবসাইটটি সঠিকভাবে কাজ করার জন্য আপনার জাভাস্ক্রিপ্ট সক্রিয় করতে হবে।</noscript>
   </body>
