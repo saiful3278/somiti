@@ -54,6 +54,15 @@ jobs:
           echo "Using VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY from GitHub Secrets"
           npm run build
 
+      - name: Ensure env.js is in dist
+        run: |
+          if [ -f public/env.js ]; then
+            cp public/env.js dist/env.js
+            echo "[env] env.js copied to dist"
+          else
+            echo "[env] public/env.js missing, skipping copy"
+          fi
+
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:

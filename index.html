@@ -22,17 +22,28 @@
       console.log('[env] optional loader init');
       (function () {
         var href = '/env.js';
-        fetch(href, { method: 'HEAD' })
+        fetch(href, { method: 'GET', cache: 'no-store' })
           .then(function (res) {
-            if (res && res.ok) {
-              var s = document.createElement('script');
-              s.src = href;
-              s.defer = true;
-              document.head.appendChild(s);
-              console.log('[env] env.js loaded');
-            } else {
+            if (!res || !res.ok) {
               console.log('[env] env.js not found, using import.meta.env');
+              return null;
             }
+            return res.text();
+          })
+          .then(function (txt) {
+            if (!txt) return;
+            if (txt.indexOf('window.__ENV__') === -1) {
+              console.log('[env] env.js invalid content, skipping');
+              return;
+            }
+            var blob = new Blob([txt], { type: 'application/javascript' });
+            var url = URL.createObjectURL(blob);
+            var s = document.createElement('script');
+            s.src = url;
+            s.defer = true;
+            s.onload = function () { URL.revokeObjectURL(url); console.log('[env] env.js loaded'); };
+            s.onerror = function () { URL.revokeObjectURL(url); console.log('[env] env.js load error'); };
+            document.head.appendChild(s);
           })
           .catch(function () {
             console.log('[env] env.js check failed, using import.meta.env');
