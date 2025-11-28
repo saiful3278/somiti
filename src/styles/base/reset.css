@@ -1,0 +1,172 @@
+/* ===== CSS RESET & BASE STYLES ===== */
+
+/* Import Google Fonts moved to src/styles/index.css top to satisfy PostCSS */
+
+/* Reset and normalize */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  /* Prevent zoom */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Global responsive sizing for small phones */
+@media (max-width: 480px) {
+  html { font-size: 98%; }
+  :root {
+    --spacing-md: 0.85rem;
+    --spacing-lg: 1.2rem;
+    --spacing-xl: 1.6rem;
+  }
+}
+@media (max-width: 420px) {
+  html { font-size: 94%; }
+  :root {
+    --spacing-md: 0.8rem;
+    --spacing-lg: 1.1rem;
+    --spacing-xl: 1.5rem;
+    --radius-sm: 0.8rem !important;
+    --radius-md: 1.2rem !important;
+    --radius-lg: 1.6rem !important;
+  }
+}
+@media (max-width: 375px) {
+  html { font-size: 89%; }
+  :root {
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.4rem;
+    --radius-sm: 0.75rem !important;
+    --radius-md: 1.1rem !important;
+    --radius-lg: 1.5rem !important;
+  }
+}
+@media (max-width: 360px) {
+  html { font-size: 86%; }
+  :root {
+    --spacing-md: 0.7rem;
+    --spacing-lg: 0.95rem;
+    --spacing-xl: 1.3rem;
+    --radius-sm: 0.7rem !important;
+    --radius-md: 1rem !important;
+    --radius-lg: 1.4rem !important;
+  }
+}
+@media (max-width: 340px) {
+  html { font-size: 83%; }
+  :root {
+    --spacing-md: 0.65rem;
+    --spacing-lg: 0.9rem;
+    --spacing-xl: 1.2rem;
+    --radius-sm: 0.65rem !important;
+    --radius-md: 0.95rem !important;
+    --radius-lg: 1.3rem !important;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Additional zoom prevention */
+  overflow-x: hidden;
+  position: relative;
+  touch-action: manipulation;
+}
+
+/* Remove default button styles */
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Remove default input styles */
+input,
+textarea,
+select {
+  font: inherit;
+  outline: none;
+}
+
+/* Remove default list styles */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Remove default link styles */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Image defaults */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Table defaults */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-300) var(--gray-100);
+}

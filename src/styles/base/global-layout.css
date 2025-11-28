@@ -1,0 +1,52 @@
+/* ===== GLOBAL LAYOUT FIXES ===== */
+/* Global solution for bottom navigation overlap issue */
+
+/* Apply bottom spacing to all main content areas globally */
+main,
+.main-content,
+.app-main,
+[role="main"] {
+  padding-bottom: 25px !important; /* Reduced space - footer handles the spacing */
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+  /* Ensure all page containers have bottom spacing on mobile */
+  .page-container,
+  .dashboard-container,
+  .content-wrapper,
+  .main-wrapper {
+    padding-bottom: 25px !important;
+  }
+  
+  /* Fix for React Router pages */
+  #root > div,
+  .app-container > div:last-child {
+    padding-bottom: 25px !important;
+  }
+}
+
+/* Desktop - remove bottom padding when sidebar is present */
+@media (min-width: 768px) {
+  .main-content-with-sidebar-visible,
+  .main-content-with-sidebar {
+    padding-bottom: 25px !important; /* Minimal spacing for desktop */
+  }
+}
+
+/* Ensure bottom navigation doesn't interfere */
+.bottom-navigation {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
+}
+
+/* Safe area adjustments for devices with notches */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  main,
+  .main-content {
+    padding-bottom: calc(25px + env(safe-area-inset-bottom)) !important;
+  }
+}

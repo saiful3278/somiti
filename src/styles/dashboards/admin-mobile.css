@@ -1,0 +1,721 @@
+/* ===== MATERIAL DESIGN 3 ADMIN DASHBOARD MOBILE STYLES ===== */
+
+/* Material Design 3 Typography Scale */
+.md-headline-small {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+  letter-spacing: 0;
+  margin: 0;
+}
+
+.md-title-large {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: 0;
+  margin: 0;
+}
+
+.md-title-medium {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  margin: 0;
+}
+
+.md-title-small {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+  margin: 0;
+}
+
+.md-body-large {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.md-body-medium {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+  margin: 0;
+}
+
+.md-body-small {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+  margin: 0;
+  color: #6B7280;
+}
+
+.md-label-large {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+  margin: 0;
+}
+
+.md-label-medium {
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+/* Main Dashboard Container */
+.admin-dashboard-mobile {
+  min-height: 100vh;
+  background: #F8FAFC;
+  position: relative;
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+/* Material Design 3 App Bar */
+.md-app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.md-app-bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  min-height: 64px;
+}
+
+.md-app-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.md-app-bar-title {
+  flex: 1;
+}
+
+.md-app-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Material Design 3 Icon Buttons */
+.md-icon-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #374151;
+  position: relative;
+  overflow: hidden;
+}
+
+.md-icon-button:hover {
+  background: rgba(55, 65, 81, 0.08);
+}
+
+.md-icon-button:active {
+  background: rgba(55, 65, 81, 0.12);
+  transform: scale(0.95);
+}
+
+.md-icon-button-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6B7280;
+}
+
+.md-icon-button-small:hover {
+  background: rgba(107, 114, 128, 0.08);
+}
+
+/* Material Design 3 Surface Container */
+.md-surface-container {
+  background: #F8FAFC;
+  min-height: calc(100vh - 64px);
+}
+
+/* Dashboard Content */
+.md-dashboard-content {
+  padding: 16px;
+  padding-bottom: 100px; /* Extra space for FAB and bottom nav */
+}
+
+/* Material Design 3 Cards */
+.md-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  border: 1px solid #F3F4F6;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.md-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 10px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.md-card-content {
+  padding: 0;
+}
+
+.md-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+}
+
+/* Stats Grid */
+.md-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.md-stats-card {
+  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes slideInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.md-stats-icon-container {
+  margin-bottom: 12px;
+}
+
+.md-stats-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.md-stats-content {
+  flex: 1;
+}
+
+.md-stats-change {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.md-stats-change.positive {
+  color: #059669;
+}
+
+.md-stats-change.negative {
+  color: #DC2626;
+}
+
+/* Material Design 3 Tabs */
+.md-tab-container {
+  margin-bottom: 24px;
+}
+
+.md-tab-bar {
+  display: flex;
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border: 1px solid #F3F4F6;
+}
+
+.md-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6B7280;
+  min-height: 64px;
+}
+
+.md-tab:hover {
+  background: rgba(107, 114, 128, 0.08);
+}
+
+.md-tab.active {
+  background: #3B82F6;
+  color: #FFFFFF;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+/* Tab Content */
+.md-tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Charts Container */
+.md-charts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.md-chart-card {
+  margin-bottom: 16px;
+}
+
+.md-chart-container {
+  padding: 16px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  margin: 0 16px 16px 16px;
+}
+
+/* Investment List */
+.md-investment-list {
+  padding: 0 16px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.md-investment-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #F9FAFB;
+  border-radius: 8px;
+  border: 1px solid #F3F4F6;
+}
+
+.md-investment-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.md-investment-info {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Material Design 3 Lists */
+.md-list {
+  padding: 0 16px 16px 16px;
+}
+
+.md-list-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #F3F4F6;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateX(-20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.md-list-item:last-child {
+  border-bottom: none;
+}
+
+.md-list-item:hover {
+  background: rgba(59, 130, 246, 0.04);
+  transform: translateX(4px);
+}
+
+.md-list-item:active {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+@keyframes slideInLeft {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.md-list-item-leading {
+  flex-shrink: 0;
+}
+
+.md-list-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.md-list-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.md-list-item-headline {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.md-list-item-supporting-text {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  color: #6B7280;
+}
+
+.md-list-item-trailing {
+  flex-shrink: 0;
+}
+
+/* Events List */
+.md-events-list {
+  padding: 0 16px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.md-event-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #EBF8FF 0%, #F0FDF4 100%);
+  border-radius: 12px;
+  border-left: 4px solid #3B82F6;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.md-event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.md-event-content {
+  flex: 1;
+}
+
+.md-event-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.md-event-detail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #374151;
+}
+
+/* Material Design 3 Buttons */
+.md-text-button {
+  border: none;
+  background: transparent;
+  color: #3B82F6;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+}
+
+.md-text-button:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.md-text-button:active {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+/* Material Design 3 Floating Action Button */
+.md-fab-container {
+  position: fixed;
+  bottom: 96px; /* Above bottom navigation */
+  right: 16px;
+  z-index: 1000;
+}
+
+.md-fab {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2), 0 6px 10px rgba(0, 0, 0, 0.14), 0 1px 18px rgba(0, 0, 0, 0.12);
+}
+
+.md-fab-primary {
+  background: #3B82F6;
+  color: #FFFFFF;
+}
+
+.md-fab-secondary {
+  background: #FFFFFF;
+  color: #3B82F6;
+  border: 1px solid #E5E7EB;
+  width: auto;
+  height: 48px;
+  padding: 0 16px;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.md-fab-label {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.md-fab-menu {
+  position: absolute;
+  bottom: 72px; /* Above main FAB */
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  animation: fabMenuSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.md-fab.rotated {
+  transform: rotate(45deg);
+}
+
+.md-fab:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 8px rgba(0, 0, 0, 0.25), 0 8px 15px rgba(0, 0, 0, 0.18), 0 2px 25px rgba(0, 0, 0, 0.15);
+}
+
+.md-fab.rotated:hover {
+  transform: rotate(45deg) scale(1.05);
+}
+
+.md-fab:active {
+  transform: scale(0.95);
+}
+
+.md-fab.rotated:active {
+  transform: rotate(45deg) scale(0.95);
+}
+
+@keyframes fabMenuSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Material Design 3 Bottom Navigation */
+.md-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border-top: 1px solid #E5E7EB;
+  display: flex;
+  padding: 8px 0;
+  z-index: 1000;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.md-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6B7280;
+  min-height: 64px;
+  position: relative;
+}
+
+.md-nav-item:hover {
+  background: rgba(107, 114, 128, 0.08);
+}
+
+.md-nav-item.active {
+  color: #3B82F6;
+}
+
+.md-nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  background: #3B82F6;
+  border-radius: 0 0 3px 3px;
+}
+
+/* Responsive Design for larger screens */
+@media (min-width: 768px) {
+  .md-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  
+  .md-charts-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  
+  .md-dashboard-content {
+    padding: 24px;
+  }
+  
+  .md-bottom-nav {
+    display: none;
+  }
+  
+  .md-fab-container {
+    bottom: 24px;
+  }
+}
+
+/* Touch feedback for mobile */
+@media (max-width: 767px) {
+  .md-card:active {
+    transform: scale(0.98);
+  }
+  
+  .md-tab:active {
+    transform: scale(0.95);
+  }
+  
+  .md-list-item:active {
+    transform: scale(0.98);
+  }
+  
+  .md-event-card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .md-card {
+    border: 2px solid #000000;
+  }
+  
+  .md-tab.active {
+    border: 2px solid #FFFFFF;
+  }
+  
+  .md-fab-primary {
+    border: 2px solid #FFFFFF;
+  }
+}

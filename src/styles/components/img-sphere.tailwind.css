@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@layer components {
+  .img-sphere-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+    min-height: 60vh;
+    padding: 1.5rem;
+  }
+
+  .img-sphere-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .img-sphere-spinner {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid rgba(99,102,241,0.2);
+    border-top-color: rgba(99,102,241,0.8);
+    animation: img-sphere-spin 0.9s linear infinite;
+  }
+}

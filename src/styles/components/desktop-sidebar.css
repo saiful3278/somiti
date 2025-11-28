@@ -1,0 +1,110 @@
+/* Optimized Desktop Sidebar Animations */
+
+/* Sidebar Container with Smooth Transitions */
+.desktop-sidebar {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform-origin: left center;
+}
+
+.desktop-sidebar.hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.desktop-sidebar.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Navigation Items with Hover Effects */
+.desktop-sidebar-nav-item {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.desktop-sidebar-nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: width 0.3s ease;
+  border-radius: inherit;
+}
+
+.desktop-sidebar-nav-item:hover::before {
+  width: 100%;
+}
+
+.desktop-sidebar-nav-item:hover {
+  transform: translateX(4px);
+}
+
+.desktop-sidebar-nav-item.active {
+  transform: translateX(0);
+}
+
+/* Icon Animation */
+.desktop-sidebar-icon {
+  transition: all 0.2s ease;
+}
+
+.desktop-sidebar-nav-item:hover .desktop-sidebar-icon {
+  transform: scale(1.1);
+}
+
+.desktop-sidebar-nav-item.active .desktop-sidebar-icon {
+  transform: scale(1);
+}
+
+/* Logo Animation */
+.desktop-sidebar-logo {
+  transition: all 0.3s ease;
+}
+
+.desktop-sidebar-logo:hover {
+  transform: scale(1.02);
+}
+
+/* Main Content Adjustment */
+.main-content-with-sidebar {
+  transition: margin-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.main-content-without-sidebar {
+  margin-left: 0;
+}
+
+.main-content-with-sidebar-visible {
+  margin-left: 288px; /* 72 * 4 = 288px (w-72) */
+}
+
+/* Responsive Behavior */
+@media (max-width: 768px) {
+  .desktop-sidebar {
+    display: none;
+  }
+  
+  .main-content-with-sidebar,
+  .main-content-without-sidebar {
+    margin-left: 0;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .desktop-sidebar,
+  .desktop-sidebar-nav-item,
+  .desktop-sidebar-icon,
+  .desktop-sidebar-logo,
+  .main-content-with-sidebar {
+    transition: none !important;
+  }
+  
+  .desktop-sidebar-nav-item::before {
+    transition: none !important;
+  }
+}
