@@ -20,6 +20,7 @@
 @import './components/tables.css';
 @import './components/member-list.css';
 @import './components/investment.css';
+@import './components/theme-switcher.css';
 
 /* Dashboard specific styles */
 @import './dashboards/admin.css';

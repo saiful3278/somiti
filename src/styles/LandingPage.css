@@ -2,7 +2,7 @@
 
 .landing-root { min-height: 100vh; display: flex; flex-direction: column; gap: var(--spacing-2xl); padding: var(--spacing-2xl) var(--spacing-xl) 0; position: relative; }
 
-.landing-hero { text-align: center; max-width: 980px; margin: 0 auto; padding: var(--spacing-lg) 0; }
+.landing-hero { text-align: center; max-width: 980px; margin: 0 auto; padding: var(--spacing-lg) 0; position: relative; }
 .hero-card { display: contents; }
 .hero-content { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-md); }
 .hero-headers { display: flex; flex-direction: column; gap: var(--spacing-xs); align-items: center; justify-content: center; }
@@ -23,6 +23,8 @@
 
 .landing-actions { margin-top: var(--spacing-xl); display: flex; gap: var(--spacing-md); justify-content: center; flex-wrap: wrap; }
 .hero-content .landing-actions { justify-content: center; }
+.hero-theme-toggle { position: absolute; top: var(--spacing-sm); right: var(--spacing-sm); }
+.hero-theme-toggle-fixed { position: fixed; top: var(--spacing-sm); right: var(--spacing-sm); z-index: var(--z-fixed); }
 .btn-primary, .btn-secondary, .btn-outline { padding: 0.8rem 1.4rem; border-radius: var(--radius-lg); text-decoration: none; transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), color var(--transition-fast), filter var(--transition-fast); box-shadow: var(--shadow-soft); font-weight: 600; backdrop-filter: saturate(120%); }
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.25), var(--shadow-md); }
@@ -271,3 +273,23 @@
   .season-item .fx { animation: none !important; }
 }
 
+.dark .landing-root { background: #f3f4f6 !important; }
+.dark .landing-root * { color: #9ca3af !important; }
+.dark .landing-title { -webkit-text-fill-color: initial; background: none; }
+.dark .panel,
+.dark .ui-card,
+.dark .season-item,
+.dark .feature-card,
+.dark .inst-list li,
+.dark .notable-item,
+.dark .crop-item,
+.dark .value-card,
+.dark .map-block,
+.dark .gallery-item,
+.dark .faq-item,
+.dark .testimonial-card,
+.dark .landing-footer {
+  background: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+  box-shadow: none !important;
+}

@@ -4,6 +4,7 @@ import { Users, ShieldCheck, Megaphone, MapPin, BookOpen, Sprout, Landmark, Sun,
 import { useAuth } from '../contexts/AuthContext';
 import Meta from '../components/Meta';
 import BubbleBackground from '../components/ui/BubbleBackground';
+import ThemeSwitcher from '../components/ui/theme-switcher';
 import Lottie from 'lottie-react';
 const FaqAccordion = React.lazy(() => import('../components/ui/FaqAccordion'));
 const Testimonials = React.lazy(() => import('../components/ui/Testimonials'));
@@ -25,6 +26,7 @@ export default function LandingPage() {
   const [shouldAnimate, setShouldAnimate] = useState(true);
   const [rainInView, setRainInView] = useState(false);
   const [leavesInView, setLeavesInView] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     console.log('[LandingPage] mounted');
@@ -201,7 +203,7 @@ export default function LandingPage() {
 
   return (
     <BubbleBackground interactive={true}>
-      <div className="landing-root">
+      <div className={`landing-root ${isDark ? 'dark' : ''}`}>
         <Meta
           title={seoTitle}
           description={seoDescription}
@@ -213,6 +215,9 @@ export default function LandingPage() {
         />
 
         <header className="landing-hero" aria-label="Village hero" onMouseEnter={() => console.log('[LandingPage] hover hero header')} onMouseLeave={() => console.log('[LandingPage] leave hero header')}>
+            <div className="hero-theme-toggle hero-theme-toggle-fixed">
+              <ThemeSwitcher isDark={isDark} onToggle={(next) => { console.log('[LandingPage] theme toggle', { next }); setIsDark(next); }} />
+            </div>
             <div className="hero-content" onMouseEnter={() => console.log('[LandingPage] hover hero-content')} onMouseLeave={() => console.log('[LandingPage] leave hero-content')}>
               <div className="hero-headers" onMouseEnter={() => console.log('[LandingPage] hover hero-headers')} onMouseLeave={() => console.log('[LandingPage] leave hero-headers')}>
                 <h1 className="landing-title">ফুলমুড়ী গ্রাম</h1>
