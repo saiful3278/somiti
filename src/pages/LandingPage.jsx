@@ -13,6 +13,9 @@ const InfoGrid = React.lazy(() => import('../components/ui/InfoGrid'));
 const MapBlock = React.lazy(() => import('../components/ui/MapBlock'));
 import '../styles/LandingPage.css';
 import { RainbowButton } from '../components/ui/rainbow-button';
+import ImgSphere from '@/components/img-sphere';
+import '../styles/components/img-sphere.tailwind.css';
+import { MemberService } from '../firebase/memberService';
 
 console.log('[LandingPage] File loaded');
 
@@ -21,12 +24,105 @@ export default function LandingPage() {
   const seasonsRef = useRef(null);
   const rainRef = useRef(null);
   const leavesRef = useRef(null);
+  const landingSphereRef = useRef(null);
   const [rainData, setRainData] = useState(null);
   const [leavesData, setLeavesData] = useState(null);
   const [shouldAnimate, setShouldAnimate] = useState(true);
   const [rainInView, setRainInView] = useState(false);
   const [leavesInView, setLeavesInView] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [sphereImages, setSphereImages] = useState([]);
+  const buildPlaceholderAvatar = (name, size = 128) => {
+    const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    const initials = (parts.slice(0, 2).map(p => p[0] || '').join('') || 'M').toUpperCase();
+    const bg = '#e2e8f0';
+    const text = '#1e293b';
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">\n  <defs>\n    <clipPath id="clip">\n      <circle cx="${size/2}" cy="${size/2}" r="${size/2}" />\n    </clipPath>\n  </defs>\n  <rect width="${size}" height="${size}" fill="${bg}"/>\n  <g clip-path="url(#clip)">\n    <rect width="${size}" height="${size}" fill="${bg}"/>\n  </g>\n  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="${Math.round(size*0.4)}" font-weight="700" fill="${text}">${initials}</text>\n</svg>`;
+    const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    return dataUrl;
+  };
+  useEffect(() => {
+    let mounted = true;
+    console.log('[LandingPage] fetching members for sphere images');
+    MemberService.getActiveMembers().then(result => {
+      if (!mounted) return;
+      if (result.success) {
+        const sorted = [...(result.data || [])].sort((a, b) => {
+          const createdA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
+          const createdB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+          if (createdA.getTime() !== createdB.getTime()) return createdB - createdA;
+          return (b.id || '').localeCompare(a.id || '');
+        });
+        const imgs = sorted.map(m => ({
+          id: m.id,
+          src: m.photoURL || m.avatar || buildPlaceholderAvatar(m.name),
+          alt: m.name || m.membershipId || 'Member',
+          title: m.name,
+          description: m.membershipId ? `ID: ${m.membershipId}` : undefined,
+        }));
+        console.log('[LandingPage] sphere images prepared', { count: imgs.length });
+        setSphereImages(imgs);
+      } else {
+        console.log('[LandingPage] members fetch failed, using minimal assets');
+        setSphereImages([
+          { id: 'footer_logo', src: '/footer_logo.svg', alt: 'Footer Logo', title: 'Footer' },
+          { id: 'vite', src: '/vite.svg', alt: 'Vite', title: 'Vite' },
+          { id: 'pdf_logo', src: '/logo_pdf.png', alt: 'PDF Logo', title: 'PDF' }
+        ]);
+      }
+    }).catch(e => {
+      console.log('[LandingPage] members fetch error', e);
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldAnimate) { console.log('[LandingPage] skip auto scroll due to reduced motion'); return; }
+    const el = landingSphereRef.current;
+    if (!el) { console.log('[LandingPage] sphere ref not ready'); return; }
+    const current = parseInt(localStorage.getItem('lpSphereScrollCount') || '0', 10) || 0;
+    if (current >= 3) { console.log('[LandingPage] auto scroll skipped (limit reached)', { current }); return; }
+    const doScroll = () => {
+      try {
+        const rect = el.getBoundingClientRect();
+        const centerY = rect.top + rect.height / 2;
+        const viewportCenter = window.innerHeight / 2;
+        const delta = centerY - viewportCenter;
+        window.scrollBy({ top: delta, behavior: 'smooth' });
+        const next = current + 1;
+        localStorage.setItem('lpSphereScrollCount', String(next));
+        console.log('[LandingPage] auto scrolled to sphere center', { delta, next });
+      } catch (e) {
+        console.log('[LandingPage] auto scroll failed, using scrollIntoView', e);
+        try {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const next = current + 1;
+          localStorage.setItem('lpSphereScrollCount', String(next));
+        } catch {}
+      }
+    };
+    const delayMs = 2000;
+    let timerId = null;
+    const schedule = () => {
+      console.log('[LandingPage] auto-scroll scheduled with delay', { delayMs });
+      timerId = setTimeout(() => {
+        requestAnimationFrame(doScroll);
+      }, delayMs);
+    };
+    const onLoad = () => schedule();
+    if (document.readyState === 'complete') {
+      schedule();
+    } else {
+      window.addEventListener('load', onLoad, { once: true });
+    }
+    return () => {
+      if (timerId) {
+        clearTimeout(timerId);
+        console.log('[LandingPage] auto-scroll timer cleared');
+      }
+      window.removeEventListener('load', onLoad);
+    };
+  }, [shouldAnimate]);
 
   useEffect(() => {
     console.log('[LandingPage] mounted');
@@ -348,6 +444,21 @@ export default function LandingPage() {
               বসন্ত
               <span className="fx fx-blossom" aria-hidden="true" />
             </div>
+          </div>
+        </section>
+        <section>
+          {console.log('[LandingPage] ImgSphere below ঋতুচক্র rendered')}
+          <div className="img-sphere-page-wrapper" style={{ background: 'transparent' }} ref={landingSphereRef}>
+            <ImgSphere
+              images={sphereImages}
+              containerSize={360}
+              sphereRadius={160}
+              autoRotate={true}
+              baseImageScale={0.1}
+              performanceMode={true}
+              disableSpotlight={true}
+              onImageClick={(img) => { console.log('[LandingPage] sphere image clicked', img); }}
+            />
           </div>
         </section>
 

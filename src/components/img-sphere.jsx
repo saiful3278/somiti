@@ -47,7 +47,8 @@ const SphereImageGrid = ({
   autoRotateSpeed = 0.3,
   className = '',
   onImageClick,
-  disableSpotlight = false
+  disableSpotlight = false,
+  performanceMode = false
 }) => {
 
   // ==========================================
@@ -65,6 +66,7 @@ const SphereImageGrid = ({
   const containerRef = useRef(null);
   const lastMousePos = useRef({ x: 0, y: 0 });
   const animationFrame = useRef(null);
+  const lastFrameTs = useRef(0);
 
   // ==========================================
   // COMPUTED VALUES
@@ -148,9 +150,8 @@ const SphereImageGrid = ({
 
       const worldPos = { x, y, z };
 
-      // Calculate visibility with smooth fade zones
-      const fadeZoneStart = -10;  // Start fading out
-      const fadeZoneEnd = -30;    // Completely hidden
+      const fadeZoneStart = performanceMode ? -5 : -10;
+      const fadeZoneEnd = performanceMode ? -20 : -30;
       const isVisible = worldPos.z > fadeZoneEnd;
 
       // Calculate fade opacity based on Z position
@@ -186,6 +187,9 @@ const SphereImageGrid = ({
       };
     });
 
+    if (performanceMode) {
+      return positions;
+    }
     // Apply collision detection to prevent overlaps
     const adjustedPositions = [...positions];
 
@@ -228,7 +232,7 @@ const SphereImageGrid = ({
     }
 
     return adjustedPositions;
-  }, [imagePositions, rotation, actualSphereRadius, baseImageSize]);
+  }, [imagePositions, rotation, actualSphereRadius, baseImageSize, performanceMode]);
 
   const clampRotationSpeed = useCallback(speed => {
     return Math.max(-maxRotationSpeed, Math.min(maxRotationSpeed, speed));
@@ -367,8 +371,13 @@ const SphereImageGrid = ({
   }, [generateSpherePositions]);
 
   useEffect(() => {
+    console.log('[ImgSphere] performance mode', { performanceMode })
     const animate = () => {
-      updateMomentum();
+      const now = performance.now();
+      if (!performanceMode || now - lastFrameTs.current >= 16) {
+        lastFrameTs.current = now;
+        updateMomentum();
+      }
       animationFrame.current = requestAnimationFrame(animate);
     };
 
@@ -381,29 +390,24 @@ const SphereImageGrid = ({
         cancelAnimationFrame(animationFrame.current);
       }
     };
-  }, [isMounted, updateMomentum]);
+  }, [isMounted, updateMomentum, performanceMode]);
 
   useEffect(() => {
     if (!isMounted) return;
-
     const container = containerRef.current;
     if (!container) return;
-
-    // Mouse events
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-    // Touch events
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-
+    const target = performanceMode ? container : document;
+    target.addEventListener('mousemove', handleMouseMove);
+    target.addEventListener('mouseup', handleMouseUp);
+    target.addEventListener('touchmove', handleTouchMove, { passive: false });
+    target.addEventListener('touchend', handleTouchEnd);
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
+      target.removeEventListener('mousemove', handleMouseMove);
+      target.removeEventListener('mouseup', handleMouseUp);
+      target.removeEventListener('touchmove', handleTouchMove);
+      target.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [isMounted, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+  }, [isMounted, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd, performanceMode]);
 
   // ==========================================
   // RENDER HELPERS
@@ -418,20 +422,21 @@ const SphereImageGrid = ({
     if (!position || !position.isVisible) return null;
 
     const imageSize = baseImageSize * position.scale;
-    const isHovered = hoveredIndex === index;
+    const isHovered = hoveredIndex === index && !performanceMode;
     const finalScale = isHovered ? Math.min(1.2, 1.2 / position.scale) : 1;
 
     return (
       <div
         key={image.id}
-        className="absolute cursor-pointer select-none transition-transform duration-200 ease-out"
+        className={performanceMode ? "absolute cursor-pointer select-none" : "absolute cursor-pointer select-none transition-transform duration-200 ease-out"}
         style={{
           width: `${imageSize}px`,
           height: `${imageSize}px`,
           left: `${containerSize/2 + position.x}px`,
           top: `${containerSize/2 + position.y}px`,
           opacity: position.fadeOpacity,
-          transform: `translate(-50%, -50%) scale(${finalScale})`,
+          transform: `translate3d(-50%, -50%, 0) scale(${finalScale})`,
+          willChange: 'transform, opacity',
           zIndex: position.zIndex
         }}
         onMouseEnter={() => setHoveredIndex(index)}
@@ -462,7 +467,7 @@ const SphereImageGrid = ({
         </div>
       </div>
     );
-  }, [worldPositions, baseImageSize, containerSize, hoveredIndex]);
+  }, [worldPositions, baseImageSize, containerSize, hoveredIndex, performanceMode]);
 
   const renderSpotlightModal = () => {
     if (disableSpotlight) return null;
