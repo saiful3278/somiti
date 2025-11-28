@@ -46,7 +46,8 @@ const SphereImageGrid = ({
   autoRotate = false,
   autoRotateSpeed = 0.3,
   className = '',
-  onImageClick
+  onImageClick,
+  disableSpotlight = false
 }) => {
 
   // ==========================================
@@ -437,7 +438,11 @@ const SphereImageGrid = ({
         onMouseLeave={() => setHoveredIndex(null)}
         onClick={() => {
           console.log('[ImgSphere] image clicked', { id: image.id, alt: image.alt })
-          setSelectedImage(image)
+          if (!disableSpotlight) {
+            setSelectedImage(image)
+          } else {
+            console.log('[ImgSphere] spotlight disabled, delegating click')
+          }
           if (typeof onImageClick === 'function') {
             try {
               onImageClick(image)
@@ -460,6 +465,7 @@ const SphereImageGrid = ({
   }, [worldPositions, baseImageSize, containerSize, hoveredIndex]);
 
   const renderSpotlightModal = () => {
+    if (disableSpotlight) return null;
     if (!selectedImage) return null;
 
     return (

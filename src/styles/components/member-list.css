@@ -14,6 +14,12 @@
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px) + 24px);
+  overscroll-behavior: contain;
+}
+
+.member-list-bottom-spacer {
+  height: calc(120px + env(safe-area-inset-bottom, 0px) + 24px);
 }
 
 .img-sphere-page-wrapper {
@@ -22,11 +28,11 @@
   z-index: 5;
   overflow: hidden;
   background: transparent;
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: pan-y;
   will-change: transform, opacity;
   transform: translateZ(0);
   backface-visibility: hidden;
-  transition: opacity 120ms linear, transform 120ms ease-out;
 }
 
 .member-list-header {
@@ -172,13 +178,14 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  content-visibility: auto;
+  contain: paint;
 }
 
 .member-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); /* Slightly enhanced hover shadow */
-  transform: translateY(-1px); /* Reduced hover lift */
-  border-color: #d1d5db; /* Slightly darker border on hover */
-  background: linear-gradient(135deg, #fefefe 0%, #f9fafb 100%); /* Subtle gradient change on hover */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border-color: #d1d5db;
+  background: linear-gradient(135deg, #fefefe 0%, #f9fafb 100%);
 }
 
 /* Improved visual hierarchy with better spacing */
@@ -209,9 +216,8 @@
 
 .member-card-content {
   display: flex;
-  align-items: center; /* Changed from flex-start to center for better alignment */
-  gap: 4px; /* Further reduced for thinner layout */
-  transform: translateY(-3px);
+  align-items: center;
+  gap: 4px;
 }
 
 .member-avatar-section {
@@ -324,7 +330,6 @@
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   align-self: center;
-  transform: translateY(-10px);
 }
 
 .member-avatar-placeholder {
@@ -342,7 +347,6 @@
   box-shadow: 0 2px 8px rgba(29, 78, 216, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.9);
   align-self: center;
-  transform: translateY(-10px);
 }
 
 .member-info {
@@ -976,8 +980,7 @@
 .member-card-minimal.admin::before { background: linear-gradient(90deg, #fecaca, #fca5a5); }
 
 .member-card-minimal:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
   border-color: #3b82f6;
 }
 
@@ -1011,7 +1014,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  transform: translateY(-3px);
 }
 
 .member-avatar-section {

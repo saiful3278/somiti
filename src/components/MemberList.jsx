@@ -57,6 +57,7 @@ const MemberList = () => {
   const scrollContainerRef = useRef(null);
   const sphereWrapperRef = useRef(null);
   const sphereProgressRef = useRef(0);
+  const [detailSimple, setDetailSimple] = useState(false);
 
   const buildPlaceholderAvatar = (name, size = 128) => {
     const parts = String(name || '').trim().split(/\s+/).filter(Boolean)
@@ -108,6 +109,7 @@ const MemberList = () => {
     setIsEditing(false);
     setEditMemberData(null);
     setShowDeleteConfirm(false);
+    setDetailSimple(false);
   };
 
   const handleEditInputChange = (field, value) => {
@@ -311,7 +313,7 @@ const MemberList = () => {
           update(top);
         });
       }
-      if (Math.abs(top - lastLoggedTop) >= 100) {
+      if (Math.abs(top - lastLoggedTop) >= 300) {
         lastLoggedTop = top;
         console.log('MemberList: rAF scroll progress', { top, p: Math.max(0, Math.min(1, top / threshold)) });
       }
@@ -547,6 +549,17 @@ const MemberList = () => {
             containerSize={420} 
             sphereRadius={180} 
             autoRotate={true}
+            disableSpotlight={true}
+            onImageClick={(img) => {
+              console.log('MemberList: sphere image clicked', img)
+              const m = members.find(x => x.id === img.id)
+              if (m) {
+                setDetailSimple(true)
+                handleMemberClick(m)
+              } else {
+                console.log('MemberList: clicked image not mapped to member')
+              }
+            }}
           />
         </div>
         <div className="member-list-header">
@@ -630,7 +643,7 @@ const MemberList = () => {
                 className={`member-card member-card-minimal ${member.role}`}
                 role="listitem"
                 tabIndex={0}
-                onClick={() => handleMemberClick(member)}
+                onClick={() => { setDetailSimple(false); handleMemberClick(member) }}
                 style={{ padding: '4px' }}
               >
                 <div className="member-card-header-row" style={{ gap: '3px' }}>
@@ -696,6 +709,8 @@ const MemberList = () => {
           </p>
         </div>
       )}
+      {(() => { console.log('MemberList: bottom spacer added (120px + safe-area + 24px)'); return null })()}
+      <div className="member-list-bottom-spacer" aria-hidden="true" />
       </div>
 
       {/* Add New Member Modal */}
@@ -1005,6 +1020,7 @@ const MemberList = () => {
               </button>
             </div>
 
+            {!detailSimple && (
             <div className="member-detail-content">
               {/* Login Credentials */}
               {(user?.role === 'admin' || user?.role === 'cashier') && (
@@ -1174,7 +1190,8 @@ const MemberList = () => {
                 </div>
               )}
             </div>
-            {(user?.role === 'admin' || user?.role === 'cashier') && (
+            )}
+            {!detailSimple && (user?.role === 'admin' || user?.role === 'cashier') && (
               <div className="member-detail-footer">
                 <div className="md-footer-left">
                   {!isEditing ? (
