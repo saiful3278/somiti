@@ -1,0 +1,542 @@
+/* Member Dashboard Material Design 3 Mobile Styles */
+
+/* Member Profile Header - Modern Design */
+.md-member-profile-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  position: relative;
+  padding: 2rem 1.5rem;
+  border-radius: 0 0 2rem 2rem;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.md-member-profile-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -30%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+}
+
+.md-member-profile-header::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  left: -20%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(240, 147, 251, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float 8s ease-in-out infinite reverse;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+.md-profile-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.md-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.md-avatar-large {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+  backdrop-filter: blur(20px);
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.md-avatar-large::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: rotate(45deg);
+  transition: all 0.6s ease;
+}
+
+.md-avatar-large:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.md-avatar-large:hover::before {
+  animation: shimmer 1.5s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.md-profile-details {
+  flex: 1;
+  color: white;
+}
+
+.md-member-profile-header .md-headline-medium {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.md-member-profile-header .md-body-medium {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.125rem;
+  font-weight: 500;
+}
+
+.md-member-profile-header .md-body-small {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 400;
+}
+
+.md-membership-badge {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 1rem;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.md-membership-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.md-membership-badge:hover::before {
+  left: 100%;
+}
+
+.md-member-profile-header .md-label-small {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.md-member-profile-header .md-label-medium {
+  font-size: 0.9rem;
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .md-member-profile-header {
+    padding: 1.5rem 1rem;
+    border-radius: 0 0 1.5rem 1.5rem;
+  }
+  
+  .md-profile-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  
+  .md-profile-info {
+    width: 100%;
+  }
+  
+  .md-avatar-large {
+    width: 4rem;
+    height: 4rem;
+  }
+  
+  .md-headline-medium {
+    font-size: 1.25rem;
+  }
+  
+  .md-membership-badge {
+    align-self: flex-start;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+.md-member-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.md-member-avatar {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+}
+
+.md-member-details h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.md-member-details p {
+  color: #dbeafe;
+}
+
+.md-membership-type {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  margin-top: 0.5rem;
+}
+
+/* Stats Cards Grid */
+.md-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.md-stats-card {
+  background-color: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f1f5f9;
+}
+
+.md-stats-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.md-stats-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.md-stats-icon.md-stats-icon-primary {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.md-stats-icon.md-stats-icon-success {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.md-stats-icon.md-stats-icon-warning {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.md-stats-icon.md-stats-icon-error {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.md-stats-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.md-stats-label {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+/* Charts Grid */
+.md-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .md-charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Profit History Grid */
+.md-profit-history-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.md-profit-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.md-profit-month {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.md-profit-amount {
+  font-weight: 600;
+  color: #16a34a;
+}
+
+/* Deposit History Grid */
+.md-deposit-history-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.md-deposit-card {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.md-deposit-card-success {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.md-deposit-card-error {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.md-deposit-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.md-deposit-info {
+  flex: 1;
+}
+
+.md-deposit-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* List Item Variants */
+.md-list-item-warning {
+  background-color: #fffbeb;
+  border-left: 4px solid #f59e0b;
+}
+
+.md-list-item-three-line {
+  padding: 1rem;
+}
+
+.md-list-item-unread {
+  background-color: #f0f9ff;
+  border-left: 4px solid #0ea5e9;
+}
+
+.md-list-item-leading {
+  margin-right: 1rem;
+}
+
+.md-list-item-content {
+  flex: 1;
+}
+
+.md-list-item-headline {
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 0.25rem;
+}
+
+.md-list-item-supporting-text {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.md-list-item-trailing {
+  margin-left: 1rem;
+}
+
+.md-list-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.md-list-item-amount {
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+/* Avatar Variants */
+.md-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.md-avatar-error {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.md-avatar-warning {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.md-avatar-success {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+/* Text Color Utilities */
+.md-text-success {
+  color: #16a34a;
+}
+
+.md-text-error {
+  color: #dc2626;
+}
+
+.md-text-warning {
+  color: #d97706;
+}
+
+.md-text-on-surface-variant {
+  color: #64748b;
+}
+
+/* Badge Variants */
+.md-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.md-badge-error {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.md-badge-warning {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.md-badge-success {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+/* Typography */
+.md-body-medium {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.md-label-large {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .md-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .md-member-info {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .md-member-avatar {
+    width: 5rem;
+    height: 5rem;
+  }
+}
+
+/* Animations */
+.md-stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease-in-out;
+}
+
+.md-deposit-card:hover {
+  transform: translateY(-1px);
+  transition: all 0.2s ease-in-out;
+}

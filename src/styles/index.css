@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+/* ===== MAIN STYLES INDEX ===== */
+/* This file imports all CSS modules in the correct order */
+@import "tailwindcss";
+
+/* Base styles - must come first */
+@import './base/variables.css';
+@import './base/reset.css';
+@import './base/animations.css';
+@import './base/global-layout.css'; /* Global layout fixes */
+@import './animations.css';
+
+/* Layout styles */
+@import './layout/layout.css';
+
+/* Component styles */
+@import './components/cards.css';
+@import './components/buttons.css';
+@import './components/forms.css';
+@import './components/tables.css';
+@import './components/member-list.css';
+@import './components/investment.css';
+@import './components/theme-switcher.css';
+
+/* Dashboard specific styles */
+@import './dashboards/admin.css';
+@import './dashboards/admin-mobile.css';
+@import './cashier-mobile.css';
+@import './member-mobile.css';
+@import './dashboards/cashier.css';
+@import './dashboards/member.css';
+
+/* Utility classes - should come last */
+@import './utilities/utilities.css';
+/* tw-animate-css removed (not installed) */
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+  --color-border: #e5e7eb;
+  --color-ring: #3b82f6;
+  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
+  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+
+  @keyframes spin-around {
+    0% {
+      transform: translateZ(0) rotate(0);
+    }
+    15%, 35% {
+      transform: translateZ(0) rotate(90deg);
+    }
+    65%, 85% {
+      transform: translateZ(0) rotate(270deg);
+    }
+    100% {
+      transform: translateZ(0) rotate(360deg);
+    }
+  }
+
+  @keyframes shimmer-slide {
+    to {
+      transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+  @keyframes spin-around {
+  0% {
+    transform: translateZ(0) rotate(0);
+    }
+  15%, 35% {
+    transform: translateZ(0) rotate(90deg);
+    }
+  65%, 85% {
+    transform: translateZ(0) rotate(270deg);
+    }
+  100% {
+    transform: translateZ(0) rotate(360deg);
+    }
+  }
+  @keyframes shimmer-slide {
+  to {
+    transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

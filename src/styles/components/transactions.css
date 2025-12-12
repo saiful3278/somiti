@@ -1,0 +1,219 @@
+/* Root */
+.transactions-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  padding: 1rem;
+}
+
+/* Header */
+.transactions-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.transactions-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.back-btn:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.transactions-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+/* Filters */
+.transactions-filters {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow: 0 6px 20px rgba(203,213,225,0.25);
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .filters-grid { grid-template-columns: 1fr 160px 160px 140px; }
+}
+
+.transactions-input {
+  width: 100%;
+  padding: 0.75rem 0.875rem 0.75rem 2.25rem;
+  border: 2px solid rgba(226,232,240,0.8);
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  background: rgba(255,255,255,0.95);
+  transition: all 0.2s ease;
+  color: #0f172a;
+}
+
+.transactions-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 10px 25px rgba(59,130,246,0.12);
+  transform: translateY(-1px);
+}
+
+.transactions-select {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 2px solid rgba(226,232,240,0.8);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.transactions-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 8px 20px rgba(59,130,246,0.12);
+}
+
+.filters-clear {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.filters-clear:hover {
+  background: #e2e8f0;
+}
+
+/* List */
+.transactions-list {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(203,213,225,0.25);
+  overflow: hidden;
+}
+
+.transaction-item {
+  padding: 0.5rem;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.transaction-item:hover {
+  background: rgba(248,250,252,0.6);
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.transaction-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.transaction-icon.income { background: #dcfce7; }
+.transaction-icon.expense { background: #fee2e2; }
+
+.transaction-text h3 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.transaction-text p {
+  font-size: 0.75rem;
+  color: #334155;
+}
+
+.transaction-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.125rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.65rem;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+}
+
+.transaction-text .member-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.item-right {
+  text-align: right;
+}
+
+.amount {
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.amount.income { color: #16a34a; }
+.amount.expense { color: #dc2626; }
+
+/* Empty state */
+.transactions-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+/* Loading container override */
+.transactions-loading {
+  padding: 2rem;
+}

@@ -1,0 +1,215 @@
+/* Cashier Dashboard Material Design 3 Mobile Styles */
+
+/* Payment Methods Specific Styles */
+.md-payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.md-payment-method-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.md-payment-method-item:last-child {
+  border-bottom: none;
+}
+
+.md-payment-method-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.md-payment-method-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-primary);
+}
+
+.md-payment-method-amount {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Charts Grid for Cashier */
+.md-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+@media (min-width: 768px) {
+  .md-charts-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* List Item Amount Styling */
+.md-list-item-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.md-list-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Search Input in Card Actions */
+.md-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.md-search-input {
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 8px;
+  background-color: var(--md-sys-color-surface-variant);
+  color: var(--md-sys-color-on-surface-variant);
+  font-family: 'Noto Sans Bengali', sans-serif;
+  font-size: 14px;
+}
+
+.md-search-input:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  background-color: var(--md-sys-color-surface);
+}
+
+/* Card Title Section with Actions */
+.md-card-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .md-card-title-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .md-card-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .md-search-input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* Badge Variants for Status */
+.md-badge-success {
+  background-color: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+}
+
+.md-badge-warning {
+  background-color: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+}
+
+.md-badge-error {
+  background-color: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+}
+
+/* List Item Warning Variant */
+.md-list-item-warning {
+  background-color: var(--md-sys-color-error-container);
+  border-radius: 12px;
+  margin: 8px 0;
+  padding: 16px;
+}
+
+.md-text-warning {
+  color: var(--md-sys-color-error);
+}
+
+/* Icon Button Variants */
+.md-icon-button-success {
+  color: var(--md-sys-color-tertiary);
+}
+
+.md-icon-button-success:hover {
+  background-color: var(--md-sys-color-tertiary-container);
+}
+
+/* Avatar in List Items */
+.md-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+  .md-payment-method-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .md-payment-method-amount {
+    align-self: flex-end;
+    text-align: right;
+  }
+  
+  .md-list-item {
+    padding: 12px;
+  }
+  
+  .md-list-item-content {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .md-list-item-trailing {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+}
+
+/* Animation for Cashier-specific Elements */
+.md-payment-method-item {
+  transition: background-color 0.2s ease;
+}
+
+.md-payment-method-item:hover {
+  background-color: var(--md-sys-color-surface-variant);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0 -12px;
+}
+
+/* Chart Container Responsive */
+@media (max-width: 768px) {
+  .md-card-content .recharts-wrapper {
+    margin: 0 -16px;
+  }
+}

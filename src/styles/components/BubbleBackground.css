@@ -1,0 +1,119 @@
+.bubble-background-root {
+  position: relative;
+  width: 100%;
+  min-height: auto;
+  overflow: visible;
+}
+
+.bubble-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.bubble-content {
+  position: relative;
+  z-index: 10;
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(12px);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+.bubble.b1 {
+  width: 32vmax;
+  height: 32vmax;
+  left: -8vmax;
+  top: -6vmax;
+  background: radial-gradient(circle at 30% 30%, rgba(var(--c1), 0.7), rgba(var(--c1), 0.0) 60%);
+  animation: float1 34s ease-in-out infinite;
+}
+
+.bubble.b2 {
+  width: 28vmax;
+  height: 28vmax;
+  right: -10vmax;
+  top: 10vmax;
+  background: radial-gradient(circle at 30% 30%, rgba(var(--c2), 0.6), rgba(var(--c2), 0.0) 60%);
+  animation: float2 40s ease-in-out infinite;
+}
+
+.bubble.b3 {
+  width: 22vmax;
+  height: 22vmax;
+  left: 5vmax;
+  bottom: -6vmax;
+  background: radial-gradient(circle at 30% 30%, rgba(var(--c3), 0.6), rgba(var(--c3), 0.0) 60%);
+  animation: float3 36s ease-in-out infinite;
+}
+
+.bubble.b4 {
+  width: 20vmax;
+  height: 20vmax;
+  right: 12vmax;
+  bottom: 4vmax;
+  background: radial-gradient(circle at 30% 30%, rgba(var(--c4), 0.5), rgba(var(--c4), 0.0) 60%);
+  animation: float4 32s ease-in-out infinite;
+}
+
+.bubble.b5 {
+  width: 18vmax;
+  height: 18vmax;
+  left: 36vmax;
+  top: -4vmax;
+  background: radial-gradient(circle at 30% 30%, rgba(var(--c5), 0.45), rgba(var(--c5), 0.0) 60%);
+  animation: float5 44s ease-in-out infinite;
+}
+
+.bubble.b6 {
+  width: 16vmax;
+  height: 16vmax;
+  left: -6vmax;
+  top: 40vmax;
+  background: radial-gradient(circle at 30% 30%, rgba(var(--c6), 0.5), rgba(var(--c6), 0.0) 60%);
+  animation: float6 38s ease-in-out infinite;
+}
+
+@keyframes float1 {
+  0% { transform: translate3d(calc(var(--mx, 0) * 10px), calc(var(--my, 0) * 10px), 0) scale(1); }
+  25% { transform: translate3d(3vmax, 1vmax, 0) scale(1.05); }
+  50% { transform: translate3d(0, 3vmax, 0) scale(0.98); }
+  75% { transform: translate3d(-2vmax, -1vmax, 0) scale(1.03); }
+  100% { transform: translate3d(calc(var(--mx, 0) * 10px), calc(var(--my, 0) * 10px), 0) scale(1); }
+}
+
+@keyframes float2 {
+  0% { transform: translate3d(calc(var(--mx, 0) * -10px), calc(var(--my, 0) * 8px), 0) scale(1); }
+  33% { transform: translate3d(-2vmax, 2vmax, 0) scale(1.06); }
+  66% { transform: translate3d(2vmax, -2vmax, 0) scale(0.96); }
+  100% { transform: translate3d(calc(var(--mx, 0) * -10px), calc(var(--my, 0) * 8px), 0) scale(1); }
+}
+
+@keyframes float3 {
+  0% { transform: translate3d(calc(var(--mx, 0) * 6px), calc(var(--my, 0) * -6px), 0) scale(1); }
+  50% { transform: translate3d(-2vmax, 2vmax, 0) scale(1.02); }
+  100% { transform: translate3d(calc(var(--mx, 0) * 6px), calc(var(--my, 0) * -6px), 0) scale(1); }
+}
+
+@keyframes float4 {
+  0% { transform: translate3d(calc(var(--mx, 0) * -6px), calc(var(--my, 0) * -6px), 0) scale(1); }
+  50% { transform: translate3d(2vmax, -1vmax, 0) scale(1.02); }
+  100% { transform: translate3d(calc(var(--mx, 0) * -6px), calc(var(--my, 0) * -6px), 0) scale(1); }
+}
+
+@keyframes float5 {
+  0% { transform: translate3d(calc(var(--mx, 0) * 5px), calc(var(--my, 0) * 5px), 0) scale(1); }
+  50% { transform: translate3d(1vmax, 3vmax, 0) scale(1.03); }
+  100% { transform: translate3d(calc(var(--mx, 0) * 5px), calc(var(--my, 0) * 5px), 0) scale(1); }
+}
+
+@keyframes float6 {
+  0% { transform: translate3d(calc(var(--mx, 0) * -5px), calc(var(--my, 0) * 5px), 0) scale(1); }
+  50% { transform: translate3d(-3vmax, 1vmax, 0) scale(1.01); }
+  100% { transform: translate3d(calc(var(--mx, 0) * -5px), calc(var(--my, 0) * 5px), 0) scale(1); }
+}

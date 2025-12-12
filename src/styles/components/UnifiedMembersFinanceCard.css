@@ -1,0 +1,144 @@
+/* Unified Members Finance Card Styles */
+
+.unified-finance-card {
+  padding: 16px;
+}
+
+.unified-finance-card__container {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  padding: 20px;
+}
+
+.unified-finance-card__header {
+  margin-bottom: 12px;
+}
+
+.unified-finance-card__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.unified-finance-card__subtitle {
+  color: #64748b;
+  margin: 0;
+}
+
+.year-switcher {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.year-label {
+  font-size: 13px;
+  color: #334155;
+}
+
+.year-select {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 13px;
+}
+
+.overall-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.summary-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-label { color: #334155; font-size: 11px; }
+.summary-value { font-weight: 700; font-size: 12px; color: #0f172a; }
+.summary-value-paid { color: #166534; }
+.summary-value-due { color: #b91c1c; }
+
+.unified-finance-card__table-wrapper {
+  overflow-x: auto;
+}
+
+.unified-finance-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.unified-finance-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  font-weight: 600;
+  font-size: 12px;
+  color: #0f172a;
+  padding: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.unified-finance-table tbody td {
+  padding: 8px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.cell-name { font-weight: 600; }
+.cell-id { color: #334155; }
+
+.amount-cell {
+  display: inline-block;
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-weight: 700;
+}
+
+.absent-badge {
+  display: inline-block;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-weight: 600;
+}
+
+.zero-cell {
+  display: inline-block;
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+
+.dash-cell {
+  display: inline-block;
+  color: #64748b;
+  padding: 3px 6px;
+}
+
+.cell-total-paid { font-weight: 700; color: #065f46; }
+.cell-total-due { font-weight: 700; color: #b91c1c; }
+
+.unified-finance-card__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}

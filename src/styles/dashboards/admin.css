@@ -1,0 +1,382 @@
+/* ===== ADMIN DASHBOARD STYLES ===== */
+
+/* Dashboard container */
+.dashboard-container {
+  padding: var(--spacing-xl);
+  background: var(--bg-secondary);
+  min-height: 100vh;
+}
+
+/* Page header */
+.page-header {
+  margin-bottom: var(--spacing-2xl);
+  padding: var(--spacing-xl);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: var(--radius-2xl);
+  color: white;
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+}
+
+.page-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+  background: linear-gradient(135deg, white, rgba(255, 255, 255, 0.8));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-subtitle {
+  font-size: var(--font-size-lg);
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* Charts section */
+.charts-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* Activities and events section */
+.activities-events-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* Activities card specific styles */
+.md-activities-card {
+  background: var(--surface);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.md-activities-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+
+.md-card-header-content {
+  flex: 1;
+}
+
+.md-card-header-content h3 {
+  margin: 0 0 var(--spacing-xs) 0;
+  color: var(--on-surface);
+}
+
+.md-card-header-content p {
+  margin: 0;
+  color: var(--on-surface-variant);
+}
+
+.md-button-primary {
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border-radius: var(--radius-full);
+  padding: var(--spacing-sm) var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  transition: all 0.2s ease;
+}
+
+.md-button-primary:hover {
+  background: var(--primary);
+  color: var(--on-primary);
+  transform: translateY(-1px);
+}
+
+.md-activities-loading {
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.md-activities-empty {
+  padding: var(--spacing-2xl);
+  text-align: center;
+}
+
+.md-activities-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.md-activities-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.md-activities-list::-webkit-scrollbar-track {
+  background: var(--surface-variant);
+  border-radius: var(--radius-md);
+}
+
+.md-activities-list::-webkit-scrollbar-thumb {
+  background: var(--outline);
+  border-radius: var(--radius-md);
+}
+
+.md-activity-item {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-xs);
+  transition: all 0.2s ease;
+  animation: slideInUp 0.3s ease forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.md-activity-item:hover {
+  background: var(--surface-container-low);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.md-activity-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-container);
+  transition: all 0.2s ease;
+}
+
+.md-activity-message {
+  font-weight: 500;
+  color: var(--on-surface);
+  margin-bottom: var(--spacing-xs);
+}
+
+.md-badge-time {
+  background: var(--secondary-container);
+  color: var(--on-secondary-container);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  margin-right: var(--spacing-sm);
+}
+
+.md-badge-amount {
+  background: var(--tertiary-container);
+  color: var(--on-tertiary-container);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
+.md-activity-menu {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.md-activity-item:hover .md-activity-menu {
+  opacity: 1;
+}
+
+@keyframes slideInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Recent activities */
+.recent-activities {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.recent-activities::-webkit-scrollbar {
+  width: 6px;
+}
+
+.recent-activities::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+}
+
+.recent-activities::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: var(--radius-md);
+}
+
+/* Upcoming events */
+.upcoming-events {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.upcoming-events::-webkit-scrollbar {
+  width: 6px;
+}
+
+.upcoming-events::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+}
+
+.upcoming-events::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: var(--radius-md);
+}
+
+/* Admin specific animations */
+.admin-fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.admin-slide-up {
+  animation: slideUp 0.8s ease-out;
+}
+
+/* Admin dashboard responsive */
+@media (max-width: 1200px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .activities-events-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: var(--spacing-lg);
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+  
+  .page-header {
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .page-title {
+    font-size: var(--font-size-2xl);
+  }
+  
+  .page-subtitle {
+    font-size: var(--font-size-base);
+  }
+}
+
+/* Admin specific status indicators */
+.admin-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
+.admin-status-indicator.online {
+  background: var(--success-100);
+  color: var(--success-700);
+}
+
+.admin-status-indicator.offline {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.admin-status-indicator.warning {
+  background: var(--warning-100);
+  color: var(--warning-700);
+}
+
+/* Admin metrics cards */
+.admin-metric-card {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--primary-50) 100%);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--primary-100);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.admin-metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--primary-100) 100%);
+}
+
+.admin-metric-value {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.admin-metric-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.admin-metric-change {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+}
+
+.admin-metric-change.positive {
+  color: var(--success);
+}
+
+.admin-metric-change.negative {
+  color: var(--error);
+}
