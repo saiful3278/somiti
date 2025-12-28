@@ -10,6 +10,7 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  display: none; /* Temporarily hidden */
 }
 
 .bubble-content {
@@ -116,4 +117,16 @@
   0% { transform: translate3d(calc(var(--mx, 0) * -5px), calc(var(--my, 0) * 5px), 0) scale(1); }
   50% { transform: translate3d(-3vmax, 1vmax, 0) scale(1.01); }
   100% { transform: translate3d(calc(var(--mx, 0) * -5px), calc(var(--my, 0) * 5px), 0) scale(1); }
+}
+
+/* Dark mode overrides */
+.bubble-background-root.dark {
+  background-color: #1f2937; /* Dark grey */
+  transition: background-color 0.3s ease;
+}
+
+.bubble-background-root.dark .bubble-background {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }

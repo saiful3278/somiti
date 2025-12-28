@@ -11,7 +11,7 @@ const defaultColors = {
   sixth: '140,100,255',
 };
 
-const BubbleBackground = ({ interactive = false, colors = defaultColors, transition = { stiffness: 100, damping: 20 }, children, ...props }) => {
+const BubbleBackground = ({ interactive = false, colors = defaultColors, transition = { stiffness: 100, damping: 20 }, isDark = false, children, ...props }) => {
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -74,7 +74,7 @@ const BubbleBackground = ({ interactive = false, colors = defaultColors, transit
   };
 
   return (
-    <div ref={rootRef} className="bubble-background-root" style={styleVars} {...props}>
+    <div ref={rootRef} className={`bubble-background-root ${isDark ? 'dark' : ''}`} style={styleVars} {...props}>
       <div className="bubble-background">
         <div className="bubble b1" />
         <div className="bubble b2" />

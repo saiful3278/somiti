@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, ShieldCheck, Megaphone, MapPin, BookOpen, Sprout, Landmark, Sun, CloudRain } from 'lucide-react';
+import { Users, ShieldCheck, Megaphone, MapPin, BookOpen, Sprout, Landmark, Sun, CloudRain, Wifi, HeartPulse, Monitor, Globe, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Meta from '../components/Meta';
 import BubbleBackground from '../components/ui/BubbleBackground';
@@ -17,7 +17,7 @@ import ImgSphere from '@/components/img-sphere';
 import '../styles/components/img-sphere.tailwind.css';
 import { MemberService } from '../firebase/memberService';
 
-console.log('[LandingPage] File loaded');
+
 
 export default function LandingPage() {
   const { user, isAuthenticated } = useAuth();
@@ -37,7 +37,7 @@ export default function LandingPage() {
     const initials = (parts.slice(0, 2).map(p => p[0] || '').join('') || 'M').toUpperCase();
     const bg = '#e2e8f0';
     const text = '#1e293b';
-    const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">\n  <defs>\n    <clipPath id="clip">\n      <circle cx="${size/2}" cy="${size/2}" r="${size/2}" />\n    </clipPath>\n  </defs>\n  <rect width="${size}" height="${size}" fill="${bg}"/>\n  <g clip-path="url(#clip)">\n    <rect width="${size}" height="${size}" fill="${bg}"/>\n  </g>\n  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="${Math.round(size*0.4)}" font-weight="700" fill="${text}">${initials}</text>\n</svg>`;
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">\n  <defs>\n    <clipPath id="clip">\n      <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" />\n    </clipPath>\n  </defs>\n  <rect width="${size}" height="${size}" fill="${bg}"/>\n  <g clip-path="url(#clip)">\n    <rect width="${size}" height="${size}" fill="${bg}"/>\n  </g>\n  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="${Math.round(size * 0.4)}" font-weight="700" fill="${text}">${initials}</text>\n</svg>`;
     const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
     return dataUrl;
   };
@@ -98,7 +98,7 @@ export default function LandingPage() {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           const next = current + 1;
           localStorage.setItem('lpSphereScrollCount', String(next));
-        } catch {}
+        } catch { }
       }
     };
     const delayMs = 2000;
@@ -137,7 +137,7 @@ export default function LandingPage() {
       const value = !(m && m.matches);
       setShouldAnimate(value);
       console.log('[LandingPage] motion preference', { shouldAnimate: value });
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {
@@ -146,26 +146,26 @@ export default function LandingPage() {
     console.log('[LandingPage] Lottie speed update requested: make even slower');
     if (rainData && rainRef.current) {
       rainRef.current.setSpeed(rainSpeed);
-      try { rainRef.current.setSubframe?.(true); console.log('[LandingPage] Lottie subframe enabled', { type: 'rain' }); } catch {}
+      try { rainRef.current.setSubframe?.(true); console.log('[LandingPage] Lottie subframe enabled', { type: 'rain' }); } catch { }
       console.log('[LandingPage] Lottie speed set', { type: 'rain', speed: rainSpeed });
     } else if (rainData && !rainRef.current) {
       setTimeout(() => {
         if (rainRef.current) {
           rainRef.current.setSpeed(rainSpeed);
-          try { rainRef.current.setSubframe?.(true); console.log('[LandingPage] Lottie subframe enabled (retry)', { type: 'rain' }); } catch {}
+          try { rainRef.current.setSubframe?.(true); console.log('[LandingPage] Lottie subframe enabled (retry)', { type: 'rain' }); } catch { }
           console.log('[LandingPage] Lottie speed set (retry)', { type: 'rain', speed: rainSpeed });
         }
       }, 150);
     }
     if (leavesData && leavesRef.current) {
       leavesRef.current.setSpeed(leafSpeed);
-      try { leavesRef.current.setSubframe?.(true); console.log('[LandingPage] Lottie subframe enabled', { type: 'leaves' }); } catch {}
+      try { leavesRef.current.setSubframe?.(true); console.log('[LandingPage] Lottie subframe enabled', { type: 'leaves' }); } catch { }
       console.log('[LandingPage] Lottie speed set', { type: 'leaves', speed: leafSpeed });
     } else if (leavesData && !leavesRef.current) {
       setTimeout(() => {
         if (leavesRef.current) {
           leavesRef.current.setSpeed(leafSpeed);
-          try { leavesRef.current.setSubframe?.(true); console.log('[LandingPage] Lottie subframe enabled (retry)', { type: 'leaves' }); } catch {}
+          try { leavesRef.current.setSubframe?.(true); console.log('[LandingPage] Lottie subframe enabled (retry)', { type: 'leaves' }); } catch { }
           console.log('[LandingPage] Lottie speed set (retry)', { type: 'leaves', speed: leafSpeed });
         }
       }, 150);
@@ -211,8 +211,8 @@ export default function LandingPage() {
             console.log('[LandingPage] season animated-start', { text: el.textContent?.trim() });
           }
           const season = el.getAttribute('data-season');
-          if (season === 'বর্ষা') { setRainInView(true); console.log('[LandingPage] rain in view'); }
-          if (season === 'শরৎ') { setLeavesInView(true); console.log('[LandingPage] leaves in view'); }
+          if (season === 'বর্ষা') { setRainInView(true); }
+          if (season === 'শরৎ') { setLeavesInView(true); }
           io.unobserve(el);
         }
       });
@@ -298,7 +298,7 @@ export default function LandingPage() {
   console.log('[LandingPage] SEO prepared', { seoTitle, seoCanonical });
 
   return (
-    <BubbleBackground interactive={true}>
+    <BubbleBackground interactive={true} isDark={isDark}>
       <div className={`landing-root ${isDark ? 'dark' : ''}`}>
         <Meta
           title={seoTitle}
@@ -311,29 +311,29 @@ export default function LandingPage() {
         />
 
         <header className="landing-hero" aria-label="Village hero" onMouseEnter={() => console.log('[LandingPage] hover hero header')} onMouseLeave={() => console.log('[LandingPage] leave hero header')}>
-            <div className="hero-theme-toggle hero-theme-toggle-fixed">
-              <ThemeSwitcher isDark={isDark} onToggle={(next) => { console.log('[LandingPage] theme toggle', { next }); setIsDark(next); }} />
+          <div className="hero-theme-toggle hero-theme-toggle-fixed">
+            <ThemeSwitcher isDark={isDark} onToggle={(next) => { console.log('[LandingPage] theme toggle', { next }); setIsDark(next); }} />
+          </div>
+          <div className="hero-content" onMouseEnter={() => console.log('[LandingPage] hover hero-content')} onMouseLeave={() => console.log('[LandingPage] leave hero-content')}>
+            <div className="hero-headers" onMouseEnter={() => console.log('[LandingPage] hover hero-headers')} onMouseLeave={() => console.log('[LandingPage] leave hero-headers')}>
+              <h1 className="landing-title">ফুলমুড়ী গ্রামে স্বাগতম</h1>
+              <h2 className="landing-subtitle">প্রাকৃতিক সৌন্দর্য, সমৃদ্ধ ঐতিহ্য এবং একতার এক অনন্য গ্রাম।</h2>
+              <p className="landing-intro">ফুলমুড়ী · মুন্সীরহাট · চৌদ্দগ্রাম · কুমিল্লা · চট্টগ্রাম</p>
             </div>
-            <div className="hero-content" onMouseEnter={() => console.log('[LandingPage] hover hero-content')} onMouseLeave={() => console.log('[LandingPage] leave hero-content')}>
-              <div className="hero-headers" onMouseEnter={() => console.log('[LandingPage] hover hero-headers')} onMouseLeave={() => console.log('[LandingPage] leave hero-headers')}>
-                <h1 className="landing-title">ফুলমুড়ী গ্রামে স্বাগতম</h1>
-                <h2 className="landing-subtitle">প্রাকৃতিক সৌন্দর্য, সমৃদ্ধ ঐতিহ্য এবং একতার এক অনন্য গ্রাম।</h2>
-                <p className="landing-intro">ফুলমুড়ী · মুন্সীরহাট · চৌদ্দগ্রাম · কুমিল্লা · চট্টগ্রাম</p>
-              </div>
-              <ul className="landing-highlights" role="list" aria-label="Village values">
-                <li className="pill">প্রকৃতি</li>
-                <li className="pill">ঐতিহ্য</li>
-                <li className="pill">কমিউনিটি</li>
-              </ul>
-              <div className="landing-actions" onMouseEnter={() => console.log('[LandingPage] hover landing-actions')} onMouseLeave={() => console.log('[LandingPage] leave landing-actions')}>
-                <a href="#history" className="btn-primary" onClick={(e) => { e.preventDefault(); document.getElementById('history').scrollIntoView({ behavior: 'smooth' }); }}>
-                  গ্রাম দেখুন
-                </a>
-                <RainbowButton to={rolePath} onClick={() => console.log('[LandingPage] CTA click: RainbowButton', { to: rolePath })}>
-                  সদস্য পোর্টাল
-                </RainbowButton>
-              </div>
+            <ul className="landing-highlights" role="list" aria-label="Village values">
+              <li className="pill">প্রকৃতি</li>
+              <li className="pill">ঐতিহ্য</li>
+              <li className="pill">কমিউনিটি</li>
+            </ul>
+            <div className="landing-actions">
+              <a href="#history" className="btn-primary" onClick={(e) => { e.preventDefault(); document.getElementById('history').scrollIntoView({ behavior: 'smooth' }); }}>
+                গ্রাম দেখুন
+              </a>
+              <RainbowButton to={rolePath} onClick={() => console.log('[LandingPage] CTA click: RainbowButton', { to: rolePath })}>
+                সদস্য পোর্টাল
+              </RainbowButton>
             </div>
+          </div>
         </header>
 
         <section className="panel" id="history">
@@ -349,8 +349,8 @@ export default function LandingPage() {
               ভোরে মাঠে যাওয়া, বিকেলে হাটে কেনাকাটা এবং সন্ধ্যায় উঠোনে আড্ডা—সরল গ্রামীণ জীবনের ছন্দেই ফুলমুড়ী এগোয়।
             </p>
             <p className="section-text">
-              আমাদের গ্রামের সমাজ ব্যবস্থা অত্যন্ত সুশৃঙ্খল ও সৌহার্দ্যপূর্ণ। সুখে-দুখে, উৎসবে-পার্বণে সবাই কাঁধে কাঁধ মিলিয়ে চলে। 
-              ঈদের নামাজ শেষে কোলাকুলি কিংবা পূজার সময় একে অপরের বাড়িতে যাওয়া এখানে ধর্ম যার যার, কিন্তু উৎসব সবার। 
+              আমাদের গ্রামের সমাজ ব্যবস্থা অত্যন্ত সুশৃঙ্খল ও সৌহার্দ্যপূর্ণ। সুখে-দুখে, উৎসবে-পার্বণে সবাই কাঁধে কাঁধ মিলিয়ে চলে।
+              ঈদের নামাজ শেষে কোলাকুলি কিংবা পূজার সময় একে অপরের বাড়িতে যাওয়া এখানে ধর্ম যার যার, কিন্তু উৎসব সবার।
               আধুনিকতার ছোঁয়া লাগলেও আমরা আমাদের শেকড়কে ভুলিনি; বরং ঐতিহ্যকে ধারণ করেই আমরা আগামীর পথে এগিয়ে চলেছি।
             </p>
             <blockquote className="quote-box">
@@ -379,12 +379,12 @@ export default function LandingPage() {
           <h2 className="section-title">আমাদের লক্ষ্য ও উদ্দেশ্য</h2>
           <div className="section-content" style={{ marginBottom: '2rem' }}>
             <p className="section-text">
-              ফুলমুড়ী গ্রামকে একটি আদর্শ ও স্মার্ট গ্রাম হিসেবে গড়ে তোলাই আমাদের মূল লক্ষ্য। আমরা এমন একটি সমাজের স্বপ্ন দেখি যেখানে আধুনিক প্রযুক্তির ছোঁয়া থাকবে, কিন্তু হারিয়ে যাবে না আমাদের শেকড়। 
+              ফুলমুড়ী গ্রামকে একটি আদর্শ ও স্মার্ট গ্রাম হিসেবে গড়ে তোলাই আমাদের মূল লক্ষ্য। আমরা এমন একটি সমাজের স্বপ্ন দেখি যেখানে আধুনিক প্রযুক্তির ছোঁয়া থাকবে, কিন্তু হারিয়ে যাবে না আমাদের শেকড়।
               শিক্ষা, স্বাস্থ্য এবং কর্মসংস্থানে প্রতিটি মানুষ হবে স্বাবলম্বী।
             </p>
             <p className="section-text">
-              আমরা বিশ্বাস করি, টেকসই উন্নয়ন কেবল অবকাঠামোগত পরিবর্তন নয়, বরং মানসিকতার পরিবর্তন। 
-              পরিবেশ সুরক্ষা, নারীর ক্ষমতায়ন এবং যুব সমাজের দক্ষতা বৃদ্ধি আমাদের পরিকল্পনার কেন্দ্রবিন্দু। 
+              আমরা বিশ্বাস করি, টেকসই উন্নয়ন কেবল অবকাঠামোগত পরিবর্তন নয়, বরং মানসিকতার পরিবর্তন।
+              পরিবেশ সুরক্ষা, নারীর ক্ষমতায়ন এবং যুব সমাজের দক্ষতা বৃদ্ধি আমাদের পরিকল্পনার কেন্দ্রবিন্দু।
               কমিউনিটির সম্মিলিত প্রচেষ্টায় আমরা আমাদের গ্রামকে বিশ্বের দরবারে একটি মডেল ভিলেজ হিসেবে উপস্থাপন করতে চাই।
             </p>
           </div>
@@ -525,22 +525,22 @@ export default function LandingPage() {
             <button className="pill">উৎসব</button>
           </div>
           <div className="gallery-grid-new">
-             <div className="gallery-card">
-               <div className="gallery-img-placeholder nature"></div>
-               <div className="gallery-caption">নদীর তীরে সূর্যাস্ত</div>
-             </div>
-             <div className="gallery-card">
-               <div className="gallery-img-placeholder life"></div>
-               <div className="gallery-caption">ধান কাটার মৌসুম</div>
-             </div>
-             <div className="gallery-card">
-               <div className="gallery-img-placeholder festival"></div>
-               <div className="gallery-caption">পিঠা উৎসব</div>
-             </div>
-             <div className="gallery-card">
-               <div className="gallery-img-placeholder nature"></div>
-               <div className="gallery-caption">সবুজ ধানক্ষেত</div>
-             </div>
+            <div className="gallery-card">
+              <div className="gallery-img-placeholder nature"><Sun /></div>
+              <div className="gallery-caption">নদীর তীরে সূর্যাস্ত</div>
+            </div>
+            <div className="gallery-card">
+              <div className="gallery-img-placeholder life"><Sprout /></div>
+              <div className="gallery-caption">ধান কাটার মৌসুম</div>
+            </div>
+            <div className="gallery-card">
+              <div className="gallery-img-placeholder festival"><Users /></div>
+              <div className="gallery-caption">পিঠা উৎসব</div>
+            </div>
+            <div className="gallery-card">
+              <div className="gallery-img-placeholder nature"><Sprout /></div>
+              <div className="gallery-caption">সবুজ ধানক্ষেত</div>
+            </div>
           </div>
         </section>
 
@@ -560,7 +560,7 @@ export default function LandingPage() {
             <div className="tourism-card highlight">
               <h3>ভ্রমণ টিপস</h3>
               <p>
-                <strong>ভ্রমণের সেরা সময়:</strong> শীতকাল (নভেম্বর-ফেব্রুয়ারি) খেজুরের রস ও পিঠার জন্য, 
+                <strong>ভ্রমণের সেরা সময়:</strong> শীতকাল (নভেম্বর-ফেব্রুয়ারি) খেজুরের রস ও পিঠার জন্য,
                 অথবা বর্ষাকাল (জুন-আগস্ট) সবুজের সমারোহ দেখতে।
               </p>
               <p>
@@ -633,16 +633,16 @@ export default function LandingPage() {
           <h2 className="section-title">অর্থনীতি ও জীবিকা</h2>
           <div className="section-content">
             <p className="section-text">
-              ফুলমুড়ী গ্রামের অর্থনীতির মূল চালিকাশক্তি কৃষি। গ্রামের প্রায় ৮০ শতাংশ মানুষ প্রত্যক্ষ বা পরোক্ষভাবে কৃষিকাজের সাথে জড়িত। 
+              ফুলমুড়ী গ্রামের অর্থনীতির মূল চালিকাশক্তি কৃষি। গ্রামের প্রায় ৮০ শতাংশ মানুষ প্রত্যক্ষ বা পরোক্ষভাবে কৃষিকাজের সাথে জড়িত।
               উর্বর মাটি এবং পর্যাপ্ত সেচ ব্যবস্থার কারণে এখানে বছরে তিনবার ফসল ফলে। ধানের পাশাপাশি রবিশস্য যেমন সরিষা, তিল এবং বিভিন্ন শাকসবজির চাষাবাদ এখানকার কৃষকদের স্বাবলম্বী করে তুলেছে।
             </p>
             <p className="section-text">
-              কৃষির পাশাপাশি মৎস্যচাষ ও পশুপালন গ্রামের অর্থনীতিতে গুরুত্বপূর্ণ ভূমিকা রাখে। প্রতিটি বাড়িতেই হাঁস-মুরগি ও গবাদিপশু পালন করা হয়, যা পারিবারিক পুষ্টির চাহিদা মেটানোর পাশাপাশি বাড়তি আয়ের উৎস। 
+              কৃষির পাশাপাশি মৎস্যচাষ ও পশুপালন গ্রামের অর্থনীতিতে গুরুত্বপূর্ণ ভূমিকা রাখে। প্রতিটি বাড়িতেই হাঁস-মুরগি ও গবাদিপশু পালন করা হয়, যা পারিবারিক পুষ্টির চাহিদা মেটানোর পাশাপাশি বাড়তি আয়ের উৎস।
               গ্রামের যুব সমাজের অনেকেই এখন আধুনিক পদ্ধতিতে মাছ চাষ ও ডেইরি ফার্ম গড়ে তুলছে।
             </p>
             <p className="section-text">
-              কুটির শিল্প ও ক্ষুদ্র ব্যবসা গ্রামের মানুষের আয়ের আরেকটি বড় মাধ্যম। বাঁশ ও বেতের তৈরি ডালা, কুলা, চালুন ইত্যাদি স্থানীয় হাট-বাজারে বিক্রি হয়। 
-              তাছাড়া গ্রামের মোড়ে মোড়ে গড়ে ওঠা ছোট ছোট দোকানগুলো গ্রামীণ বাণিজ্যের কেন্দ্রবিন্দু। 
+              কুটির শিল্প ও ক্ষুদ্র ব্যবসা গ্রামের মানুষের আয়ের আরেকটি বড় মাধ্যম। বাঁশ ও বেতের তৈরি ডালা, কুলা, চালুন ইত্যাদি স্থানীয় হাট-বাজারে বিক্রি হয়।
+              তাছাড়া গ্রামের মোড়ে মোড়ে গড়ে ওঠা ছোট ছোট দোকানগুলো গ্রামীণ বাণিজ্যের কেন্দ্রবিন্দু।
               নারীরাও ঘরে বসে নকশিকাঁথা সেলাই ও হস্তশিল্পের মাধ্যমে সংসারে সচ্ছলতা ফিরিয়ে আনছে।
             </p>
           </div>
@@ -695,24 +695,40 @@ export default function LandingPage() {
 
         <section className="panel" id="smart-services">
           <h2 className="section-title">স্মার্ট সেবা</h2>
-          <p className="section-text">ডিজিটাল যুগে ফুলমুড়ী গ্রামও পিছিয়ে নেই। তথ্যপ্রযুক্তির ছোঁয়ায় নাগরিক সেবা এখন হাতের মুঠোয়।</p>
-          <ul className="check-list">
-            <li><strong>অনলাইন তথ্য কেন্দ্র:</strong> জন্ম-মৃত্যু নিবন্ধন এবং নাগরিক সনদের তথ্য সহায়তা।</li>
-            <li><strong>ই-স্বাস্থ্য সেবা:</strong> টেলিমেডিসিন এবং জরুরি স্বাস্থ্য পরামর্শ।</li>
-            <li><strong>ডিজিটাল শিক্ষা:</strong> অনলাইন ক্লাস এবং ফ্রিল্যান্সিং প্রশিক্ষণের ব্যবস্থা।</li>
-            <li><strong>স্মার্ট কৃষি:</strong> আধুনিক কৃষি প্রযুক্তি এবং আবহাওয়া বার্তা।</li>
-          </ul>
+          <p className="section-text" style={{ marginBottom: '2rem' }}>ডিজিটাল যুগে ফুলমুড়ী গ্রামও পিছিয়ে নেই। তথ্যপ্রযুক্তির ছোঁয়ায় নাগরিক সেবা এখন হাতের মুঠোয়।</p>
+          <div className="landing-features">
+            <div className="feature-card">
+              <div className="feature-icon"><Wifi size={20} /></div>
+              <h3>অনলাইন তথ্য</h3>
+              <p>জন্ম-মৃত্যু নিবন্ধন এবং নাগরিক সনদের তথ্য সহায়তা।</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon"><HeartPulse size={20} /></div>
+              <h3>ই-স্বাস্থ্য সেবা</h3>
+              <p>টেলিমেডিসিন এবং জরুরি স্বাস্থ্য পরামর্শ।</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon"><Monitor size={20} /></div>
+              <h3>ডিজিটাল শিক্ষা</h3>
+              <p>অনলাইন ক্লাস এবং ফ্রিল্যান্সিং প্রশিক্ষণের ব্যবস্থা।</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon"><Sprout size={20} /></div>
+              <h3>স্মার্ট কৃষি</h3>
+              <p>আধুনিক কৃষি প্রযুক্তি এবং আবহাওয়া বার্তা।</p>
+            </div>
+          </div>
         </section>
 
         <section className="panel" id="institutions">
           <h2 className="section-title">শিক্ষা ও সামাজিক প্রতিষ্ঠান</h2>
           <div className="section-content" style={{ marginBottom: '2rem' }}>
             <p className="section-text">
-              "শিক্ষাই জাতির মেরুদণ্ড" এই মন্ত্রে দীক্ষিত ফুলমুড়ী গ্রামের মানুষ। গ্রামের প্রতিটি শিশু যাতে শিক্ষার আলোয় আলোকিত হতে পারে, সে লক্ষ্যে এখানে গড়ে উঠেছে একাধিক শিক্ষা প্রতিষ্ঠান। 
+              "শিক্ষাই জাতির মেরুদণ্ড" এই মন্ত্রে দীক্ষিত ফুলমুড়ী গ্রামের মানুষ। গ্রামের প্রতিটি শিশু যাতে শিক্ষার আলোয় আলোকিত হতে পারে, সে লক্ষ্যে এখানে গড়ে উঠেছে একাধিক শিক্ষা প্রতিষ্ঠান।
               সকালবেলা মক্তবের কচি-কাঁচা শিক্ষার্থীদের কলকাকলি আর স্কুলগামী ছাত্রছাত্রীদের পদচারণায় গ্রাম মুখরিত হয়ে ওঠে।
             </p>
             <p className="section-text">
-              শুধু প্রাতিষ্ঠানিক শিক্ষা নয়, নৈতিক ও ধর্মীয় শিক্ষার প্রতিও এখানে বিশেষ গুরুত্ব দেওয়া হয়। গ্রামের পাঠাগারটি জ্ঞানপিপাসু মানুষের মিলনমেলা। 
+              শুধু প্রাতিষ্ঠানিক শিক্ষা নয়, নৈতিক ও ধর্মীয় শিক্ষার প্রতিও এখানে বিশেষ গুরুত্ব দেওয়া হয়। গ্রামের পাঠাগারটি জ্ঞানপিপাসু মানুষের মিলনমেলা।
               বিকেলে সেখানে বসে সাহিত্য ও বিশ্ব পরিস্থিতি নিয়ে আলোচনা যা গ্রামের মানুষের চিন্তাশীলতার পরিচয় দেয়।
             </p>
           </div>
@@ -745,7 +761,7 @@ export default function LandingPage() {
           </ul>
         </section>
 
-        {console.log('[LandingPage] transport section removed per request')}
+
 
 
         <section className="panel" id="language">
@@ -846,13 +862,13 @@ export default function LandingPage() {
           </ul>
         </section>
 
-        
 
-        
 
-        
 
-        
+
+
+
+
 
         <section className="panel" id="testimonials">
           <h2 className="section-title">আমাদের গ্রামের কথা</h2>
@@ -895,13 +911,13 @@ export default function LandingPage() {
           </Suspense>
         </section>
 
-        {console.log('[LandingPage] notices section removed per request')}
 
-        
+
+
 
         <section className="panel" id="contact">
           <h2 className="section-title">যোগাযোগ ও ঠিকানা</h2>
-          
+
           <div className="contact-layout">
             <div className="contact-form-wrapper">
               <p className="section-text">
@@ -923,8 +939,12 @@ export default function LandingPage() {
                 <button type="submit" className="btn-primary full-width">বার্তা পাঠান</button>
               </form>
               <div className="social-links">
-                <a href="#" className="social-btn fb" onClick={e=>e.preventDefault()}>Facebook</a>
-                <a href="#" className="social-btn wa" onClick={e=>e.preventDefault()}>WhatsApp</a>
+                <a href="#" className="social-btn fb" onClick={e => e.preventDefault()}>
+                  <Globe size={18} style={{ marginRight: '8px' }} /> Facebook
+                </a>
+                <a href="#" className="social-btn wa" onClick={e => e.preventDefault()}>
+                  <MessageCircle size={18} style={{ marginRight: '8px' }} /> WhatsApp
+                </a>
               </div>
             </div>
 
@@ -943,11 +963,11 @@ export default function LandingPage() {
           <h2 className="section-title">লোকসংস্কৃতি ও ঐতিহ্য</h2>
           <div className="section-content" style={{ marginBottom: '2rem' }}>
             <p className="section-text">
-              বাঙালির হাজার বছরের সংস্কৃতি ফুলমুড়ী গ্রামের পরতে পরতে মিশে আছে। বর্ষায় নৌকাবাইচ, শীতে পিঠা উৎসব, আর চৈত্র সংক্রান্তির মেলা এ যেন বারো মাসে তেরো পার্বণ। 
+              বাঙালির হাজার বছরের সংস্কৃতি ফুলমুড়ী গ্রামের পরতে পরতে মিশে আছে। বর্ষায় নৌকাবাইচ, শীতে পিঠা উৎসব, আর চৈত্র সংক্রান্তির মেলা এ যেন বারো মাসে তেরো পার্বণ।
               সন্ধ্যার পর গ্রামের উঠোনে বসে দাদী-নানীদের মুখে রূপকথার গল্প শোনা কিংবা পুঁথি পাঠের আসর আজও আমাদের মনে করিয়ে দেয় সেই সোনালী অতীতের কথা।
             </p>
             <p className="section-text">
-              গ্রামের নারীদের হাতে বোনা নকশিকাঁথায় ফুটে ওঠে জীবনের সুখ-দুঃখের গল্প। মাটির তৈরি তৈজসপত্র আর বাঁশের কারুকাজ প্রমাণ করে আমাদের কারিগরদের নিপুণতা। 
+              গ্রামের নারীদের হাতে বোনা নকশিকাঁথায় ফুটে ওঠে জীবনের সুখ-দুঃখের গল্প। মাটির তৈরি তৈজসপত্র আর বাঁশের কারুকাজ প্রমাণ করে আমাদের কারিগরদের নিপুণতা।
               এখানে জারি, সারি আর ভাটিয়ালি গানের সুরে মাঝিরা যখন নৌকা বায়, তখন প্রকৃতিও যেন সেই সুরে নেচে ওঠে।
             </p>
           </div>
@@ -986,7 +1006,7 @@ export default function LandingPage() {
           </ul>
         </section>
 
-        
+
 
         <section className="panel" id="market">
           <h2 className="section-title">হাট-বাজার দিন</h2>

@@ -7,9 +7,20 @@ export default function MapBlock() {
 
   return (
     <div className="map-block">
-      <div className="map-placeholder">Map placeholder — Fulmuri (Munshirhat, Chauddagram, Cumilla, Chattogram)</div>
+      <iframe
+        title="Map of Fulmuri"
+        src="https://maps.google.com/maps?q=Fulmuri%20Munshirhat%20Chauddagram%20Comilla&t=&z=15&ie=UTF8&iwloc=&output=embed"
+        width="100%"
+        height="350"
+        style={{ border: 0, borderRadius: 'var(--radius-lg)' }}
+        allowFullScreen=""
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+      ></iframe>
       <div className="map-actions">
-        <a href="#" className="btn-secondary" onClick={() => console.log('[MapBlock] open map')}>মানচিত্র দেখুন</a>
+        <a href="https://maps.google.com/?q=Fulmuri,+Cumilla" target="_blank" rel="noopener noreferrer" className="btn-secondary">
+          গুগল ম্যাপে দেখুন
+        </a>
       </div>
     </div>
   );
