@@ -36,28 +36,32 @@ const App = () => {
   );
 };
 
-export const AppRoutes = () => {
+import { HelmetProvider } from 'react-helmet-async';
+
+export const AppRoutes = ({ helmetContext = {} }) => {
   return (
-    <AuthProvider>
-      <UserProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          {/* Debug route - available in all environments */}
-          <Route path="/secret3278" element={<SecretRoleSwitcher />} />
-          {/* Public New route to avoid auth redirect */}
-          <Route path="/new" element={<New />} />
-          <Route path="/" element={<LandingPage />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <MainApp />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </UserProvider>
-    </AuthProvider>
+    <HelmetProvider context={helmetContext}>
+      <AuthProvider>
+        <UserProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            {/* Debug route - available in all environments */}
+            <Route path="/secret3278" element={<SecretRoleSwitcher />} />
+            {/* Public New route to avoid auth redirect */}
+            <Route path="/new" element={<New />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <MainApp />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </UserProvider>
+      </AuthProvider>
+    </HelmetProvider>
   );
 };
 

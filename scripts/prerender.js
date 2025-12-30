@@ -1,12 +1,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const toAbsolute = (p) => path.resolve(__dirname, '..', p)
 
 const template = fs.readFileSync(toAbsolute('dist/index.html'), 'utf-8')
-const render = (await import(toAbsolute('dist/server/entry-server.js'))).prerender
+const render = (await import(pathToFileURL(toAbsolute('dist/server/entry-server.js')).href)).prerender
 
 // Determine routes to prerender
 const routesToPrerender = fs.readdirSync(toAbsolute('src/pages')).map((file) => {
@@ -21,11 +21,11 @@ const staticRoutes = ['/', '/login', '/new', '/landingpage'] // LandingPage migh
     ; (async () => {
         // Pre-render each route...
         for (const url of staticRoutes) {
-            const stream = await render(url)
+            const { prelude, helmet } = await render(url)
 
             // Convert ReadableStream to string
             const parts = []
-            const reader = stream.getReader()
+            const reader = prelude.getReader()
             let decoder = new TextDecoder()
 
             while (true) {
@@ -37,7 +37,16 @@ const staticRoutes = ['/', '/login', '/new', '/landingpage'] // LandingPage migh
 
             const appHtml = parts.join('')
 
-            const html = template.replace(`<!--app-html-->`, appHtml)
+            const helmetHead = `
+      ${helmet.title.toString()}
+      ${helmet.meta.toString()}
+      ${helmet.link.toString()}
+      ${helmet.script.toString()}
+    `
+
+            const html = template
+                .replace(`<!--app-html-->`, appHtml)
+                .replace(`<!--app-head-->`, helmetHead)
 
             const filePath = `dist${url === '/' ? '/index.html' : `${url}/index.html`}`
 

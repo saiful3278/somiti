@@ -17,5 +17,8 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react-hot-toast'],
     dedupe: ['react', 'react-dom']
+  },
+  ssr: {
+    noExternal: ['react-helmet-async'],
   }
 })

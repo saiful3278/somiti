@@ -4,12 +4,13 @@ import { StaticRouter } from 'react-router-dom'
 import { AppRoutes } from './App'
 
 export async function prerender(url) {
+    const helmetContext = {}
     const { prelude } = await reactPrerender(
         <StrictMode>
             <StaticRouter location={url}>
-                <AppRoutes />
+                <AppRoutes helmetContext={helmetContext} />
             </StaticRouter>
         </StrictMode>
     )
-    return prelude
+    return { prelude, helmet: helmetContext.helmet }
 }
