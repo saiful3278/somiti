@@ -45,8 +45,8 @@ const staticRoutes = ['/', '/login', '/new', '/landingpage'] // LandingPage migh
     `
 
             const html = template
-                .replace(`<!--app-html-->`, appHtml)
-                .replace(`<!--app-head-->`, helmetHead)
+                .replace('</head>', `${helmetHead}</head>`)
+                .replace(/<div id="root">.*<\/div>/s, `<div id="root">${appHtml}</div>`)
 
             const filePath = `dist${url === '/' ? '/index.html' : `${url}/index.html`}`
 
