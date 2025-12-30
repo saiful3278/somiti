@@ -31,27 +31,33 @@ import New from './pages/New';
 const App = () => {
   return (
     <Router>
-      <AuthProvider>
-        <UserProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            {/* Debug route - available in all environments */}
-            <Route path="/secret3278" element={<SecretRoleSwitcher />} />
-            {/* Public New route to avoid auth redirect */}
-            <Route path="/new" element={<New />} />
-            <Route path="/" element={<LandingPage />} />
-            <Route 
-              path="/*" 
-              element={
-                <ProtectedRoute>
-                  <MainApp />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </UserProvider>
-      </AuthProvider>
+      <AppRoutes />
     </Router>
+  );
+};
+
+export const AppRoutes = () => {
+  return (
+    <AuthProvider>
+      <UserProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          {/* Debug route - available in all environments */}
+          <Route path="/secret3278" element={<SecretRoleSwitcher />} />
+          {/* Public New route to avoid auth redirect */}
+          <Route path="/new" element={<New />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <MainApp />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </UserProvider>
+    </AuthProvider>
   );
 };
 

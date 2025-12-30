@@ -22,6 +22,9 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // SSR Check: ensure window is defined
+    if (typeof window === 'undefined') return;
+
     const autoLogin = async () => {
       console.log('[AuthContext] autoLogin start'); // Debug log
       const token = localStorage.getItem('somiti_token');
@@ -133,16 +136,18 @@ export const AuthProvider = ({ children }) => {
       setUser(updatedUser);
       localStorage.setItem('somiti_role', newRole);
       console.log('[AuthContext] switchRole ->', newRole);
-      
+
       // Navigate to the appropriate dashboard based on role
       const roleRoutes = {
         admin: '/admin',
         cashier: '/cashier',
         member: '/member'
       };
-      
+
       // Use window.location to navigate since we can't use useNavigate hook here
-      window.location.hash = `#${roleRoutes[newRole] || '/member'}`;
+      if (typeof window !== 'undefined') {
+        window.location.hash = `#${roleRoutes[newRole] || '/member'}`;
+      }
     }
   };
 
