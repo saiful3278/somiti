@@ -15,6 +15,7 @@ import '../styles/LandingPage.css';
 import { RainbowButton } from '../components/ui/rainbow-button';
 import ImgSphere from '@/components/img-sphere';
 import '../styles/components/img-sphere.tailwind.css';
+import FeedbackButton from '../components/FeedbackButton';
 import { MemberService } from '../firebase/memberService';
 
 
@@ -818,7 +819,7 @@ export default function LandingPage() {
               <div className="section-text">সদস্য লোড হচ্ছে...</div>
             )}
           </div>
-        </section>
+        </section >
 
         <section id="profile" className="panel">
           <h2 className="section-title">গ্রামের পরিচিতি</h2>
@@ -1049,6 +1050,7 @@ export default function LandingPage() {
           </div>
         </footer>
 
+        <FeedbackButton />
       </div>
     </BubbleBackground>
   );
