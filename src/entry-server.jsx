@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { prerender as reactPrerender } from 'react-dom/static'
-import { StaticRouter } from 'react-router-dom'
+import { StaticRouter } from 'react-router'
 import { AppRoutes } from './App'
 
 export async function prerender(url) {
