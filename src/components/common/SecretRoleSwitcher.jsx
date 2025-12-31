@@ -13,6 +13,7 @@ const SecretRoleSwitcher = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[SecretRoleSwitcher] subscribing to feedbacks');
     const q = query(collection(db, 'feedbacks'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const feedbackData = snapshot.docs.map(doc => ({
@@ -24,10 +25,14 @@ const SecretRoleSwitcher = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log('[SecretRoleSwitcher] unsubscribe feedbacks');
+      unsubscribe();
+    };
   }, []);
 
   const handleDeleteFeedback = async (id) => {
+    console.log('[SecretRoleSwitcher] delete feedback', id);
     if (!window.confirm('Are you sure you want to delete this feedback?')) return;
     try {
       await deleteDoc(doc(db, 'feedbacks', id));
@@ -39,6 +44,7 @@ const SecretRoleSwitcher = () => {
   };
 
   const handleRoleSwitch = (newRole) => {
+    console.log('[SecretRoleSwitcher] switch role', newRole);
     // Create a debug user object for role switching
     const debugUser = {
       uid: 'debug-user',
@@ -69,12 +75,13 @@ const SecretRoleSwitcher = () => {
   };
 
   const handleGoBack = () => {
+    console.log('[SecretRoleSwitcher] go back');
     navigate(-1); // Go back to previous page
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-96 max-w-90vw">
+    <div className="min-h-screen bg-gray-100 flex flex-col lg:flex-row items-start justify-center p-4 gap-4">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
             <Shield className="w-5 h-5 text-red-500" />
@@ -147,7 +154,7 @@ const SecretRoleSwitcher = () => {
       </div>
 
       {/* Admin Feedback Section */}
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl ml-4 h-[80vh] flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl p-4 w-full lg:max-w-2xl h-[70vh] lg:h-[80vh] flex flex-col">
         <div className="flex justify-between items-center mb-4 border-b pb-4">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-blue-500" />
@@ -158,7 +165,7 @@ const SecretRoleSwitcher = () => {
           </h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           {loading ? (
             <div className="text-center py-8 text-gray-500">Loading feedback...</div>
           ) : feedbacks.length === 0 ? (
@@ -184,7 +191,7 @@ const SecretRoleSwitcher = () => {
                     {feedback.createdAt?.toLocaleString() || 'Unknown date'}
                   </div>
                   {feedback.page && (
-                    <div className="px-2 py-0.5 bg-gray-200 rounded text-[10px] font-mono truncat max-w-[150px]">
+                    <div className="px-2 py-0.5 bg-gray-200 rounded text-[10px] font-mono truncate max-w-[150px]">
                       {feedback.page}
                     </div>
                   )}

@@ -4,7 +4,7 @@ import { db } from '../firebase/config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 
-const FeedbackModal = ({ isOpen, onClose }) => {
+const FeedbackModal = ({ isOpen, onClose, onSubmitted }) => {
     const [message, setMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -16,6 +16,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
 
         setIsSubmitting(true);
         try {
+            console.log('FeedbackModal: submitting feedback');
             await addDoc(collection(db, 'feedbacks'), {
                 message: message.trim(),
                 createdAt: serverTimestamp(),
@@ -25,6 +26,10 @@ const FeedbackModal = ({ isOpen, onClose }) => {
 
             toast.success('মতামত পাঠানোর জন্য ধন্যবাদ!');
             setMessage('');
+            console.log('FeedbackModal: feedback submitted successfully');
+            if (typeof onSubmitted === 'function') {
+                onSubmitted();
+            }
             onClose();
         } catch (error) {
             console.error('Error adding feedback: ', error);
@@ -40,7 +45,6 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
                     <div className="flex items-center gap-2">
                         <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg text-green-600 dark:text-green-400">
@@ -49,14 +53,16 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                         <h3 className="font-bold text-gray-800 dark:text-gray-100">মতামত দিন</h3>
                     </div>
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            console.log('FeedbackModal: close clicked');
+                            onClose();
+                        }}
                         className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 transition-colors"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
-                {/* Body */}
                 <form onSubmit={handleSubmit} className="p-4 space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -78,7 +84,10 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                             className="flex items-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-600/20 active:scale-95"
                         >
                             {isSubmitting ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <>
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span className="ml-1">পাঠানো হচ্ছে...</span>
+                                </>
                             ) : (
                                 <>
                                     <span>পাঠান</span>
