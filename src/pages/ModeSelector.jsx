@@ -7,7 +7,7 @@ import '../styles/ModeSelector.css';
 import Meta from '../components/Meta';
 
 const ModeSelector = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const { switchMode } = useMode();
     const navigate = useNavigate();
     const [selectedMode, setSelectedMode] = useState(null);
@@ -39,16 +39,19 @@ const ModeSelector = () => {
                 window.location.reload();
             }, 300);
         } else {
-            // Production mode - CRITICAL: Clear demo credentials first!
-            console.log('[ModeSelector] Production mode selected, clearing all credentials');
+            // Production mode - CRITICAL: Call logout to clear both localStorage AND React state
+            console.log('[ModeSelector] Production mode selected, performing logout');
 
-            // Clear ALL localStorage to remove demo credentials
-            localStorage.removeItem('somiti_token');
-            localStorage.removeItem('somiti_uid');
-            localStorage.removeItem('somiti_role');
+            // This clears tokens/roles from localStorage AND sets user state to null
+            logout();
 
             // Switch to production mode
             switchMode('production');
+
+            // Clear explicit items just in case logout missed something
+            localStorage.removeItem('somiti_token');
+            localStorage.removeItem('somiti_uid');
+            localStorage.removeItem('somiti_role');
 
             // Navigate to login
             setTimeout(() => {

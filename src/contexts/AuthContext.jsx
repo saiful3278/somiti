@@ -33,8 +33,20 @@ export const AuthProvider = ({ children }) => {
 
       if (token && userId) {
         try {
+          const currentMode = localStorage.getItem('somiti_mode');
+
           // Check if this is a demo user
           if (userId === 'demo-user' && token === 'demo-token') {
+            // CRITICAL: Only allow demo user login if we are actually in demo mode
+            if (currentMode !== 'demo') {
+              console.log('[AuthContext] Demo credentials found but mode is not demo. Blocking auto-login.');
+              localStorage.removeItem('somiti_token');
+              localStorage.removeItem('somiti_uid');
+              localStorage.removeItem('somiti_role');
+              setLoading(false);
+              return;
+            }
+
             // Create demo user from localStorage
             setUser({
               uid: 'demo-user',
