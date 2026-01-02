@@ -6,6 +6,7 @@ import { db } from '../firebase/config';
 import { doc, getDoc, updateDoc, getDocs, collection } from 'firebase/firestore';
 import LoadingAnimation from './common/LoadingAnimation';
 import { fetchLoginHistory } from '../firebase/loginHistoryService';
+import ModeSwitcher from './common/ModeSwitcher';
 
 const MemberSettings = () => {
   console.log("MemberSettings component module loaded.");
@@ -47,33 +48,33 @@ const MemberSettings = () => {
           if (memberDocSnap.exists()) {
             const data = memberDocSnap.data();
             console.log("Member data found:", data);
-            
+
             // Fetch all members to determine the somiti_user_id
             const allMembersSnap = await getDocs(collection(db, 'members'));
             const allMembers = allMembersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
+
             const sortedMembers = allMembers.sort((a, b) => {
               // Ensure we have valid dates
               const joiningDateA = a.joiningDate || a.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
               const joiningDateB = b.joiningDate || b.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || new Date().toISOString().split('T')[0];
-              
+
               const dateA = new Date(joiningDateA);
               const dateB = new Date(joiningDateB);
-              
+
               // First sort by joining date
               if (dateA.getTime() !== dateB.getTime()) {
                 return dateA - dateB;
               }
-              
+
               // If joining dates are same, sort by createdAt timestamp
               const createdA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
               const createdB = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
-              
+
               // If creation times are also same, sort by document ID for consistency
               if (createdA.getTime() === createdB.getTime()) {
                 return a.id.localeCompare(b.id);
               }
-              
+
               return createdA - createdB;
             });
             const currentUserIndex = sortedMembers.findIndex(member => member.id === currentUser.uid);
@@ -253,248 +254,251 @@ const MemberSettings = () => {
         <div className="member-tab-content">
           {activeTab === 'profile' && (
             <div className="profile-section">
-            <div className="readonly-notice">
-              <span className="readonly-notice-icon">ℹ️</span>
-              <p className="readonly-notice-text">
-                এই তথ্যগুলি শুধুমাত্র দেখার জন্য। পরিবর্তনের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।
-              </p>
-            </div>
-            
-            <div className="profile-section-header">
-              <div className="profile-icon">
-                <User />
+              <div className="readonly-notice">
+                <span className="readonly-notice-icon">ℹ️</span>
+                <p className="readonly-notice-text">
+                  এই তথ্যগুলি শুধুমাত্র দেখার জন্য। পরিবর্তনের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।
+                </p>
               </div>
-              <div>
-                <h2 className="profile-section-title">প্রোফাইল তথ্য</h2>
-                <p className="profile-section-subtitle">আপনার ব্যক্তিগত এবং সদস্যপদ সংক্রান্ত তথ্য</p>
+
+              <div className="profile-section-header">
+                <div className="profile-icon">
+                  <User />
+                </div>
+                <div>
+                  <h2 className="profile-section-title">প্রোফাইল তথ্য</h2>
+                  <p className="profile-section-subtitle">আপনার ব্যক্তিগত এবং সদস্যপদ সংক্রান্ত তথ্য</p>
+                </div>
               </div>
-            </div>
-            
-            <div className="profile-grid">
-              {/* Basic Information */}
-              <div className="profile-group">
-                <h3 className="profile-group-title">মৌলিক তথ্য</h3>
-                <div className="profile-field">
-                  <label className="profile-label">নাম</label>
-                  <span className="profile-value">{profileData.name || 'তথ্য নেই'}</span>
-                </div>
-                <div className="profile-field">
-                  <label className="profile-label">সদস্য আইডি</label>
-                  <span className="profile-value">{profileData.somiti_user_id || 'তথ্য নেই'}</span>
-                </div>
-                <div className="profile-field">
-                  <label className="profile-label">ফোন নম্বর</label>
-                  <span className="profile-value">{profileData.phone || 'তথ্য নেই'}</span>
-                </div>
-                <div className="profile-field">
-                  <label className="profile-label">ইমেইল</label>
-                  <span className="profile-value">{profileData.email || 'তথ্য নেই'}</span>
-                </div>
-                <div className="profile-field">
-                  <label className="profile-label">ভূমিকা</label>
-                  <span className="profile-value">{profileData.role === 'member' ? 'সদস্য' : profileData.role || 'তথ্য নেই'}</span>
-                </div>
-                <div className="profile-field">
-                  <label className="profile-label">স্ট্যাটাস</label>
-                  <span className={`profile-status ${
-                    profileData.status === 'active' 
-                      ? 'profile-status-active' 
+
+              <div className="profile-grid">
+                {/* Basic Information */}
+                <div className="profile-group">
+                  <h3 className="profile-group-title">মৌলিক তথ্য</h3>
+                  <div className="profile-field">
+                    <label className="profile-label">নাম</label>
+                    <span className="profile-value">{profileData.name || 'তথ্য নেই'}</span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">সদস্য আইডি</label>
+                    <span className="profile-value">{profileData.somiti_user_id || 'তথ্য নেই'}</span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">ফোন নম্বর</label>
+                    <span className="profile-value">{profileData.phone || 'তথ্য নেই'}</span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">ইমেইল</label>
+                    <span className="profile-value">{profileData.email || 'তথ্য নেই'}</span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">ভূমিকা</label>
+                    <span className="profile-value">{profileData.role === 'member' ? 'সদস্য' : profileData.role || 'তথ্য নেই'}</span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">স্ট্যাটাস</label>
+                    <span className={`profile-status ${profileData.status === 'active'
+                      ? 'profile-status-active'
                       : 'profile-status-inactive'
-                  }`}>{profileData.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span>
+                      }`}>{profileData.status === 'active' ? 'সক্রিয়' : 'নিষ্ক্রিয়'}</span>
+                  </div>
+
+                  <div className="profile-field profile-field-full">
+                    <label className="profile-label">ঠিকানা</label>
+                    <span className="profile-value profile-value-address">
+                      {profileData.address || 'তথ্য নেই'}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="profile-field profile-field-full">
-                  <label className="profile-label">ঠিকানা</label>
-                  <span className="profile-value profile-value-address">
-                    {profileData.address || 'তথ্য নেই'}
-                  </span>
+                {/* Share Information */}
+                <div className="profile-group">
+                  <h3 className="profile-group-title">শেয়ার তথ্য</h3>
+                  <div className="profile-field">
+                    <label className="profile-label">শেয়ার সংখ্যা</label>
+                    <span className="profile-value">{profileData.shareCount || '০'}</span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">যোগদানের তারিখ</label>
+                    <span className="profile-value">{profileData.joiningDate || 'তথ্য নেই'}</span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Share Information */}
-              <div className="profile-group">
-                <h3 className="profile-group-title">শেয়ার তথ্য</h3>
-                <div className="profile-field">
-                  <label className="profile-label">শেয়ার সংখ্যা</label>
-                  <span className="profile-value">{profileData.shareCount || '০'}</span>
+                {/* Nominee Information */}
+                <div className="profile-group">
+                  <h3 className="profile-group-title">নমিনি তথ্য</h3>
+                  <div className="profile-field">
+                    <label className="profile-label">নমিনির নাম</label>
+                    <span className="profile-value">{profileData.nomineeName || 'তথ্য নেই'}</span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">নমিনির ফোন</label>
+                    <span className="profile-value">{profileData.nomineePhone || 'তথ্য নেই'}</span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">নমিনির সাথে সম্পর্ক</label>
+                    <span className="profile-value">{profileData.nomineeRelation || 'তথ্য নেই'}</span>
+                  </div>
                 </div>
-                <div className="profile-field">
-                  <label className="profile-label">যোগদানের তারিখ</label>
-                  <span className="profile-value">{profileData.joiningDate || 'তথ্য নেই'}</span>
-                </div>
-              </div>
 
-              {/* Nominee Information */}
-              <div className="profile-group">
-                <h3 className="profile-group-title">নমিনি তথ্য</h3>
-                <div className="profile-field">
-                  <label className="profile-label">নমিনির নাম</label>
-                  <span className="profile-value">{profileData.nomineeName || 'তথ্য নেই'}</span>
-                </div>
-                <div className="profile-field">
-                  <label className="profile-label">নমিনির ফোন</label>
-                  <span className="profile-value">{profileData.nomineePhone || 'তথ্য নেই'}</span>
-                </div>
-                <div className="profile-field">
-                  <label className="profile-label">নমিনির সাথে সম্পর্ক</label>
-                  <span className="profile-value">{profileData.nomineeRelation || 'তথ্য নেই'}</span>
-                </div>
-              </div>
-
-              {/* Account Information */}
-              <div className="profile-group">
-                <h3 className="profile-group-title">অ্যাকাউন্ট তথ্য</h3>
-                <div className="profile-field">
-                  <label className="profile-label">ইউজার আইডি</label>
-                  <span className="profile-value profile-value-mono">{profileData.somiti_user_id || 'তথ্য নেই'}</span>
-                </div>
-                <div className="profile-field">
-                  <label className="profile-label">তৈরির তারিখ</label>
-                  <span className="profile-value">
-                    {profileData.createdAt && profileData.createdAt.toDate 
-                      ? new Date(profileData.createdAt.toDate()).toLocaleDateString('bn-BD') 
-                      : 'তথ্য নেই'}
-                  </span>
-                </div>
-                <div className="profile-field">
-                  <label className="profile-label">সর্বশেষ আপডেট</label>
-                  <span className="profile-value">
-                    {profileData.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString('bn-BD') : 'তথ্য নেই'}
-                  </span>
+                {/* Account Information */}
+                <div className="profile-group">
+                  <h3 className="profile-group-title">অ্যাকাউন্ট তথ্য</h3>
+                  <div className="profile-field">
+                    <label className="profile-label">ইউজার আইডি</label>
+                    <span className="profile-value profile-value-mono">{profileData.somiti_user_id || 'তথ্য নেই'}</span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">তৈরির তারিখ</label>
+                    <span className="profile-value">
+                      {profileData.createdAt && profileData.createdAt.toDate
+                        ? new Date(profileData.createdAt.toDate()).toLocaleDateString('bn-BD')
+                        : 'তথ্য নেই'}
+                    </span>
+                  </div>
+                  <div className="profile-field">
+                    <label className="profile-label">সর্বশেষ আপডেট</label>
+                    <span className="profile-value">
+                      {profileData.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString('bn-BD') : 'তথ্য নেই'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Notifications Tab */}
-        {activeTab === 'notifications' && (
-          <div className="settings-section">
-            <h2 className="settings-section-title">নোটিফিকেশন সেটিংস</h2>
-            <div className="settings-list">
-              {notificationItems.map((item) => (
-                <div key={item.key} className="settings-item">
+          {/* Notifications Tab */}
+          {activeTab === 'notifications' && (
+            <div className="settings-section">
+              <h2 className="settings-section-title">নোটিফিকেশন সেটিংস</h2>
+              <div className="settings-list">
+                {notificationItems.map((item) => (
+                  <div key={item.key} className="settings-item">
+                    <div className="settings-item-text">
+                      <h3 className="settings-item-title">{item.title}</h3>
+                      <p className="settings-item-description">{item.desc}</p>
+                    </div>
+                    <div className="settings-item-control">
+                      <label className="toggle-switch">
+                        <input
+                          type="checkbox"
+                          checked={notificationSettings[item.key]}
+                          onChange={() => handleNotificationChange(item.key)}
+                        />
+                        <span className="toggle-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* System Tab */}
+          {activeTab === 'system' && (
+            <div className="settings-section">
+              <h2 className="settings-section-title">সিস্টেম সেটিংস</h2>
+              <div className="settings-grid">
+                <div className="settings-item">
                   <div className="settings-item-text">
-                    <h3 className="settings-item-title">{item.title}</h3>
-                    <p className="settings-item-description">{item.desc}</p>
+                    <h3 className="settings-item-title">ভাষা</h3>
                   </div>
                   <div className="settings-item-control">
-                    <label className="toggle-switch">
-                      <input
-                        type="checkbox"
-                        checked={notificationSettings[item.key]}
-                        onChange={() => handleNotificationChange(item.key)}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
+                    <select
+                      className="settings-dropdown"
+                      value={systemPreferences.language}
+                      onChange={(e) => handleSystemChange('language', e.target.value)}
+                    >
+                      <option value="bn">বাংলা</option>
+                      <option value="en">English</option>
+                    </select>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* System Tab */}
-        {activeTab === 'system' && (
-          <div className="settings-section">
-            <h2 className="settings-section-title">সিস্টেম সেটিংস</h2>
-            <div className="settings-grid">
-              <div className="settings-item">
-                <div className="settings-item-text">
-                  <h3 className="settings-item-title">ভাষা</h3>
-                </div>
-                <div className="settings-item-control">
-                  <select
-                    className="settings-dropdown"
-                    value={systemPreferences.language}
-                    onChange={(e) => handleSystemChange('language', e.target.value)}
-                  >
-                    <option value="bn">বাংলা</option>
-                    <option value="en">English</option>
-                  </select>
-                </div>
-              </div>
-              <div className="settings-item">
-                <div className="settings-item-text">
-                  <h3 className="settings-item-title">থিম</h3>
-                </div>
-                <div className="settings-item-control">
-                  <select
-                    className="settings-dropdown"
-                    value={systemPreferences.theme}
-                    onChange={(e) => handleSystemChange('theme', e.target.value)}
-                  >
-                    <option value="light">হালকা</option>
-                    <option value="dark">গাঢ়</option>
-                  </select>
-                </div>
-              </div>
-              <div className="settings-item">
-                <div className="settings-item-text">
-                  <h3 className="settings-item-title">মুদ্রা</h3>
-                </div>
-                <div className="settings-item-control">
-                  <select
-                    className="settings-dropdown"
-                    value={systemPreferences.currency}
-                    onChange={(e) => handleSystemChange('currency', e.target.value)}
-                  >
-                    <option value="BDT">বাংলাদেশী টাকা (৳)</option>
-                    <option value="USD">US Dollar ($)</option>
-                  </select>
-                </div>
-              </div>
-              <div className="settings-item">
-                <div className="settings-item-text">
-                  <h3 className="settings-item-title">তারিখ ফরম্যাট</h3>
-                </div>
-                <div className="settings-item-control">
-                  <select
-                    className="settings-dropdown"
-                    value={systemPreferences.dateFormat}
-                    onChange={(e) => handleSystemChange('dateFormat', e.target.value)}
-                  >
-                    <option value="dd/mm/yyyy">DD/MM/YYYY</option>
-                    <option value="mm/dd/yyyy">MM/DD/YYYY</option>
-                    <option value="yyyy-mm-dd">YYYY-MM-DD</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div className="settings-footer">
-              <button onClick={saveChanges} className="btn btn-primary">
-                <Save className="btn-icon" />
-                সেটিংস সংরক্ষণ করুন
-              </button>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'history' && (
-          <div className="settings-section">
-            <h2 className="settings-section-title">লগইন ইতিহাস</h2>
-            {loginHistoryError && (
-              <div className="inline-error">
-                <span>{loginHistoryError}</span>
-              </div>
-            )}
-            <div className="history-list">
-              {loginHistory.length === 0 ? (
-                <div className="history-item">
-                  <div className="history-meta-line">কোনো ইতিহাস পাওয়া যায়নি বা সেশন নেই</div>
-                </div>
-              ) : (
-                loginHistory.map((row, idx) => (
-                  <div key={idx} className="history-item">
-                    <div className="history-date">{row.created_at?.toDate ? new Date(row.created_at.toDate()).toLocaleString('bn-BD') : (row.created_at ? new Date(row.created_at).toLocaleString('bn-BD') : '')}</div>
-                    <div className="history-meta-line">ডিভাইস: {row.meta?.ua || 'অজানা'}</div>
-                    <div className="history-meta-line">আইপি: {row.ip || 'অজানা'} | {row.meta?.country || ''}{row.meta?.city ? ', ' + row.meta.city : ''}</div>
+                <div className="settings-item">
+                  <div className="settings-item-text">
+                    <h3 className="settings-item-title">থিম</h3>
                   </div>
-                ))
+                  <div className="settings-item-control">
+                    <select
+                      className="settings-dropdown"
+                      value={systemPreferences.theme}
+                      onChange={(e) => handleSystemChange('theme', e.target.value)}
+                    >
+                      <option value="light">হালকা</option>
+                      <option value="dark">গাঢ়</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="settings-item">
+                  <div className="settings-item-text">
+                    <h3 className="settings-item-title">মুদ্রা</h3>
+                  </div>
+                  <div className="settings-item-control">
+                    <select
+                      className="settings-dropdown"
+                      value={systemPreferences.currency}
+                      onChange={(e) => handleSystemChange('currency', e.target.value)}
+                    >
+                      <option value="BDT">বাংলাদেশী টাকা (৳)</option>
+                      <option value="USD">US Dollar ($)</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="settings-item">
+                  <div className="settings-item-text">
+                    <h3 className="settings-item-title">তারিখ ফরম্যাট</h3>
+                  </div>
+                  <div className="settings-item-control">
+                    <select
+                      className="settings-dropdown"
+                      value={systemPreferences.dateFormat}
+                      onChange={(e) => handleSystemChange('dateFormat', e.target.value)}
+                    >
+                      <option value="dd/mm/yyyy">DD/MM/YYYY</option>
+                      <option value="mm/dd/yyyy">MM/DD/YYYY</option>
+                      <option value="yyyy-mm-dd">YYYY-MM-DD</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mode Switcher */}
+              <ModeSwitcher />
+
+              <div className="settings-footer">
+                <button onClick={saveChanges} className="btn btn-primary">
+                  <Save className="btn-icon" />
+                  সেটিংস সংরক্ষণ করুন
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'history' && (
+            <div className="settings-section">
+              <h2 className="settings-section-title">লগইন ইতিহাস</h2>
+              {loginHistoryError && (
+                <div className="inline-error">
+                  <span>{loginHistoryError}</span>
+                </div>
               )}
+              <div className="history-list">
+                {loginHistory.length === 0 ? (
+                  <div className="history-item">
+                    <div className="history-meta-line">কোনো ইতিহাস পাওয়া যায়নি বা সেশন নেই</div>
+                  </div>
+                ) : (
+                  loginHistory.map((row, idx) => (
+                    <div key={idx} className="history-item">
+                      <div className="history-date">{row.created_at?.toDate ? new Date(row.created_at.toDate()).toLocaleString('bn-BD') : (row.created_at ? new Date(row.created_at).toLocaleString('bn-BD') : '')}</div>
+                      <div className="history-meta-line">ডিভাইস: {row.meta?.ua || 'অজানা'}</div>
+                      <div className="history-meta-line">আইপি: {row.ip || 'অজানা'} | {row.meta?.country || ''}{row.meta?.city ? ', ' + row.meta.city : ''}</div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
           {/* Save Status */}
           {saveStatus && (

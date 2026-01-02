@@ -1,0 +1,211 @@
+/* Mode Switcher Component Styles */
+
+.mode-switcher-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+}
+
+.mode-switcher-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  color: #1e293b;
+}
+
+.mode-switcher-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mode-switcher-description {
+  color: #64748b;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.mode-options {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: left;
+  width: 100%;
+}
+
+.mode-option:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mode-option.active {
+  border-color: #667eea;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+}
+
+.mode-option.active .mode-option-icon {
+  transform: scale(1.1);
+}
+
+.mode-option-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.mode-option-icon.production {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.mode-option-icon.demo {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.mode-option-content {
+  flex: 1;
+}
+
+.mode-option-content h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+}
+
+.mode-option-content p {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.mode-checkmark {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.25rem;
+  animation: checkmarkAppear 0.3s ease;
+}
+
+@keyframes checkmarkAppear {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.mode-current-status {
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.mode-current-status p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.mode-current-status strong {
+  color: #1e293b;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .mode-switcher-section {
+    background: #1e293b;
+  }
+
+  .mode-option {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .mode-option:hover {
+    border-color: #475569;
+  }
+
+  .mode-option.active {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+  }
+
+  .mode-current-status {
+    background: #0f172a;
+  }
+
+  .mode-switcher-header,
+  .mode-option-content h4,
+  .mode-current-status strong {
+    color: #f1f5f9;
+  }
+
+  .mode-switcher-description,
+  .mode-option-content p,
+  .mode-current-status p {
+    color: #cbd5e1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .mode-switcher-section {
+    padding: 1rem;
+  }
+
+  .mode-option {
+    padding: 1rem;
+  }
+
+  .mode-option-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .mode-option-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .mode-option-content h4 {
+    font-size: 1rem;
+  }
+
+  .mode-option-content p {
+    font-size: 0.85rem;
+  }
+}

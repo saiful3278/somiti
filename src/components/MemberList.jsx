@@ -5,6 +5,8 @@ import { Search, Filter, UserPlus, Eye, EyeOff, X, Phone, Mail, MapPin, Save, Lo
 import { MemberService } from '../firebase/memberService';
 import LoadingAnimation from './common/LoadingAnimation';
 import { toast } from 'react-hot-toast';
+import { useMode } from '../contexts/ModeContext';
+import { demoMembers } from '../utils/demoData';
 
 import '../styles/components/member-list.css';
 import ImgSphere from '@/components/img-sphere';
@@ -15,6 +17,7 @@ import { generateEmailCredentials } from '../utils/transliteration';
 
 const MemberList = () => {
   const { user } = useAuth();
+  const { isDemo } = useMode();
   const location = useLocation();
   const [members, setMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
@@ -42,7 +45,7 @@ const MemberList = () => {
 
   const [addMemberSucceeded, setAddMemberSucceeded] = useState(false);
 
-  
+
 
   // Floating detail card states
   const [selectedMember, setSelectedMember] = useState(null);
@@ -68,14 +71,14 @@ const MemberList = () => {
 <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
   <defs>
     <clipPath id="clip">
-      <circle cx="${size/2}" cy="${size/2}" r="${size/2}" />
+      <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" />
     </clipPath>
   </defs>
   <rect width="${size}" height="${size}" fill="${bg}"/>
   <g clip-path="url(#clip)">
     <rect width="${size}" height="${size}" fill="${bg}"/>
   </g>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="${Math.round(size*0.4)}" font-weight="700" fill="${text}">${initials}</text>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="${Math.round(size * 0.4)}" font-weight="700" fill="${text}">${initials}</text>
 </svg>`
     const dataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
     return dataUrl
@@ -230,8 +233,23 @@ const MemberList = () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Check if in demo mode
+      if (isDemo()) {
+        console.log('[MemberList] Using demo members');
+        const membersWithSomitiId = demoMembers.map((member, index) => ({
+          ...member,
+          somiti_user_id: index + 1,
+        }));
+        setMembers(membersWithSomitiId);
+        setFilteredMembers(membersWithSomitiId);
+        setLoading(false);
+        return;
+      }
+
+      // Production mode - fetch from Firebase
       const result = await MemberService.getActiveMembers();
-      
+
       if (result.success) {
         const sortedByCreatedAt = [...result.data].sort((a, b) => {
           const createdA = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
@@ -358,37 +376,37 @@ const MemberList = () => {
 
   const validateForm = () => {
     const errors = {};
-    
+
     // Name is always required
     if (!newMemberData.name.trim()) {
       errors.name = 'নাম আবশ্যক';
     }
-    
+
     // Share count is always required
     if (!newMemberData.shareCount.trim()) {
       errors.shareCount = 'শেয়ার সংখ্যা আবশ্যক';
     } else if (isNaN(newMemberData.shareCount) || Number(newMemberData.shareCount) <= 0) {
       errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
     }
-    
+
     return errors;
   };
 
   const handleSubmitNewMember = async (e) => {
     e.preventDefault();
     const errors = validateForm();
-    
+
     if (Object.keys(errors).length > 0) {
       setMemberFormErrors(errors);
       return;
     }
-    
+
     try {
       setSaving(true);
-      
+
       // Step 1: Generate credentials with Bangla name support
       const credentials = generateEmailCredentials(newMemberData.name);
-      
+
       console.log('Generated credentials:', credentials);
 
       // Step 2: Register user in the backend
@@ -452,8 +470,8 @@ const MemberList = () => {
           role: 'member'
         });
         setMemberFormErrors({});
-        
-        
+
+
       } else {
         console.error('সদস্য যোগ করতে ত্রুটি:', addResult?.error);
         setAddMemberSucceeded(false);
@@ -515,7 +533,7 @@ const MemberList = () => {
     { value: 'member', label: 'সদস্য', icon: User }
   ];
 
-  
+
 
   if (error) {
     return (
@@ -528,7 +546,7 @@ const MemberList = () => {
           </div>
           <h3 className="text-lg font-semibold text-red-800 mb-2">ত্রুটি ঘটেছে</h3>
           <p className="text-red-600 mb-4">{error}</p>
-          <button 
+          <button
             onClick={fetchMembers}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
           >
@@ -549,10 +567,10 @@ const MemberList = () => {
           className="img-sphere-page-wrapper"
           ref={sphereWrapperRef}
         >
-          <ImgSphere 
-            images={sphereImages} 
-            containerSize={420} 
-            sphereRadius={180} 
+          <ImgSphere
+            images={sphereImages}
+            containerSize={420}
+            sphereRadius={180}
             autoRotate={true}
             disableSpotlight={true}
             onImageClick={(img) => {
@@ -568,154 +586,154 @@ const MemberList = () => {
           />
         </div>
         <div className="member-list-header">
-        <div className="member-list-header-content">
-          {(user?.role === 'admin' || user?.role === 'cashier') && (
-            <button 
-              className="add-member-btn"
-              onClick={() => setShowAddMemberModal(true)}
-            >
-              <UserPlus className="h-5 w-5" />
-              <span>নতুন সদস্য যোগ করুন</span>
-            </button>
-          )}
+          <div className="member-list-header-content">
+            {(user?.role === 'admin' || user?.role === 'cashier') && (
+              <button
+                className="add-member-btn"
+                onClick={() => setShowAddMemberModal(true)}
+              >
+                <UserPlus className="h-5 w-5" />
+                <span>নতুন সদস্য যোগ করুন</span>
+              </button>
+            )}
+          </div>
         </div>
-        </div>
 
-      {/* Search removed */}
+        {/* Search removed */}
 
-      {/* Member Cards - Single Column Layout */}
-      <div className="member-cards-container" id="member-cards" role="list">
-        {loading ? (
-          (() => {
-            console.log('MemberList: skeleton cards match actual card size');
-            return (
-              <div className="member-list-loading" role="status" aria-live="polite">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="member-card member-card-minimal skeleton"
-                    role="listitem"
-                    aria-hidden="true"
-                    style={{ padding: '6px' }}
-                  >
-                    <div className="member-serial-number sk-line" style={{ minWidth: '24px' }} />
+        {/* Member Cards - Single Column Layout */}
+        <div className="member-cards-container" id="member-cards" role="list">
+          {loading ? (
+            (() => {
+              console.log('MemberList: skeleton cards match actual card size');
+              return (
+                <div className="member-list-loading" role="status" aria-live="polite">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="member-card member-card-minimal skeleton"
+                      role="listitem"
+                      aria-hidden="true"
+                      style={{ padding: '6px' }}
+                    >
+                      <div className="member-serial-number sk-line" style={{ minWidth: '24px' }} />
 
-                    <div className="sk-avatar" />
+                      <div className="sk-avatar" />
+
+                      <div className="member-info">
+                        <h3 className="member-name">
+                          <div className="sk-line" style={{ width: '65%' }} />
+                        </h3>
+
+                        <div className="member-address">
+                          <div className="sk-icon" />
+                          <div className="sk-line" style={{ width: '80%' }} />
+                        </div>
+
+                        <div className="member-details-row">
+                          <div className="sk-pill" style={{ width: '110px' }} />
+                          <span className="sk-pill" style={{ width: '80px' }} />
+                        </div>
+
+                        <div className="member-meta-row">
+                          <div className="sk-icon" />
+                          <div className="sk-line" style={{ width: '40%' }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()
+          ) : (
+            filteredMembers.map((member, index) => {
+              const roleInfo = getRoleInfo(member.role);
+              const RoleIcon = roleInfo.icon;
+              const displayId = member.somiti_user_id;
+              const joinDateStr = (() => {
+                const jd = member.joiningDate || member.joinDate || member.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || member.createdAt;
+                try {
+                  return jd ? new Date(jd).toLocaleDateString('bn-BD') : '';
+                } catch (e) {
+                  console.log('MemberList: joinDate in list formatting failed', e);
+                  return '';
+                }
+              })();
+
+              return (
+                <div
+                  key={member.id}
+                  className={`member-card member-card-minimal ${member.role}`}
+                  role="listitem"
+                  tabIndex={0}
+                  onClick={() => { setDetailSimple(false); handleMemberClick(member) }}
+                  style={{ padding: '4px' }}
+                >
+                  <div className="member-card-header-row" style={{ gap: '3px' }}>
+                    <div className="member-serial-badge">
+                      #{displayId}
+                    </div>
+                    <span className={`member-role-badge ${member.role}`}>
+                      <RoleIcon className="w-3 h-3" />
+                      {roleInfo.label}
+                    </span>
+                  </div>
+
+                  <div className="member-card-content" style={{ gap: '4px', alignItems: 'center' }}>
+                    {member.photoURL || member.avatar ? (
+                      <img
+                        src={member.photoURL || member.avatar}
+                        alt={member.name}
+                        className="member-avatar"
+                      />
+                    ) : (
+                      <div className="member-avatar-placeholder">
+                        {getInitials(member.name)}
+                      </div>
+                    )}
 
                     <div className="member-info">
                       <h3 className="member-name">
-                        <div className="sk-line" style={{ width: '65%' }} />
+                        {member.name}
                       </h3>
 
                       <div className="member-address">
-                        <div className="sk-icon" />
-                        <div className="sk-line" style={{ width: '80%' }} />
+                        <MapPin className="w-4 h-4" />
+                        <span>{member.address || 'ঠিকানা যোগ করা হয়নি'}</span>
                       </div>
 
                       <div className="member-details-row">
-                        <div className="sk-pill" style={{ width: '110px' }} />
-                        <span className="sk-pill" style={{ width: '80px' }} />
-                      </div>
-
-                      <div className="member-meta-row">
-                        <div className="sk-icon" />
-                        <div className="sk-line" style={{ width: '40%' }} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            );
-          })()
-        ) : (
-          filteredMembers.map((member, index) => {
-            const roleInfo = getRoleInfo(member.role);
-            const RoleIcon = roleInfo.icon;
-            const displayId = member.somiti_user_id;
-            const joinDateStr = (() => {
-              const jd = member.joiningDate || member.joinDate || member.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || member.createdAt;
-              try {
-                return jd ? new Date(jd).toLocaleDateString('bn-BD') : '';
-              } catch (e) {
-                console.log('MemberList: joinDate in list formatting failed', e);
-                return '';
-              }
-            })();
-
-            return (
-              <div 
-                key={member.id} 
-                className={`member-card member-card-minimal ${member.role}`}
-                role="listitem"
-                tabIndex={0}
-                onClick={() => { setDetailSimple(false); handleMemberClick(member) }}
-                style={{ padding: '4px' }}
-              >
-                <div className="member-card-header-row" style={{ gap: '3px' }}>
-                  <div className="member-serial-badge">
-                    #{displayId}
-                  </div>
-                  <span className={`member-role-badge ${member.role}`}>
-                    <RoleIcon className="w-3 h-3" />
-                    {roleInfo.label}
-                  </span>
-                </div>
-
-                <div className="member-card-content" style={{ gap: '4px', alignItems: 'center' }}>
-                  {member.photoURL || member.avatar ? (
-                    <img
-                      src={member.photoURL || member.avatar}
-                      alt={member.name}
-                      className="member-avatar"
-                    />
-                  ) : (
-                    <div className="member-avatar-placeholder">
-                      {getInitials(member.name)}
-                    </div>
-                  )}
-
-                  <div className="member-info">
-                    <h3 className="member-name">
-                      {member.name}
-                    </h3>
-                    
-                    <div className="member-address">
-                      <MapPin className="w-4 h-4" />
-                      <span>{member.address || 'ঠিকানা যোগ করা হয়নি'}</span>
-                    </div>
-                    
-                    <div className="member-details-row">
-                      <div className="member-share-info">
-                        <DollarSign className="w-4 h-4" />
-                        <span>{member.shareCount} শেয়ার</span>
-                      </div>
-                      {joinDateStr && (
-                        <div className="member-join-date">
-                          <Calendar className="w-4 h-4" />
-                          <span>{joinDateStr}</span>
+                        <div className="member-share-info">
+                          <DollarSign className="w-4 h-4" />
+                          <span>{member.shareCount} শেয়ার</span>
                         </div>
-                      )}
+                        {joinDateStr && (
+                          <div className="member-join-date">
+                            <Calendar className="w-4 h-4" />
+                            <span>{joinDateStr}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* No Results */}
-      {filteredMembers.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <Users className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">কোনো সদস্য পাওয়া যায়নি</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            অনুসন্ধানের শর্ত পরিবর্তন করে আবার চেষ্টা করুন।
-          </p>
+              );
+            })
+          )}
         </div>
-      )}
-      {(() => { console.log('MemberList: bottom spacer added (120px + safe-area + 24px)'); return null })()}
-      <div className="member-list-bottom-spacer" aria-hidden="true" />
+
+        {/* No Results */}
+        {filteredMembers.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <Users className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">কোনো সদস্য পাওয়া যায়নি</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              অনুসন্ধানের শর্ত পরিবর্তন করে আবার চেষ্টা করুন।
+            </p>
+          </div>
+        )}
+        {(() => { console.log('MemberList: bottom spacer added (120px + safe-area + 24px)'); return null })()}
+        <div className="member-list-bottom-spacer" aria-hidden="true" />
       </div>
 
       {/* Add New Member Modal */}
@@ -744,118 +762,118 @@ const MemberList = () => {
                     <User size={18} />
                     মূল তথ্য
                   </h3>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">নাম *</label>
-                    <input
-                      type="text"
-                      className={`form-input ${memberFormErrors.name ? 'error' : ''}`}
-                      value={newMemberData.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="সদস্যের নাম লিখুন"
-                    />
-                    {memberFormErrors.name && (
-                      <span className="error-message">{memberFormErrors.name}</span>
-                    )}
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">নাম *</label>
+                      <input
+                        type="text"
+                        className={`form-input ${memberFormErrors.name ? 'error' : ''}`}
+                        value={newMemberData.name}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        placeholder="সদস্যের নাম লিখুন"
+                      />
+                      {memberFormErrors.name && (
+                        <span className="error-message">{memberFormErrors.name}</span>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        <Phone size={16} />
+                        ফোন নম্বর (ঐচ্ছিক)
+                      </label>
+                      <input
+                        type="tel"
+                        className={`form-input ${memberFormErrors.phone ? 'error' : ''}`}
+                        value={newMemberData.phone}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        placeholder="01XXXXXXXXX (ঐচ্ছিক)"
+                      />
+                      {memberFormErrors.phone && (
+                        <span className="error-message">{memberFormErrors.phone}</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label">
-                      <Phone size={16} />
-                      ফোন নম্বর (ঐচ্ছিক)
+                      <MapPin size={16} />
+                      ঠিকানা (ঐচ্ছিক)
                     </label>
-                    <input
-                      type="tel"
-                      className={`form-input ${memberFormErrors.phone ? 'error' : ''}`}
-                      value={newMemberData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="01XXXXXXXXX (ঐচ্ছিক)"
+                    <textarea
+                      className={`form-textarea ${memberFormErrors.address ? 'error' : ''}`}
+                      value={newMemberData.address}
+                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      placeholder="সম্পূর্ণ ঠিকানা লিখুন (ঐচ্ছিক)"
+                      rows="2"
                     />
-                    {memberFormErrors.phone && (
-                      <span className="error-message">{memberFormErrors.phone}</span>
+                    {memberFormErrors.address && (
+                      <span className="error-message">{memberFormErrors.address}</span>
                     )}
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">
-                    <MapPin size={16} />
-                    ঠিকানা (ঐচ্ছিক)
-                  </label>
-                  <textarea
-                    className={`form-textarea ${memberFormErrors.address ? 'error' : ''}`}
-                    value={newMemberData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="সম্পূর্ণ ঠিকানা লিখুন (ঐচ্ছিক)"
-                    rows="2"
-                  />
-                  {memberFormErrors.address && (
-                    <span className="error-message">{memberFormErrors.address}</span>
-                  )}
-                </div>
-              </div>
+                {/* Role Selection - Visible to Admin and Cashier */}
+                {(user?.role === 'admin' || user?.role === 'cashier') && (
+                  <div className="form-section">
+                    <h3 className="form-section-title">
+                      <Crown size={18} />
+                      ভূমিকা নির্বাচন
+                    </h3>
 
-              {/* Role Selection - Visible to Admin and Cashier */}
-              {(user?.role === 'admin' || user?.role === 'cashier') && (
-                <div className="form-section">
-                  <h3 className="form-section-title">
-                    <Crown size={18} />
-                    ভূমিকা নির্বাচন
-                  </h3>
-                  
-                  <div className="form-group">
-                    <label className="form-label">
-                      <Crown size={16} />
-                      সদস্যের ভূমিকা (ঐচ্ছিক)
-                    </label>
-                    <select
-                      className={`form-select ${memberFormErrors.role ? 'error' : ''}`}
-                      value={newMemberData.role}
-                      onChange={(e) => handleInputChange('role', e.target.value)}
-                    >
-                      <option value="member">সদস্য</option>
-                      <option value="cashier">ক্যাশিয়ার</option>
-                      <option value="admin">অ্যাডমিন</option>
-                    </select>
-                    {memberFormErrors.role && (
-                      <span className="error-message">{memberFormErrors.role}</span>
-                    )}
-                    <div className="role-info-minimal">
-                       <div className="role-info-trigger">
-                         <span className="role-info-label">ভূমিকা সম্পর্কে জানুন</span>
-                         <button 
-                           type="button"
-                           className="role-info-toggle"
-                           onClick={() => setShowRoleInfo(!showRoleInfo)}
-                           aria-label="ভূমিকার বিস্তারিত তথ্য দেখুন"
-                         >
-                           <Info size={16} />
-                         </button>
-                       </div>
-                       
-                       {showRoleInfo && (
-                         <div className="role-info-details">
-                           <div className="role-descriptions">
-                             <div className="role-item">
-                               <span className="role-badge member">সদস্য</span>
-                               <span className="role-desc">সাধারণ অ্যাক্সেস ও তথ্য দেখার সুবিধা</span>
-                             </div>
-                             <div className="role-item">
-                               <span className="role-badge cashier">ক্যাশিয়ার</span>
-                               <span className="role-desc">লেনদেন ব্যবস্থাপনা ও আর্থিক কার্যক্রম</span>
-                             </div>
-                             <div className="role-item">
-                               <span className="role-badge admin">অ্যাডমিন</span>
-                               <span className="role-desc">সম্পূর্ণ নিয়ন্ত্রণ ও ব্যবস্থাপনা অধিকার</span>
-                             </div>
-                           </div>
-                         </div>
-                       )}
-                     </div>
+                    <div className="form-group">
+                      <label className="form-label">
+                        <Crown size={16} />
+                        সদস্যের ভূমিকা (ঐচ্ছিক)
+                      </label>
+                      <select
+                        className={`form-select ${memberFormErrors.role ? 'error' : ''}`}
+                        value={newMemberData.role}
+                        onChange={(e) => handleInputChange('role', e.target.value)}
+                      >
+                        <option value="member">সদস্য</option>
+                        <option value="cashier">ক্যাশিয়ার</option>
+                        <option value="admin">অ্যাডমিন</option>
+                      </select>
+                      {memberFormErrors.role && (
+                        <span className="error-message">{memberFormErrors.role}</span>
+                      )}
+                      <div className="role-info-minimal">
+                        <div className="role-info-trigger">
+                          <span className="role-info-label">ভূমিকা সম্পর্কে জানুন</span>
+                          <button
+                            type="button"
+                            className="role-info-toggle"
+                            onClick={() => setShowRoleInfo(!showRoleInfo)}
+                            aria-label="ভূমিকার বিস্তারিত তথ্য দেখুন"
+                          >
+                            <Info size={16} />
+                          </button>
+                        </div>
+
+                        {showRoleInfo && (
+                          <div className="role-info-details">
+                            <div className="role-descriptions">
+                              <div className="role-item">
+                                <span className="role-badge member">সদস্য</span>
+                                <span className="role-desc">সাধারণ অ্যাক্সেস ও তথ্য দেখার সুবিধা</span>
+                              </div>
+                              <div className="role-item">
+                                <span className="role-badge cashier">ক্যাশিয়ার</span>
+                                <span className="role-desc">লেনদেন ব্যবস্থাপনা ও আর্থিক কার্যক্রম</span>
+                              </div>
+                              <div className="role-item">
+                                <span className="role-badge admin">অ্যাডমিন</span>
+                                <span className="role-desc">সম্পূর্ণ নিয়ন্ত্রণ ও ব্যবস্থাপনা অধিকার</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
                 {/* Share Information */}
                 <div className="form-section">
@@ -863,37 +881,37 @@ const MemberList = () => {
                     <DollarSign size={18} />
                     শেয়ার তথ্য
                   </h3>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">
-                      <DollarSign size={16} />
-                      শেয়ার সংখ্যা *
-                    </label>
-                    <input
-                      type="number"
-                      className={`form-input ${memberFormErrors.shareCount ? 'error' : ''}`}
-                      value={newMemberData.shareCount}
-                      onChange={(e) => handleInputChange('shareCount', e.target.value)}
-                      placeholder="কতটি শেয়ার কিনেছেন"
-                      min="1"
-                    />
-                    {memberFormErrors.shareCount && (
-                      <span className="error-message">{memberFormErrors.shareCount}</span>
-                    )}
-                  </div>
 
-                  <div className="form-group">
-                    <label className="form-label">যোগদানের তারিখ (ঐচ্ছিক)</label>
-                    <input
-                      type="date"
-                      className="form-input"
-                      value={newMemberData.joiningDate}
-                      onChange={(e) => handleInputChange('joiningDate', e.target.value)}
-                    />
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">
+                        <DollarSign size={16} />
+                        শেয়ার সংখ্যা *
+                      </label>
+                      <input
+                        type="number"
+                        className={`form-input ${memberFormErrors.shareCount ? 'error' : ''}`}
+                        value={newMemberData.shareCount}
+                        onChange={(e) => handleInputChange('shareCount', e.target.value)}
+                        placeholder="কতটি শেয়ার কিনেছেন"
+                        min="1"
+                      />
+                      {memberFormErrors.shareCount && (
+                        <span className="error-message">{memberFormErrors.shareCount}</span>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">যোগদানের তারিখ (ঐচ্ছিক)</label>
+                      <input
+                        type="date"
+                        className="form-input"
+                        value={newMemberData.joiningDate}
+                        onChange={(e) => handleInputChange('joiningDate', e.target.value)}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
                 {/* Nominee Information */}
                 <div className="form-section">
@@ -901,66 +919,66 @@ const MemberList = () => {
                     <Users size={18} />
                     নমিনি তথ্য
                   </h3>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">
-                      <User size={16} />
-                      নমিনির নাম (ঐচ্ছিক)
-                    </label>
-                    <input
-                      type="text"
-                      className={`form-input ${memberFormErrors.nomineeName ? 'error' : ''}`}
-                      value={newMemberData.nomineeName}
-                      onChange={(e) => handleInputChange('nomineeName', e.target.value)}
-                      placeholder="নমিনির নাম লিখুন (ঐচ্ছিক)"
-                    />
-                    {memberFormErrors.nomineeName && (
-                      <span className="error-message">{memberFormErrors.nomineeName}</span>
-                    )}
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">
+                        <User size={16} />
+                        নমিনির নাম (ঐচ্ছিক)
+                      </label>
+                      <input
+                        type="text"
+                        className={`form-input ${memberFormErrors.nomineeName ? 'error' : ''}`}
+                        value={newMemberData.nomineeName}
+                        onChange={(e) => handleInputChange('nomineeName', e.target.value)}
+                        placeholder="নমিনির নাম লিখুন (ঐচ্ছিক)"
+                      />
+                      {memberFormErrors.nomineeName && (
+                        <span className="error-message">{memberFormErrors.nomineeName}</span>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        <Phone size={16} />
+                        নমিনির ফোন (ঐচ্ছিক)
+                      </label>
+                      <input
+                        type="tel"
+                        className={`form-input ${memberFormErrors.nomineePhone ? 'error' : ''}`}
+                        value={newMemberData.nomineePhone}
+                        onChange={(e) => handleInputChange('nomineePhone', e.target.value)}
+                        placeholder="01XXXXXXXXX (ঐচ্ছিক)"
+                      />
+                      {memberFormErrors.nomineePhone && (
+                        <span className="error-message">{memberFormErrors.nomineePhone}</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">
-                      <Phone size={16} />
-                      নমিনির ফোন (ঐচ্ছিক)
-                    </label>
-                    <input
-                      type="tel"
-                      className={`form-input ${memberFormErrors.nomineePhone ? 'error' : ''}`}
-                      value={newMemberData.nomineePhone}
-                      onChange={(e) => handleInputChange('nomineePhone', e.target.value)}
-                      placeholder="01XXXXXXXXX (ঐচ্ছিক)"
-                    />
-                    {memberFormErrors.nomineePhone && (
-                      <span className="error-message">{memberFormErrors.nomineePhone}</span>
+                    <label className="form-label">নমিনির সাথে সম্পর্ক (ঐচ্ছিক)</label>
+                    <select
+                      className={`form-select ${memberFormErrors.nomineeRelation ? 'error' : ''}`}
+                      value={newMemberData.nomineeRelation}
+                      onChange={(e) => handleInputChange('nomineeRelation', e.target.value)}
+                    >
+                      <option value="">সম্পর্ক নির্বাচন করুন (ঐচ্ছিক)</option>
+                      <option value="পিতা">পিতা</option>
+                      <option value="মাতা">মাতা</option>
+                      <option value="স্বামী">স্বামী</option>
+                      <option value="স্ত্রী">স্ত্রী</option>
+                      <option value="ভাই">ভাই</option>
+                      <option value="বোন">বোন</option>
+                      <option value="ছেলে">ছেলে</option>
+                      <option value="মেয়ে">মেয়ে</option>
+                      <option value="অন্যান্য">অন্যান্য</option>
+                    </select>
+                    {memberFormErrors.nomineeRelation && (
+                      <span className="error-message">{memberFormErrors.nomineeRelation}</span>
                     )}
                   </div>
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">নমিনির সাথে সম্পর্ক (ঐচ্ছিক)</label>
-                  <select
-                    className={`form-select ${memberFormErrors.nomineeRelation ? 'error' : ''}`}
-                    value={newMemberData.nomineeRelation}
-                    onChange={(e) => handleInputChange('nomineeRelation', e.target.value)}
-                  >
-                    <option value="">সম্পর্ক নির্বাচন করুন (ঐচ্ছিক)</option>
-                    <option value="পিতা">পিতা</option>
-                    <option value="মাতা">মাতা</option>
-                    <option value="স্বামী">স্বামী</option>
-                    <option value="স্ত্রী">স্ত্রী</option>
-                    <option value="ভাই">ভাই</option>
-                    <option value="বোন">বোন</option>
-                    <option value="ছেলে">ছেলে</option>
-                    <option value="মেয়ে">মেয়ে</option>
-                    <option value="অন্যান্য">অন্যান্য</option>
-                  </select>
-                  {memberFormErrors.nomineeRelation && (
-                    <span className="error-message">{memberFormErrors.nomineeRelation}</span>
-                  )}
-                </div>
-              </div>
 
                 {/* Form Actions */}
                 <div className="form-actions">
@@ -1026,175 +1044,175 @@ const MemberList = () => {
             </div>
 
             {!detailSimple && (
-            <div className="member-detail-content">
-              {/* Login Credentials */}
-              {(user?.role === 'admin' || user?.role === 'cashier') && (
-                <div className="member-detail-section">
-                  <h4 className="member-detail-section-title">
-                    <Lock className="w-4 h-4" />
-                    লগইন তথ্য
-                  </h4>
-                  <div className="member-detail-grid">
-                    <div className="member-detail-item">
-                      <span className="member-detail-label">ইমেইল:</span>
-                      <div className="member-detail-value-with-copy">
-                        <span className="member-detail-value code">{selectedMember.email}</span>
-                        <button
-                          className="copy-btn"
-                          onClick={() => copyToClipboard(selectedMember.email, 'email')}
-                          title="ইমেইল কপি করুন"
-                        >
-                          {copiedField === 'email' ? (
-                            <Check className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
+              <div className="member-detail-content">
+                {/* Login Credentials */}
+                {(user?.role === 'admin' || user?.role === 'cashier') && (
+                  <div className="member-detail-section">
+                    <h4 className="member-detail-section-title">
+                      <Lock className="w-4 h-4" />
+                      লগইন তথ্য
+                    </h4>
+                    <div className="member-detail-grid">
+                      <div className="member-detail-item">
+                        <span className="member-detail-label">ইমেইল:</span>
+                        <div className="member-detail-value-with-copy">
+                          <span className="member-detail-value code">{selectedMember.email}</span>
+                          <button
+                            className="copy-btn"
+                            onClick={() => copyToClipboard(selectedMember.email, 'email')}
+                            title="ইমেইল কপি করুন"
+                          >
+                            {copiedField === 'email' ? (
+                              <Check className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="member-detail-item">
+                        <span className="member-detail-label">পাসওয়ার্ড:</span>
+                        <div className="member-detail-value-with-copy">
+                          <span className="member-detail-value code">{selectedMember.password}</span>
+                          <button
+                            className="copy-btn"
+                            onClick={() => copyToClipboard(selectedMember.password || '', 'password')}
+                            title="পাসওয়ার্ড কপি করুন"
+                          >
+                            {copiedField === 'password' ? (
+                              <Check className="w-4 h-4 text-green-600" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div className="member-detail-item">
-                      <span className="member-detail-label">পাসওয়ার্ড:</span>
-                      <div className="member-detail-value-with-copy">
-                        <span className="member-detail-value code">{selectedMember.password}</span>
-                        <button
-                          className="copy-btn"
-                          onClick={() => copyToClipboard(selectedMember.password || '', 'password')}
-                          title="পাসওয়ার্ড কপি করুন"
-                        >
-                          {copiedField === 'password' ? (
-                            <Check className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <div className="member-detail-section">
-                <h4 className="member-detail-section-title">
-                  <Phone className="w-4 h-4" />
-                  যোগাযোগের তথ্য
-                </h4>
-                <div className="member-detail-grid">
-                  <div className="member-detail-item">
-                    <span className="member-detail-label">ফোন:</span>
-                    {isEditing ? (
-                      <input className="member-edit-input" value={editMemberData.phone} onChange={(e) => handleEditInputChange('phone', e.target.value)} />
-                    ) : (
-                      <span className="member-detail-value">{selectedMember.phone}</span>
-                    )}
-                  </div>
-                  <div className="member-detail-item">
-                    <span className="member-detail-label">ঠিকানা:</span>
-                    {isEditing ? (
-                      <textarea className="member-edit-textarea" value={editMemberData.address} onChange={(e) => handleEditInputChange('address', e.target.value)} />
-                    ) : (
-                      <span className="member-detail-value">{selectedMember.address}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="member-detail-section">
-                <h4 className="member-detail-section-title">
-                  <DollarSign className="w-4 h-4" />
-                  শেয়ার তথ্য
-                </h4>
-                <div className="member-detail-grid">
-                  <div className="member-detail-item">
-                    <span className="member-detail-label">মোট শেয়ার:</span>
-                    {isEditing ? (
-                      <input type="number" className="member-edit-input" value={editMemberData.shareCount} onChange={(e) => handleEditInputChange('shareCount', e.target.value)} />
-                    ) : (
-                      <span className="member-detail-value">{selectedMember.shareCount} টি</span>
-                    )}
-                  </div>
-                  <div className="member-detail-item">
-                    <span className="member-detail-label">যোগদানের তারিখ:</span>
-                    {isEditing ? (
-                      <input type="date" className="member-edit-input" value={editMemberData.joiningDate} onChange={(e) => handleEditInputChange('joiningDate', e.target.value)} />
-                    ) : (
-                      <span className="member-detail-value">
-                        {(() => {
-                          const jd = selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || selectedMember.createdAt;
-                          try {
-                            return jd ? new Date(jd).toLocaleDateString('bn-BD') : 'N/A';
-                          } catch (e) {
-                            console.log('MemberList: joiningDate formatting failed', e);
-                            return 'N/A';
-                          }
-                        })()}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Share Progress Bar */}
-                <div className="member-detail-progress">
-                  <div className="member-detail-progress-header">
-                    <span>শেয়ার অগ্রগতি</span>
-                    <span className="member-detail-progress-percentage">
-                      {Math.min(100, (selectedMember.shareCount / 200) * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                  <div className="member-detail-progress-bar">
-                    <div
-                      className="member-detail-progress-fill"
-                      style={{ width: `${Math.min(100, (selectedMember.shareCount / 200) * 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              {selectedMember.nomineeName && (
                 <div className="member-detail-section">
                   <h4 className="member-detail-section-title">
-                    <Users className="w-4 h-4" />
-                    নমিনি তথ্য
+                    <Phone className="w-4 h-4" />
+                    যোগাযোগের তথ্য
                   </h4>
                   <div className="member-detail-grid">
-                    <div className="member-detail-item">
-                      <span className="member-detail-label">নমিনির নাম:</span>
-                      {isEditing ? (
-                        <input className="member-edit-input" value={editMemberData.nomineeName} onChange={(e) => handleEditInputChange('nomineeName', e.target.value)} />
-                      ) : (
-                        <span className="member-detail-value">{selectedMember.nomineeName}</span>
-                      )}
-                    </div>
-                    <div className="member-detail-item">
-                      <span className="member-detail-label">সম্পর্ক:</span>
-                      {isEditing ? (
-                        <select className="member-edit-input" value={editMemberData.nomineeRelation} onChange={(e) => handleEditInputChange('nomineeRelation', e.target.value)}>
-                          <option value="">সম্পর্ক নির্বাচন করুন</option>
-                          <option value="পিতা">পিতা</option>
-                          <option value="মাতা">মাতা</option>
-                          <option value="স্বামী">স্বামী</option>
-                          <option value="স্ত্রী">স্ত্রী</option>
-                          <option value="ভাই">ভাই</option>
-                          <option value="বোন">বোন</option>
-                          <option value="ছেলে">ছেলে</option>
-                          <option value="মেয়ে">মেয়ে</option>
-                          <option value="অন্যান্য">অন্যান্য</option>
-                        </select>
-                      ) : (
-                        <span className="member-detail-value">{selectedMember.nomineeRelation}</span>
-                      )}
-                    </div>
                     <div className="member-detail-item">
                       <span className="member-detail-label">ফোন:</span>
                       {isEditing ? (
-                        <input className="member-edit-input" value={editMemberData.nomineePhone} onChange={(e) => handleEditInputChange('nomineePhone', e.target.value)} />
+                        <input className="member-edit-input" value={editMemberData.phone} onChange={(e) => handleEditInputChange('phone', e.target.value)} />
                       ) : (
-                        <span className="member-detail-value">{selectedMember.nomineePhone}</span>
+                        <span className="member-detail-value">{selectedMember.phone}</span>
+                      )}
+                    </div>
+                    <div className="member-detail-item">
+                      <span className="member-detail-label">ঠিকানা:</span>
+                      {isEditing ? (
+                        <textarea className="member-edit-textarea" value={editMemberData.address} onChange={(e) => handleEditInputChange('address', e.target.value)} />
+                      ) : (
+                        <span className="member-detail-value">{selectedMember.address}</span>
                       )}
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+
+                <div className="member-detail-section">
+                  <h4 className="member-detail-section-title">
+                    <DollarSign className="w-4 h-4" />
+                    শেয়ার তথ্য
+                  </h4>
+                  <div className="member-detail-grid">
+                    <div className="member-detail-item">
+                      <span className="member-detail-label">মোট শেয়ার:</span>
+                      {isEditing ? (
+                        <input type="number" className="member-edit-input" value={editMemberData.shareCount} onChange={(e) => handleEditInputChange('shareCount', e.target.value)} />
+                      ) : (
+                        <span className="member-detail-value">{selectedMember.shareCount} টি</span>
+                      )}
+                    </div>
+                    <div className="member-detail-item">
+                      <span className="member-detail-label">যোগদানের তারিখ:</span>
+                      {isEditing ? (
+                        <input type="date" className="member-edit-input" value={editMemberData.joiningDate} onChange={(e) => handleEditInputChange('joiningDate', e.target.value)} />
+                      ) : (
+                        <span className="member-detail-value">
+                          {(() => {
+                            const jd = selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt?.toDate?.()?.toISOString()?.split('T')[0] || selectedMember.createdAt;
+                            try {
+                              return jd ? new Date(jd).toLocaleDateString('bn-BD') : 'N/A';
+                            } catch (e) {
+                              console.log('MemberList: joiningDate formatting failed', e);
+                              return 'N/A';
+                            }
+                          })()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Share Progress Bar */}
+                  <div className="member-detail-progress">
+                    <div className="member-detail-progress-header">
+                      <span>শেয়ার অগ্রগতি</span>
+                      <span className="member-detail-progress-percentage">
+                        {Math.min(100, (selectedMember.shareCount / 200) * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                    <div className="member-detail-progress-bar">
+                      <div
+                        className="member-detail-progress-fill"
+                        style={{ width: `${Math.min(100, (selectedMember.shareCount / 200) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedMember.nomineeName && (
+                  <div className="member-detail-section">
+                    <h4 className="member-detail-section-title">
+                      <Users className="w-4 h-4" />
+                      নমিনি তথ্য
+                    </h4>
+                    <div className="member-detail-grid">
+                      <div className="member-detail-item">
+                        <span className="member-detail-label">নমিনির নাম:</span>
+                        {isEditing ? (
+                          <input className="member-edit-input" value={editMemberData.nomineeName} onChange={(e) => handleEditInputChange('nomineeName', e.target.value)} />
+                        ) : (
+                          <span className="member-detail-value">{selectedMember.nomineeName}</span>
+                        )}
+                      </div>
+                      <div className="member-detail-item">
+                        <span className="member-detail-label">সম্পর্ক:</span>
+                        {isEditing ? (
+                          <select className="member-edit-input" value={editMemberData.nomineeRelation} onChange={(e) => handleEditInputChange('nomineeRelation', e.target.value)}>
+                            <option value="">সম্পর্ক নির্বাচন করুন</option>
+                            <option value="পিতা">পিতা</option>
+                            <option value="মাতা">মাতা</option>
+                            <option value="স্বামী">স্বামী</option>
+                            <option value="স্ত্রী">স্ত্রী</option>
+                            <option value="ভাই">ভাই</option>
+                            <option value="বোন">বোন</option>
+                            <option value="ছেলে">ছেলে</option>
+                            <option value="মেয়ে">মেয়ে</option>
+                            <option value="অন্যান্য">অন্যান্য</option>
+                          </select>
+                        ) : (
+                          <span className="member-detail-value">{selectedMember.nomineeRelation}</span>
+                        )}
+                      </div>
+                      <div className="member-detail-item">
+                        <span className="member-detail-label">ফোন:</span>
+                        {isEditing ? (
+                          <input className="member-edit-input" value={editMemberData.nomineePhone} onChange={(e) => handleEditInputChange('nomineePhone', e.target.value)} />
+                        ) : (
+                          <span className="member-detail-value">{selectedMember.nomineePhone}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
             {!detailSimple && (user?.role === 'admin' || user?.role === 'cashier') && (
               <div className="member-detail-footer">
@@ -1208,18 +1226,20 @@ const MemberList = () => {
                       <button type="button" className="save-btn" onClick={handleSaveMember}>
                         <span>সংরক্ষণ</span>
                       </button>
-                      <button type="button" className="cancel-btn" onClick={() => { console.log('MemberList: cancel edit (footer)'); setIsEditing(false); setEditMemberData({
-                        name: selectedMember.name || '',
-                        phone: selectedMember.phone || '',
-                        address: selectedMember.address || '',
-                        shareCount: String(selectedMember.shareCount || ''),
-                        joiningDate: (selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt) ? new Date(selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt?.toDate?.() || selectedMember.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                        nomineeName: selectedMember.nomineeName || '',
-                        nomineePhone: selectedMember.nomineePhone || '',
-                        nomineeRelation: selectedMember.nomineeRelation || '',
-                        role: selectedMember.role || 'member',
-                        status: selectedMember.status || 'active'
-                      }); }}>
+                      <button type="button" className="cancel-btn" onClick={() => {
+                        console.log('MemberList: cancel edit (footer)'); setIsEditing(false); setEditMemberData({
+                          name: selectedMember.name || '',
+                          phone: selectedMember.phone || '',
+                          address: selectedMember.address || '',
+                          shareCount: String(selectedMember.shareCount || ''),
+                          joiningDate: (selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt) ? new Date(selectedMember.joiningDate || selectedMember.joinDate || selectedMember.createdAt?.toDate?.() || selectedMember.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                          nomineeName: selectedMember.nomineeName || '',
+                          nomineePhone: selectedMember.nomineePhone || '',
+                          nomineeRelation: selectedMember.nomineeRelation || '',
+                          role: selectedMember.role || 'member',
+                          status: selectedMember.status || 'active'
+                        });
+                      }}>
                         <span>বাতিল</span>
                       </button>
                     </>
@@ -1249,7 +1269,7 @@ const MemberList = () => {
         </div>
       )}
 
-      
+
     </div>
   );
 };

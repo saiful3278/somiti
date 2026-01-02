@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { 
+import {
   Home,
   Users,
   PieChart,
@@ -21,9 +21,9 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
   const getNavigationItems = () => {
     console.log('[BottomNavigation] building items for role', user?.role);
     const commonItems = [
-      { 
-        name: 'হোম', 
-        href: '/', 
+      {
+        name: 'হোম',
+        href: user?.role ? `/${user.role}` : '/',
         icon: Home,
         roles: ['admin', 'cashier', 'member']
       }
@@ -57,7 +57,7 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
   const navigationItems = getNavigationItems();
 
   return (
-    <nav 
+    <nav
       className="fixed bottom-0 left-0 right-0 bg-white z-30"
       style={{
         borderTop: '1px solid #e5e7eb',
@@ -71,7 +71,7 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.href;
           const isAddTransaction = item.href === '/add-transaction';
-          
+
           // For Add Transaction, use button instead of Link
           if (isAddTransaction) {
             return (
@@ -91,7 +91,7 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
                   const size = Math.max(rect.width, rect.height);
                   const x = e.touches[0].clientX - rect.left - size / 2;
                   const y = e.touches[0].clientY - rect.top - size / 2;
-                  
+
                   ripple.style.cssText = `
                     position: absolute;
                     width: ${size}px;
@@ -105,9 +105,9 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
                     pointer-events: none;
                     z-index: 1;
                   `;
-                  
+
                   button.appendChild(ripple);
-                  
+
                   setTimeout(() => {
                     if (ripple.parentNode) {
                       ripple.parentNode.removeChild(ripple);
@@ -116,24 +116,24 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
                 }}
               >
                 {/* Icon container with background */}
-                <div 
+                <div
                   className="relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 group-hover:scale-105"
                   style={{
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     border: '1px solid rgba(59, 130, 246, 0.2)'
                   }}
                 >
-                  <Icon 
-                    size={20} 
+                  <Icon
+                    size={20}
                     className="transition-all duration-200"
                     style={{ strokeWidth: 2.5 }}
                   />
                 </div>
-                
+
                 {/* Label */}
-                <span 
+                <span
                   className="text-xs font-medium mt-1 transition-all duration-200 truncate max-w-full"
-                  style={{ 
+                  style={{
                     fontSize: '11px',
                     lineHeight: '1.2'
                   }}
@@ -143,7 +143,7 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
               </button>
             );
           }
-          
+
           // For other items, use Link as before
           return (
             <Link
@@ -162,7 +162,7 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
                 const size = Math.max(rect.width, rect.height);
                 const x = e.touches[0].clientX - rect.left - size / 2;
                 const y = e.touches[0].clientY - rect.top - size / 2;
-                
+
                 ripple.style.cssText = `
                   position: absolute;
                   width: ${size}px;
@@ -176,9 +176,9 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
                   pointer-events: none;
                   z-index: 1;
                 `;
-                
+
                 button.appendChild(ripple);
-                
+
                 setTimeout(() => {
                   if (ripple.parentNode) {
                     ripple.parentNode.removeChild(ripple);
@@ -188,35 +188,33 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
             >
               {/* Active indicator */}
               {isActive && (
-                <div 
+                <div
                   className="absolute -top-0.5 w-8 h-1 rounded-full transition-all duration-200"
-                  style={{ 
+                  style={{
                     backgroundColor: '#3b82f6',
                     boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
                   }}
                 />
               )}
-              
+
               {/* Icon container with background */}
-              <div 
-                className={`relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${
-                  isActive ? 'scale-110' : 'scale-100'
-                }`}
+              <div
+                className={`relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 ${isActive ? 'scale-110' : 'scale-100'
+                  }`}
                 style={{
                   backgroundColor: isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                 }}
               >
-                <Icon 
-                  className="w-5 h-5 transition-all duration-200" 
+                <Icon
+                  className="w-5 h-5 transition-all duration-200"
                   strokeWidth={isActive ? 2.5 : 2}
                 />
               </div>
-              
+
               {/* Label */}
-              <span 
-                className={`text-xs mt-1 font-medium transition-all duration-200 truncate max-w-full ${
-                  isActive ? 'text-blue-600' : 'text-gray-500'
-                }`}
+              <span
+                className={`text-xs mt-1 font-medium transition-all duration-200 truncate max-w-full ${isActive ? 'text-blue-600' : 'text-gray-500'
+                  }`}
                 style={{
                   fontSize: '0.7rem',
                   fontWeight: isActive ? 600 : 500,
@@ -225,21 +223,20 @@ const BottomNavigation = ({ onOpenAddTransaction }) => {
               >
                 {item.name}
               </span>
-              
+
               {/* Hover effect overlay */}
-              <div 
-                className={`absolute inset-0 rounded-xl transition-all duration-200 ${
-                  isActive 
-                    ? 'bg-blue-50 opacity-0' 
+              <div
+                className={`absolute inset-0 rounded-xl transition-all duration-200 ${isActive
+                    ? 'bg-blue-50 opacity-0'
                     : 'bg-gray-50 opacity-0 group-hover:opacity-100'
-                }`}
+                  }`}
                 style={{ zIndex: -1 }}
               />
             </Link>
           );
         })}
       </div>
-      
+
       {/* Add ripple animation styles */}
       <style>{`
         @keyframes ripple {

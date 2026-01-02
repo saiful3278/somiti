@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UserProvider } from './contexts/UserContext';
+import { ModeProvider } from './contexts/ModeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -27,6 +28,7 @@ import SecretRoleSwitcher from './components/common/SecretRoleSwitcher';
 import UnifiedMembersFinanceCardPage from './pages/UnifiedMembersFinanceCardPage';
 import MemberTablePage from './pages/MemberTablePage';
 import New from './pages/New';
+import ModeSelector from './pages/ModeSelector';
 
 const App = () => {
   return (
@@ -42,24 +44,28 @@ export const AppRoutes = ({ helmetContext = {} }) => {
   return (
     <HelmetProvider context={helmetContext}>
       <AuthProvider>
-        <UserProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            {/* Debug route - available in all environments */}
-            <Route path="/secret3278" element={<SecretRoleSwitcher />} />
-            {/* Public New route to avoid auth redirect */}
-            <Route path="/new" element={<New />} />
-            <Route path="/" element={<LandingPage />} />
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <MainApp />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </UserProvider>
+        <ModeProvider>
+          <UserProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              {/* Debug route - available in all environments */}
+              <Route path="/secret3278" element={<SecretRoleSwitcher />} />
+              {/* Public New route to avoid auth redirect */}
+              <Route path="/new" element={<New />} />
+              <Route path="/" element={<LandingPage />} />
+              {/* Mode Selector Route - Public, no auth required */}
+              <Route path="/mode-selector" element={<ModeSelector />} />
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <MainApp />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </UserProvider>
+        </ModeProvider>
       </AuthProvider>
     </HelmetProvider>
   );

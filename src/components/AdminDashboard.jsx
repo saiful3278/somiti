@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Users, 
-  PiggyBank, 
-  TrendingUp, 
-  DollarSign, 
-  Bell, 
+import {
+  Users,
+  PiggyBank,
+  TrendingUp,
+  DollarSign,
+  Bell,
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
@@ -20,8 +20,12 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { MemberService, TransactionService, FundService } from '../firebase';
 import TransactionDetailsCard from './common/TransactionDetailsCard';
+import { useMode } from '../contexts/ModeContext';
+import { getDemoOrProductionData } from '../utils/useDemoData';
+import { demoMembers, demoTransactions } from '../utils/demoData';
 
 const AdminDashboard = () => {
+  const { isDemo } = useMode();
   const navigate = useNavigate();
   const [loading, setLoading] = useState({
     members: true,
@@ -41,7 +45,7 @@ const AdminDashboard = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [showTransactionCard, setShowTransactionCard] = useState(false);
   const [cardPosition, setCardPosition] = useState({ x: 0, y: 0 });
-  
+
   // Add new state for FAB menu
   const [showFabMenu, setShowFabMenu] = useState(false);
 
@@ -50,27 +54,27 @@ const AdminDashboard = () => {
     const monthNames = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
     const last6Months = [];
     const currentDate = new Date();
-    
+
     for (let i = 5; i >= 0; i--) {
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
       const monthName = monthNames[date.getMonth()];
-      
+
       // Calculate deposits for this month
       const monthlyDeposits = transactions
         .filter(t => {
           if (!t.createdAt || t.transactionType !== 'monthly_deposit') return false;
           const transactionDate = new Date(t.createdAt.seconds * 1000);
-          return transactionDate.getMonth() === date.getMonth() && 
-                 transactionDate.getFullYear() === date.getFullYear();
+          return transactionDate.getMonth() === date.getMonth() &&
+            transactionDate.getFullYear() === date.getFullYear();
         })
         .reduce((sum, t) => sum + (t.amount || 0), 0);
-      
+
       last6Months.push({
         month: monthName,
         deposits: monthlyDeposits
       });
     }
-    
+
     return last6Months;
   };
 
@@ -106,80 +110,110 @@ const AdminDashboard = () => {
     };
   }, [showFabMenu]);
 
-  // Load dashboard data from Firebase
+  // Load dashboard data from Firebase or demo
   useEffect(() => {
     const loadDashboardData = async () => {
       try {
-        // Load all data in parallel
-        const [memberResult, fundSummary, transactions] = await Promise.all([
-          MemberService.getAllMembers().then(result => {
-            if (result.success) {
-              const members = result.data;
-              const activeMembers = members.filter(member => member.status === 'active').length;
-              setDashboardData(prev => ({
-                ...prev,
-                totalMembers: members.length,
-                activeMembers
-              }));
-              setLoading(prev => ({ ...prev, members: false }));
-              return members;
-            } else {
-              console.error('Error loading members:', result.error);
+        // Check if we're in demo mode
+        const isDemoMode = isDemo();
+
+        if (isDemoMode) {
+          // Use demo data
+          const activeMembers = demoMembers.filter(m => m.status === 'active').length;
+          const totalFunds = demoTransactions
+            .filter(t => t.type === 'deposit')
+            .reduce((sum, t) => sum + t.amount, 0);
+          const monthlyDeposits = demoTransactions
+            .filter(t => t.type === 'deposit' && t.category === 'monthly')
+            .reduce((sum, t) => sum + t.amount, 0);
+          const monthlyData = generateMonthlyDepositsData(demoTransactions.map(t => ({
+            ...t,
+            transactionType: t.type,
+            createdAt: { seconds: new Date(t.date).getTime() / 1000 }
+          })));
+
+          setDashboardData({
+            totalMembers: demoMembers.length,
+            activeMembers,
+            totalFunds,
+            monthlyDeposits,
+            recentTransactions: demoTransactions.slice(0, 10),
+            monthlyData
+          });
+
+          setLoading({ members: false, transactions: false, fundData: false, initial: false });
+        } else {
+          // Load all data in parallel from Firebase
+          const [memberResult, fundSummary, transactions] = await Promise.all([
+            MemberService.getAllMembers().then(result => {
+              if (result.success) {
+                const members = result.data;
+                const activeMembers = members.filter(member => member.status === 'active').length;
+                setDashboardData(prev => ({
+                  ...prev,
+                  totalMembers: members.length,
+                  activeMembers
+                }));
+                setLoading(prev => ({ ...prev, members: false }));
+                return members;
+              } else {
+                console.error('Error loading members:', result.error);
+                setLoading(prev => ({ ...prev, members: false }));
+                return [];
+              }
+            }).catch(error => {
+              console.error('Error loading members:', error);
               setLoading(prev => ({ ...prev, members: false }));
               return [];
-            }
-          }).catch(error => {
-            console.error('Error loading members:', error);
-            setLoading(prev => ({ ...prev, members: false }));
-            return [];
-          }),
-          
-          FundService.getFundSummary().then(result => {
-            if (result.success && result.data) {
-              const fundSummary = result.data;
-              setDashboardData(prev => ({
-                ...prev,
-                totalFunds: fundSummary.totalAmount || 0,
-                monthlyDeposits: fundSummary.monthlyDeposits || 0
-              }));
-              setLoading(prev => ({ ...prev, fundData: false }));
-              return fundSummary;
-            } else {
-              console.error('Error loading fund summary:', result.error);
+            }),
+
+            FundService.getFundSummary().then(result => {
+              if (result.success && result.data) {
+                const fundSummary = result.data;
+                setDashboardData(prev => ({
+                  ...prev,
+                  totalFunds: fundSummary.totalAmount || 0,
+                  monthlyDeposits: fundSummary.monthlyDeposits || 0
+                }));
+                setLoading(prev => ({ ...prev, fundData: false }));
+                return fundSummary;
+              } else {
+                console.error('Error loading fund summary:', result.error);
+                setLoading(prev => ({ ...prev, fundData: false }));
+                return {};
+              }
+            }).catch(error => {
+              console.error('Error loading fund summary:', error);
               setLoading(prev => ({ ...prev, fundData: false }));
               return {};
-            }
-          }).catch(error => {
-            console.error('Error loading fund summary:', error);
-            setLoading(prev => ({ ...prev, fundData: false }));
-            return {};
-          }),
-          
-          TransactionService.getAllTransactions().then(result => {
-            if (result.success) {
-              const allTransactions = result.data || [];
-              const recentTransactions = allTransactions.slice(0, 10);
-              const monthlyData = generateMonthlyDepositsData(allTransactions);
-              
-              setDashboardData(prev => ({
-                ...prev,
-                recentTransactions,
-                monthlyData
-              }));
-              setLoading(prev => ({ ...prev, transactions: false }));
-              return allTransactions;
-            } else {
-              console.error('Error loading transactions:', result.error);
+            }),
+
+            TransactionService.getAllTransactions().then(result => {
+              if (result.success) {
+                const allTransactions = result.data || [];
+                const recentTransactions = allTransactions.slice(0, 10);
+                const monthlyData = generateMonthlyDepositsData(allTransactions);
+
+                setDashboardData(prev => ({
+                  ...prev,
+                  recentTransactions,
+                  monthlyData
+                }));
+                setLoading(prev => ({ ...prev, transactions: false }));
+                return allTransactions;
+              } else {
+                console.error('Error loading transactions:', result.error);
+                setLoading(prev => ({ ...prev, transactions: false }));
+                return [];
+              }
+            }).catch(error => {
+              console.error('Error loading transactions:', error);
               setLoading(prev => ({ ...prev, transactions: false }));
               return [];
-            }
-          }).catch(error => {
-            console.error('Error loading transactions:', error);
-            setLoading(prev => ({ ...prev, transactions: false }));
-            return [];
-          })
-        ]);
-        
+            })
+          ]);
+        }
+
       } catch (error) {
         console.error('Error loading dashboard data:', error);
       } finally {
@@ -188,7 +222,7 @@ const AdminDashboard = () => {
     };
 
     loadDashboardData();
-  }, []);
+  }, [isDemo]);
 
   // Generate summary stats from Firebase data
   const summaryStats = [
@@ -225,13 +259,13 @@ const AdminDashboard = () => {
       console.error('No transaction data provided');
       return;
     }
-    
+
     // Get click position for floating card
     setCardPosition({
       x: event.clientX,
       y: event.clientY
     });
-    
+
     // Create a safe transaction object with defaults
     const safeTransaction = {
       id: transaction.id || 'N/A',
@@ -251,7 +285,7 @@ const AdminDashboard = () => {
       processedBy: transaction.processedBy,
       ...transaction // Spread the original transaction to preserve any additional fields
     };
-    
+
     setSelectedTransaction(safeTransaction);
     setShowTransactionCard(true);
   };
@@ -284,106 +318,69 @@ const AdminDashboard = () => {
   const [recentActivities, setRecentActivities] = useState([]);
   const [activitiesLoading, setActivitiesLoading] = useState(true);
 
-  // Fetch recent activities from Firebase
+  // Fetch recent activities from Firebase or demo data
   useEffect(() => {
     const fetchRecentActivities = async () => {
       try {
         setActivitiesLoading(true);
-        const result = await TransactionService.getRecentTransactions(10);
-        
-        if (result.success && result.data) {
-          const formattedActivities = result.data.map((transaction, index) => {
-            const transactionInfo = getTransactionInfo(transaction.transactionType);
-            
+
+        const isDemoMode = isDemo();
+        let transactionsData = [];
+
+        if (isDemoMode) {
+          // Use demo data
+          transactionsData = demoTransactions.slice(0, 10);
+        } else {
+          // Fetch from Firebase
+          const result = await TransactionService.getRecentTransactions(10);
+          if (result.success && result.data) {
+            transactionsData = result.data;
+          }
+        }
+
+        if (transactionsData.length > 0) {
+          const formattedActivities = transactionsData.map((transaction, index) => {
+            const transactionInfo = getTransactionInfo(transaction.transactionType || transaction.type);
+
             const getTimeAgo = (transaction) => {
-              if (!transaction.createdAt) return 'এই মাসে';
-              
-              const transactionDate = transaction.createdAt.toDate ? transaction.createdAt.toDate() : new Date(transaction.createdAt.seconds * 1000);
+              const transactionDate = isDemoMode
+                ? new Date(transaction.date)
+                : (transaction.createdAt?.toDate ? transaction.createdAt.toDate() : new Date(transaction.createdAt.seconds * 1000));
+
               const now = new Date();
               const diffTime = Math.abs(now - transactionDate);
               const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
               const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-              
-              if (diffHours < 1) {
-                return 'এখনই';
-              } else if (diffHours < 24) {
-                return `${diffHours} ঘন্টা আগে`;
-              } else if (diffDays === 1) {
-                return 'গতকাল';
-              } else if (diffDays <= 7) {
-                return `${diffDays} দিন আগে`;
-              } else if (diffDays <= 30) {
+
+              if (diffHours < 1) return 'এখনই';
+              if (diffHours < 24) return `${diffHours} ঘন্টা আগে`;
+              if (diffDays === 1) return 'গতকাল';
+              if (diffDays <= 7) return `${diffDays} দিন আগে`;
+              if (diffDays <= 30) {
                 const weeks = Math.floor(diffDays / 7);
                 return `${weeks} সপ্তাহ আগে`;
               }
-              
               return 'এই মাসে';
             };
-            
+
             return {
               id: transaction.id || index,
-              type: transaction.transactionType,
+              type: transaction.transactionType || transaction.type,
               message: `${transaction.memberName || 'সদস্য'} ${(transaction.amount || 0).toLocaleString()} টাকা ${transactionInfo.action}`,
               time: getTimeAgo(transaction),
               icon: transactionInfo.icon,
               color: transactionInfo.color,
-              originalTransaction: transaction,
+              originalTransaction: isDemoMode ? {
+                ...transaction,
+                transactionType: transaction.type,
+                createdAt: new Date(transaction.date)
+              } : transaction,
             };
           });
-          
+
           setRecentActivities(formattedActivities);
         } else {
-          // Fallback to dummy data if Firebase fails
-          setRecentActivities([
-            {
-              id: 1,
-              type: 'member_join',
-              message: 'নতুন সদস্য মোহাম্মদ রহিম যোগদান করেছেন',
-              time: '২ ঘন্টা আগে',
-              icon: Users,
-              color: 'text-blue-600',
-              originalTransaction: {
-                id: 'dummy-1',
-                memberName: 'মোহাম্মদ রহিম',
-                transactionType: 'member_join',
-                amount: 0,
-                description: 'নতুন সদস্য যোগদান',
-                createdAt: new Date()
-              }
-            },
-            {
-              id: 2,
-              type: 'deposit',
-              message: 'ফাতেমা খাতুন ৫,০০০ টাকা জমা দিয়েছেন',
-              time: '৪ ঘন্টা আগে',
-              icon: PiggyBank,
-              color: 'text-green-600',
-              originalTransaction: {
-                id: 'dummy-2',
-                memberName: 'ফাতেমা খাতুন',
-                transactionType: 'monthly_deposit',
-                amount: 5000,
-                description: 'মাসিক জমা',
-                createdAt: new Date()
-              }
-            },
-            {
-              id: 4,
-              type: 'notice',
-              message: 'মাসিক সভার নোটিশ প্রকাশিত হয়েছে',
-              time: '২ দিন আগে',
-              icon: Bell,
-              color: 'text-orange-600',
-              originalTransaction: {
-                id: 'dummy-4',
-                memberName: 'সমিতি',
-                transactionType: 'other',
-                amount: 0,
-                description: 'মাসিক সভার নোটিশ',
-                createdAt: new Date()
-              }
-            }
-          ]);
+          setRecentActivities([]);
         }
       } catch (error) {
         console.error('Error fetching recent activities:', error);
@@ -394,7 +391,7 @@ const AdminDashboard = () => {
     };
 
     fetchRecentActivities();
-  }, []);
+  }, [isDemo]);
 
   // Helper function to create loading skeleton
   const LoadingSkeleton = ({ className = "", height = "h-4" }) => (
@@ -405,7 +402,7 @@ const AdminDashboard = () => {
     <div className="admin-dashboard-mobile">
       <div className="md-surface-container">
         <div className="md-dashboard-content">
-          
+
           {/* Material Design 3 Stats Cards */}
           <div className="md-stats-grid">
             {summaryStats.map((stat, index) => (
@@ -418,20 +415,20 @@ const AdminDashboard = () => {
                   </div>
                   <div className="md-stats-content">
                     <h3 className="md-title-large">
-                      {(index === 0 && loading.members) || (index === 1 && loading.fundData) || (index === 2 && loading.fundData) || (index === 3 && loading.fundData) ? 
-                        <LoadingSkeleton className="w-16 h-6" /> : 
+                      {(index === 0 && loading.members) || (index === 1 && loading.fundData) || (index === 2 && loading.fundData) || (index === 3 && loading.fundData) ?
+                        <LoadingSkeleton className="w-16 h-6" /> :
                         stat.value
                       }
                     </h3>
                     <p className="md-body-medium">{stat.title}</p>
                     <div className={`md-stats-change ${stat.changeType === 'increase' ? 'positive' : 'negative'}`}>
-                      {stat.changeType === 'increase' ? 
-                        <ArrowUpRight className="h-4 w-4" /> : 
+                      {stat.changeType === 'increase' ?
+                        <ArrowUpRight className="h-4 w-4" /> :
                         <ArrowDownRight className="h-4 w-4" />
                       }
                       <span className="md-label-medium">
-                        {(index === 0 && loading.members) || (index === 1 && loading.fundData) || (index === 2 && loading.fundData) || (index === 3 && loading.fundData) ? 
-                          <LoadingSkeleton className="w-8" /> : 
+                        {(index === 0 && loading.members) || (index === 1 && loading.fundData) || (index === 2 && loading.fundData) || (index === 3 && loading.fundData) ?
+                          <LoadingSkeleton className="w-8" /> :
                           stat.change
                         }
                       </span>
@@ -445,14 +442,14 @@ const AdminDashboard = () => {
           {/* Material Design 3 Tab Navigation */}
           <div className="md-tab-container">
             <div className="md-tab-bar">
-              <button 
+              <button
                 className={`md-tab ${activeTab === 'overview' ? 'active' : ''}`}
                 onClick={() => setActiveTab('overview')}
               >
                 <TrendingUp className="h-5 w-5" />
                 <span className="md-label-medium">সংক্ষিপ্ত</span>
               </button>
-              <button 
+              <button
                 className={`md-tab ${activeTab === 'activities' ? 'active' : ''}`}
                 onClick={() => setActiveTab('activities')}
               >
@@ -485,7 +482,7 @@ const AdminDashboard = () => {
                           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                           <YAxis tick={{ fontSize: 12 }} />
-                          <Tooltip 
+                          <Tooltip
                             formatter={(value) => `৳ ${value.toLocaleString()}`}
                             contentStyle={{
                               backgroundColor: 'white',
@@ -513,7 +510,7 @@ const AdminDashboard = () => {
                       <h3 className="md-title-medium">সাম্প্রতিক কার্যক্রম</h3>
                       <p className="md-body-small text-gray-600">সর্বশেষ লেনদেন এবং কার্যক্রম</p>
                     </div>
-                    <button 
+                    <button
                       className="md-text-button md-button-primary"
                       onClick={() => navigate('/transactions')}
                     >
@@ -521,7 +518,7 @@ const AdminDashboard = () => {
                       <ArrowUpRight className="h-4 w-4 ml-1" />
                     </button>
                   </div>
-                  
+
                   {activitiesLoading ? (
                     <div className="md-activities-loading">
                       <div className="flex items-center justify-center py-8">
@@ -540,10 +537,10 @@ const AdminDashboard = () => {
                   ) : (
                     <div className="md-list md-activities-list">
                       {recentActivities.map((activity, index) => (
-                        <div 
-                          key={activity.id} 
-                          className="md-list-item md-activity-item" 
-                          style={{ 
+                        <div
+                          key={activity.id}
+                          className="md-list-item md-activity-item"
+                          style={{
                             animationDelay: `${index * 100}ms`,
                             cursor: 'pointer'
                           }}
@@ -590,7 +587,7 @@ const AdminDashboard = () => {
         {/* FAB Menu Items */}
         {showFabMenu && (
           <div className="md-fab-menu">
-            <button 
+            <button
               className="md-fab md-fab-secondary"
               onClick={handleNewMember}
               title="নতুন সদস্য যোগ করুন"
@@ -598,7 +595,7 @@ const AdminDashboard = () => {
               <UserPlus className="h-5 w-5" />
               <span className="md-fab-label">নতুন সদস্য</span>
             </button>
-            <button 
+            <button
               className="md-fab md-fab-secondary"
               onClick={handleNewTransaction}
               title="নতুন লেনদেন যোগ করুন"
@@ -608,9 +605,9 @@ const AdminDashboard = () => {
             </button>
           </div>
         )}
-        
+
         {/* Main FAB */}
-        <button 
+        <button
           className={`md-fab md-fab-primary ${showFabMenu ? 'rotated' : ''}`}
           onClick={toggleFabMenu}
           title="নতুন যোগ করুন"

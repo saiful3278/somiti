@@ -33,8 +33,25 @@ export const AuthProvider = ({ children }) => {
 
       if (token && userId) {
         try {
+          // Check if this is a demo user
+          if (userId === 'demo-user' && token === 'demo-token') {
+            // Create demo user from localStorage
+            setUser({
+              uid: 'demo-user',
+              email: 'demo@somiti.com',
+              role: savedRole || 'member',
+              name: `ডেমো ${savedRole === 'admin' ? 'অ্যাডমিন' : savedRole === 'cashier' ? 'ক্যাশিয়ার' : 'সদস্য'}`,
+              isDebugUser: true,
+              isDemoUser: true,
+              membershipType: 'ডেমো ব্যবহারকারী',
+              joinDate: new Date(),
+              shareCount: 10,
+              totalInvestment: 50000
+            });
+            console.log('[AuthContext] Demo user restored from localStorage');
+          }
           // Check if this is a debug user
-          if (userId === 'debug-user' && token === 'debug-token') {
+          else if (userId === 'debug-user' && token === 'debug-token') {
             // Create debug user from localStorage
             setUser({
               uid: 'debug-user',

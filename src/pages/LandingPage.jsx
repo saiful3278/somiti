@@ -330,7 +330,7 @@ export default function LandingPage() {
               <a href="#history" className="btn-primary" onClick={(e) => { e.preventDefault(); document.getElementById('history').scrollIntoView({ behavior: 'smooth' }); }}>
                 গ্রাম দেখুন
               </a>
-              <RainbowButton to={rolePath} onClick={() => console.log('[LandingPage] CTA click: RainbowButton', { to: rolePath })}>
+              <RainbowButton to="/mode-selector" onClick={() => console.log('[LandingPage] CTA click: RainbowButton', { to: '/mode-selector' })}>
                 সদস্য পোর্টাল
               </RainbowButton>
             </div>

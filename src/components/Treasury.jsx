@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  PiggyBank, 
-  TrendingUp, 
-  DollarSign, 
+import {
+  PiggyBank,
+  TrendingUp,
+  DollarSign,
   ArrowUpRight,
   ArrowDownRight,
   Eye,
@@ -19,14 +19,17 @@ import { FundService, TransactionService } from '../firebase';
 import TransactionDetailsCard from './common/TransactionDetailsCard';
 import LoadingAnimation from './common/LoadingAnimation';
 import '../styles/components/treasury.css';
+import { useMode } from '../contexts/ModeContext';
+import { demoTransactions } from '../utils/demoData';
 
 const Treasury = () => {
   const navigate = useNavigate();
+  const { isDemo } = useMode();
   const [loading, setLoading] = useState({
     fundData: true,
     transactions: true
   });
-  
+
   const [treasuryData, setTreasuryData] = useState({
     totalFunds: 0,
     monthlyDeposits: 0,
@@ -45,7 +48,7 @@ const Treasury = () => {
     const loadTreasuryData = async () => {
       try {
         setLoading(prev => ({ ...prev, fundData: true, transactions: true }));
-        
+
         // Load fund summary
         const fundResult = await FundService.getFundSummary();
         if (fundResult.success) {
@@ -61,7 +64,7 @@ const Treasury = () => {
           console.error('Error loading fund summary:', fundResult.error);
           setLoading(prev => ({ ...prev, fundData: false }));
         }
-        
+
         // Load recent transactions
         const transactionResult = await TransactionService.getRecentTransactions(10);
         if (transactionResult.success) {
@@ -75,7 +78,7 @@ const Treasury = () => {
           console.error('Error loading transactions:', transactionResult.error);
           setLoading(prev => ({ ...prev, transactions: false }));
         }
-        
+
       } catch (error) {
         console.error('Error loading treasury data:', error);
         setLoading(prev => ({ ...prev, fundData: false, transactions: false }));
@@ -83,7 +86,7 @@ const Treasury = () => {
     };
 
     loadTreasuryData();
-  }, []);
+  }, [isDemo]);
 
   // Transaction card handlers with position tracking
   const handleTransactionClick = (transaction, event) => {
@@ -92,13 +95,13 @@ const Treasury = () => {
       console.error('No transaction data provided');
       return;
     }
-    
+
     // Get click position for floating card
     setCardPosition({
       x: event.clientX,
       y: event.clientY
     });
-    
+
     // Create a safe transaction object with defaults
     const safeTransaction = {
       id: transaction.id || 'N/A',
@@ -118,7 +121,7 @@ const Treasury = () => {
       processedBy: transaction.processedBy,
       ...transaction // Spread the original transaction to preserve any additional fields
     };
-    
+
     setSelectedTransaction(safeTransaction);
     setShowTransactionCard(true);
   };
@@ -168,13 +171,13 @@ const Treasury = () => {
     if (transaction.monthName) {
       return transaction.monthName;
     }
-    
+
     // Otherwise, extract month from date
     const bengaliMonths = [
       'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
       'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'
     ];
-    
+
     const date = new Date(transaction.date?.seconds * 1000 || transaction.createdAt?.seconds * 1000 || Date.now());
     return bengaliMonths[date.getMonth()] || 'এই মাসে';
   };
@@ -270,8 +273,8 @@ const Treasury = () => {
                 {treasuryData.recentTransactions.map((transaction) => {
                   const formattedTransaction = formatTransaction(transaction);
                   return (
-                    <div 
-                      key={formattedTransaction.id} 
+                    <div
+                      key={formattedTransaction.id}
                       className="treasury-transaction-item"
                       style={{ cursor: 'pointer' }}
                       onClick={(e) => handleTransactionClick(transaction, e)}
@@ -286,7 +289,7 @@ const Treasury = () => {
                       <div className="treasury-transaction-details">
                         <p className="treasury-transaction-description">{formattedTransaction.type}</p>
                         <p className="treasury-transaction-time">
-                          {formattedTransaction.memberName} • 
+                          {formattedTransaction.memberName} •
                           <span className="month-badge" style={{
                             backgroundColor: '#fff3e0',
                             color: '#f57c00',
@@ -316,11 +319,11 @@ const Treasury = () => {
                 <p className="treasury-empty-description">এখনো কোনো লেনদেন রেকর্ড করা হয়নি</p>
               </div>
             )}
-            
+
             {/* See More Button */}
             {!loading.transactions && treasuryData.recentTransactions.length > 0 && (
               <div className="mt-6 text-center">
-                <button 
+                <button
                   onClick={() => navigate('/transactions')}
                   className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-semibold rounded-xl border border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:shadow-sm transition-all duration-300 group"
                 >

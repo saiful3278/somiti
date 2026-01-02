@@ -39,6 +39,14 @@ export const UserProvider = ({ children }) => {
       return;
     }
 
+    // Check if this is a demo or debug user - don't fetch from Firebase
+    if (authUser?.isDemoUser || authUser?.isDebugUser || selectedUserId === 'demo-user' || selectedUserId === 'debug-user') {
+      console.log('[UserContext] Skipping Firebase load for demo/debug user, using authUser directly');
+      setCurrentUser(authUser);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -47,13 +55,13 @@ export const UserProvider = ({ children }) => {
       const result = await MemberService.getAllMembers();
       if (result.success && result.data.length > 0) {
         // Find user by ID or use first member as fallback
-        let user = result.data.find(member => 
-          member.id === selectedUserId || 
+        let user = result.data.find(member =>
+          member.id === selectedUserId ||
           member.membershipId === selectedUserId ||
           member.memberId === selectedUserId ||
           member.somiti_user_id === selectedUserId
         );
-        
+
         if (!user) {
           user = result.data[0]; // Fallback to first member
         }
@@ -89,7 +97,7 @@ export const UserProvider = ({ children }) => {
       setLoading(false);
       console.log('[UserContext] loadCurrentUser finished, loading set to false');
     }
-  }, [selectedUserId]);
+  }, [selectedUserId, authUser]);
 
   useEffect(() => {
     loadCurrentUser();

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Bell, Settings, Save, CheckCircle, Shield, Globe } from 'lucide-react';
 import '../styles/components/AdminSettings.css';
+import ModeSwitcher from './common/ModeSwitcher';
 
 const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState('notifications');
@@ -77,7 +78,7 @@ const AdminSettings = () => {
 
         {/* Content */}
         <div className="admin-tab-content">
-          
+
           {/* Notifications Tab */}
           {activeTab === 'notifications' && (
             <div className="settings-section">
@@ -90,7 +91,7 @@ const AdminSettings = () => {
                   <p className="settings-section-subtitle">আপনার নোটিফিকেশন পছন্দ পরিচালনা করুন</p>
                 </div>
               </div>
-              
+
               <div className="settings-grid">
                 <div className="settings-group">
                   <h3 className="settings-group-title">
@@ -132,14 +133,14 @@ const AdminSettings = () => {
                   <p className="settings-section-subtitle">সিস্টেম পছন্দ কনফিগার করুন</p>
                 </div>
               </div>
-              
+
               <div className="settings-grid">
                 <div className="settings-group">
                   <h3 className="settings-group-title">
                     <Globe className="h-4 w-4" />
                     সাধারণ সেটিংস
                   </h3>
-                  
+
                   <div className="settings-field">
                     <label className="settings-label">ভাষা</label>
                     <select
@@ -185,6 +186,9 @@ const AdminSettings = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Mode Switcher */}
+              <ModeSwitcher />
             </div>
           )}
         </div>

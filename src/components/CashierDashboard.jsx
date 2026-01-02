@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  DollarSign, 
-  Plus, 
-  Eye, 
+import {
+  DollarSign,
+  Plus,
+  Eye,
   Banknote,
   Receipt,
   RefreshCw,
@@ -60,11 +60,14 @@ import { registerUser } from '../api/auth';
 import { generateEmailCredentials } from '../utils/transliteration';
 import '../styles/components/cashier-dashboard.css';
 import '../styles/components/CashierProfileCard.css';
+import { useMode } from '../contexts/ModeContext';
+import { demoMembers, demoTransactions } from '../utils/demoData';
 
 const CashierDashboard = () => {
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const { currentUser, loading: userLoading } = useUser();
+  const { isDemo } = useMode();
   const [photoURL, setPhotoURL] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
   const [somitiUserId, setSomitiUserId] = useState('');
@@ -198,7 +201,7 @@ const CashierDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [fundViewMode, setFundViewMode] = useState('overview'); // 'overview', 'cashflow'
   const [selectedTimeRange, setSelectedTimeRange] = useState('6months');
-  
+
   // Firebase data states
   const [members, setMembers] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -208,7 +211,7 @@ const CashierDashboard = () => {
     monthlyExpense: 0,
     cashFlow: []
   });
-  
+
   // New functionality states
   const [transactionSearchTerm, setTransactionSearchTerm] = useState('');
   const [expandedTransaction, setExpandedTransaction] = useState(null);
@@ -216,9 +219,9 @@ const CashierDashboard = () => {
   const [lastRefresh, setLastRefresh] = useState(new Date());
   // Spinner state for light transaction refresh
   const [refreshingTransactions, setRefreshingTransactions] = useState(false);
-  
-  
-  
+
+
+
   // Transaction History state variables
   const [transactionFilter, setTransactionFilter] = useState('all'); // 'all', 'completed', 'pending', 'failed'
   const [transactionTypeFilter, setTransactionTypeFilter] = useState('all'); // 'all', 'subscription', 'loan', 'donation', 'fine'
@@ -256,13 +259,13 @@ const CashierDashboard = () => {
       console.error('No transaction data provided');
       return;
     }
-    
+
     // Get click position for floating card
     setCardPosition({
       x: event.clientX,
       y: event.clientY
     });
-    
+
     // Create a safe transaction object with defaults
     const safeTransaction = {
       id: transaction.id || 'N/A',
@@ -281,7 +284,7 @@ const CashierDashboard = () => {
       processedBy: transaction.processedBy,
       ...transaction // Spread the original transaction to preserve any additional fields
     };
-    
+
     setSelectedTransaction(safeTransaction);
     setShowTransactionCard(true);
   };
@@ -296,7 +299,29 @@ const CashierDashboard = () => {
     try {
       setLoading(prev => ({ ...prev, initial: true }));
       setError(null);
-      
+
+      // Check if in demo mode
+      if (isDemo()) {
+        console.log('[CashierDashboard] Using demo data');
+        setMembers(demoMembers);
+        setTransactions(demoTransactions);
+
+        const totalFunds = demoTransactions.filter(t => t.type === 'deposit').reduce((sum, t) => sum + t.amount, 0);
+        const monthlyDeposits = demoTransactions.filter(t => t.type === 'deposit' && t.category === 'monthly').reduce((sum, t) => sum + t.amount, 0);
+
+        setFundData({
+          totalBalance: totalFunds,
+          availableCash: totalFunds * 0.8,
+          monthlyDeposits,
+          monthlyExpense: 5000,
+          cashFlow: []
+        });
+
+        setLoading({ members: false, transactions: false, fundData: false, initial: false });
+        setLastRefresh(new Date());
+        return;
+      }
+
       // Load all data in parallel for better performance
       const [membersResult, transactionsResult, fundResult] = await Promise.all([
         MemberService.getAllMembers().then(result => {
@@ -312,7 +337,7 @@ const CashierDashboard = () => {
           setLoading(prev => ({ ...prev, members: false }));
           return { success: false, error };
         }),
-        
+
         TransactionService.getAllTransactions().then(result => {
           if (result.success) {
             setTransactions(result.data || []);
@@ -326,7 +351,7 @@ const CashierDashboard = () => {
           setLoading(prev => ({ ...prev, transactions: false }));
           return { success: false, error };
         }),
-        
+
         FundService.getFundSummary().then(result => {
           if (result.success && result.data) {
             setFundData(result.data);
@@ -339,7 +364,7 @@ const CashierDashboard = () => {
           return { success: false, error };
         })
       ]);
-      
+
       setLastRefresh(new Date());
     } catch (error) {
       console.error('ডেটা রিফ্রেশ করতে ত্রুটি:', error);
@@ -368,10 +393,10 @@ const CashierDashboard = () => {
       // Use the same signature as MemberList: pass userId as Firestore doc ID
       const addResult = await MemberService.addMember(memberData, userId);
       console.log('📡 MemberService.addMember result:', addResult);
-      
+
       if (addResult.success) {
         console.log('✅ Member service returned success');
-        
+
         // Return success to indicate the operation completed successfully
         console.log('✅ Returning success from handleAddMember');
         return { success: true };
@@ -393,14 +418,14 @@ const CashierDashboard = () => {
     try {
       setSaving(true);
       const addResult = await TransactionService.addTransaction(transactionData);
-      
+
       if (addResult.success) {
         // Reload transactions and fund data
         const updatedTransactionsResult = await TransactionService.getAllTransactions();
         if (updatedTransactionsResult.success) {
           setTransactions(updatedTransactionsResult.data || []);
         }
-        
+
         const updatedFundResult = await FundService.getFundSummary();
         if (updatedFundResult.success && updatedFundResult.data) {
           setFundData(updatedFundResult.data);
@@ -421,7 +446,7 @@ const CashierDashboard = () => {
     paidMembers: members.filter(member => member.status === 'active').length,
     unpaidMembers: members.filter(member => member.status === 'inactive').length,
     totalCollected: transactions
-      .filter(t => (t.transactionType === 'monthly_deposit' || t.transactionType === 'share_purchase') && 
+      .filter(t => (t.transactionType === 'monthly_deposit' || t.transactionType === 'share_purchase') &&
         new Date(t.createdAt?.seconds * 1000).getMonth() === new Date().getMonth())
       .reduce((sum, t) => sum + (t.amount || 0), 0),
     expectedAmount: members.length * 1200 // Assuming 1200 per member monthly
@@ -487,9 +512,9 @@ const CashierDashboard = () => {
   // Enhanced expense records with categories and status
   const [expenseFilter, setExpenseFilter] = useState('all');
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
-  
-  
-  
+
+
+
   const expenseCategories = [
     { id: 'office', name: 'অফিস খরচ', color: '#3B82F6' },
     { id: 'event', name: 'ইভেন্ট', color: '#10B981' },
@@ -540,7 +565,7 @@ const CashierDashboard = () => {
 
   // Utility function for payment method labels
   const getPaymentMethodLabel = (method) => {
-    switch(method) {
+    switch (method) {
       case 'cash': return 'নগদ';
       case 'bank_transfer': return 'ব্যাংক ট্রান্সফার';
       case 'mobile_banking': return 'মোবাইল ব্যাংকিং';
@@ -551,23 +576,23 @@ const CashierDashboard = () => {
   // Payment method breakdown from real Firebase data
   const paymentMethods = React.useMemo(() => {
     if (!transactions.length) return [];
-    
+
     const methodStats = transactions.reduce((acc, transaction) => {
       const method = transaction.paymentMethod || 'cash';
       const amount = transaction.amount || 0;
-      
+
       if (!acc[method]) {
         acc[method] = { amount: 0, count: 0 };
       }
-      
+
       acc[method].amount += amount;
       acc[method].count += 1;
-      
+
       return acc;
     }, {});
-    
+
     const totalAmount = Object.values(methodStats).reduce((sum, stat) => sum + stat.amount, 0);
-    
+
     return Object.entries(methodStats).map(([method, stats]) => ({
       method: getPaymentMethodLabel(method),
       amount: stats.amount,
@@ -599,7 +624,7 @@ const CashierDashboard = () => {
 
 
   const getTransactionTypeLabel = (type) => {
-    switch(type) {
+    switch (type) {
       case 'subscription': return 'মাসিক চাঁদা';
       case 'loan': return 'ঋণ';
       case 'donation': return 'দান';
@@ -607,7 +632,7 @@ const CashierDashboard = () => {
       case 'monthly_deposit': return 'মাসিক জমা';
       case 'share_purchase': return 'শেয়ার ক্রয়';
       case 'loan_payment': return 'ঋণ পরিশোধ';
-  
+
       default: return type;
     }
   };
@@ -647,18 +672,18 @@ const CashierDashboard = () => {
     const matchesStatus = expenseFilter === 'all' || expense.status === expenseFilter;
     const matchesCategory = expenseCategoryFilter === 'all' || expense.category === expenseCategoryFilter;
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         expense.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         expense.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase());
+      expense.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      expense.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesCategory && matchesSearch;
-   });
+  });
 
-   // Monthly report data and analytics
-  
+  // Monthly report data and analytics
 
-   // Calculate real monthly report data from Firebase transactions
-  
 
-  
+  // Calculate real monthly report data from Firebase transactions
+
+
+
 
   // Use real Firebase transactions data
   const recentTransactions = React.useMemo(() => {
@@ -670,10 +695,10 @@ const CashierDashboard = () => {
       amount: transaction.amount || 0,
       paymentMethod: transaction.paymentMethod || 'cash',
       status: transaction.status || 'completed',
-      time: transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000).toLocaleTimeString('bn-BD', { 
-        hour: '2-digit', 
+      time: transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000).toLocaleTimeString('bn-BD', {
+        hour: '2-digit',
         minute: '2-digit',
-        hour12: true 
+        hour12: true
       }) : 'N/A',
       date: transaction.createdAt ? new Date(transaction.createdAt.seconds * 1000).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       description: transaction.description || getTransactionTypeLabel(transaction.transactionType || transaction.type || 'other'),
@@ -726,9 +751,9 @@ const CashierDashboard = () => {
   const filteredTransactions = recentTransactions.filter(transaction => {
     // Search filter
     const matchesSearch = transaction.memberName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.memberId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.reference.toLowerCase().includes(searchTerm.toLowerCase());
+      transaction.memberId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.reference.toLowerCase().includes(searchTerm.toLowerCase());
 
     // Status filter
     const matchesStatus = transactionFilter === 'all' || transaction.status === transactionFilter;
@@ -742,7 +767,7 @@ const CashierDashboard = () => {
     // Date range filter
     const matchesDateRange = (() => {
       if (dateRangeFilter === 'all') return true;
-      
+
       const transactionDate = new Date(transaction.date);
       const today = new Date();
       const daysDiff = Math.floor((today - transactionDate) / (1000 * 60 * 60 * 24));
@@ -860,7 +885,7 @@ const CashierDashboard = () => {
         TransactionService.getAllTransactions(),
         new Promise(resolve => setTimeout(resolve, 500))
       ]);
-      
+
       if (result.success) {
         setTransactions(result.data || []);
         console.log('✅ Transaction refresh successful:', result.data?.length || 0, 'transactions loaded');
@@ -894,42 +919,42 @@ const CashierDashboard = () => {
 
   const validateForm = () => {
     const errors = {};
-    
+
     if (!newMemberData.name.trim()) {
       errors.name = 'নাম আবশ্যক';
     }
-    
+
     if (!newMemberData.shareCount.trim()) {
       errors.shareCount = 'শেয়ার সংখ্যা আবশ্যক';
     } else if (isNaN(newMemberData.shareCount) || Number(newMemberData.shareCount) <= 0) {
       errors.shareCount = 'সঠিক শেয়ার সংখ্যা দিন';
     }
-    
+
     // Optional phone validation (match MemberList.jsx behavior)
     if (newMemberData.phone?.trim() && !/^01[3-9]\d{8}$/.test(newMemberData.phone)) {
       errors.phone = 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)';
     }
-    
+
     // Optional nominee phone validation
     if (newMemberData.nomineePhone?.trim() && !/^01[3-9]\d{8}$/.test(newMemberData.nomineePhone)) {
       errors.nomineePhone = 'সঠিক নমিনির ফোন নম্বর দিন (01XXXXXXXXX)';
     }
-    
+
     return errors;
   };
 
   const handleSubmitNewMember = async (e) => {
     e.preventDefault();
     console.log('🔥 handleSubmitNewMember called');
-    
+
     const errors = validateForm();
-    
+
     if (Object.keys(errors).length > 0) {
       console.log('❌ Form validation errors:', errors);
       setMemberFormErrors(errors);
       return;
     }
-    
+
     try {
       setSaving(true);
       console.log('💾 Setting saving to true');
@@ -979,7 +1004,7 @@ const CashierDashboard = () => {
       // Step 4: Save to Firestore using user_id as the document ID
       const result = await handleAddMember(memberData, user_id);
       console.log('📊 handleAddMember result:', result);
-      
+
       if (result && result.success) {
         console.log('✅ Member added successfully');
         console.log('CashierDashboard: toast success - সদস্য যোগ');
@@ -1009,7 +1034,7 @@ const CashierDashboard = () => {
         console.error('❌ সদস্য যোগ করতে ত্রুটি:', result?.error || 'Unknown error');
         // You could show an error animation here too
       }
-      
+
     } catch (error) {
       console.error('💥 সদস্য যোগ করতে ত্রুটি:', error);
       // You could show an error animation here too
@@ -1032,614 +1057,614 @@ const CashierDashboard = () => {
   return (
     <>
       <div className="treasury-container cashier-dashboard">
-      <div className="p-4">
-      {console.log('[CashierDashboard] render profile header v3')}
-      <div className="cashier-profile-header bg-white border border-gray-200 rounded-xl shadow-sm mb-3 p-4">
-        {console.log('[CashierDashboard] header style upgrade applied')}
-        <div className="flex items-center gap-4">
-          <div
-            className="cashier-header-avatar avatar-glow-on rounded-full shrink-0 flex items-center justify-center border-2 border-black bg-white transition"
-            role="button"
-            tabIndex={0}
-            aria-label="প্রোফাইল ছবি পরিবর্তন"
-            onClick={() => { console.log('[CashierDashboard] open photo modal'); setIsPhotoModalOpen(true); }}
-            onKeyDown={(e) => { if (e.key === 'Enter') { console.log('[CashierDashboard] open photo modal via keyboard'); setIsPhotoModalOpen(true); } }}
-            ref={avatarRef}
-          >
-            {photoURL ? (
-              <img src={photoURL} alt="avatar" className="cashier-header-photo w-full h-full object-cover" />
-            ) : (
-              <Camera className="h-7 w-7 text-black" />
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            {console.log('[CashierDashboard] responsive badge/layout enabled')}
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-semibold truncate">
-                {(currentUser && currentUser.name) || (authUser && authUser.name) || 'ক্যাশিয়ার'}
-              </h2>
-              {console.log('[CashierDashboard] rich badge applied')}
-              <span className="cashier-badge badge-rich">
-                <User className="h-3.5 w-3.5" />
-                ক্যাশিয়ার
-              </span>
-            </div>
-
-            <div className="mt-1 text-sm text-gray-600 flex gap-4 flex-wrap">
-              <span className="flex items-center gap-1">আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}</span>
-            </div>
-
-            {console.log('[CashierDashboard] render profile chips v3')}
-            <div className="mt-2 flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}</span>
-              <span className="px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">{currentUser?.status || 'সক্রিয়'}</span>
-            </div>
-          </div>
-
-          {console.log('[CashierDashboard] settings icon removed from header')}
-        </div>
-      </div>
-      <ProfilePhotoModal
-        isOpen={isPhotoModalOpen}
-        onClose={() => { console.log('[CashierDashboard] close photo modal'); setIsPhotoModalOpen(false); }}
-        userId={currentUser?.uid}
-        currentPhotoURL={photoURL}
-        onPhotoUpdate={(newPhotoURL) => { console.log('[CashierDashboard] photo updated', { newPhotoURL }); setPhotoURL(newPhotoURL); }}
-      />
-
-      <div className="flex flex-col items-center gap-2 mb-3">
-        <button 
-          onClick={refreshData}
-          disabled={loading.initial}
-          className={`icon-action-btn blue flex items-center gap-2 w-48 justify-center ${loading.initial ? 'opacity-75 cursor-not-allowed' : ''}`}
-          title={loading.initial ? "ডেটা লোড হচ্ছে..." : "সব ডেটা রিফ্রেশ করুন"}
-        >
-          <RefreshCw className={`h-4 w-4 ${loading.initial ? 'animate-spin' : ''}`} />
-          <span className="text-sm font-medium">
-            {loading.initial ? 'লোড হচ্ছে...' : 'রিফ্রেশ করুন'}
-          </span>
-        </button>
-      </div>
-        
-        {/* Error Display */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-3">
-            <div className="flex items-center">
-              <div className="shrink-0">
-                <X className="h-5 w-5 text-red-400" />
+        <div className="p-4">
+          {console.log('[CashierDashboard] render profile header v3')}
+          <div className="cashier-profile-header bg-white border border-gray-200 rounded-xl shadow-sm mb-3 p-4">
+            {console.log('[CashierDashboard] header style upgrade applied')}
+            <div className="flex items-center gap-4">
+              <div
+                className="cashier-header-avatar avatar-glow-on rounded-full shrink-0 flex items-center justify-center border-2 border-black bg-white transition"
+                role="button"
+                tabIndex={0}
+                aria-label="প্রোফাইল ছবি পরিবর্তন"
+                onClick={() => { console.log('[CashierDashboard] open photo modal'); setIsPhotoModalOpen(true); }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { console.log('[CashierDashboard] open photo modal via keyboard'); setIsPhotoModalOpen(true); } }}
+                ref={avatarRef}
+              >
+                {photoURL ? (
+                  <img src={photoURL} alt="avatar" className="cashier-header-photo w-full h-full object-cover" />
+                ) : (
+                  <Camera className="h-7 w-7 text-black" />
+                )}
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-              <div className="ml-auto pl-3">
-                <button
-                  onClick={() => setError(null)}
-                  className="inline-flex text-red-400 hover:text-red-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Monthly Summary Card */}
-        <div className="treasury-card">
-          {/* Card Header */}
-          <div className="treasury-card-header">
-            <h3 className="treasury-card-title">মাসিক সারসংক্ষেপ</h3>
-            <div className="treasury-card-icon">
-              <DollarSign className="w-5 h-5" />
-            </div>
-          </div>
-            
 
-            
-            {/* Summary Metrics Grid */}
-          <div className="treasury-summary-grid">
-            {/* Total Members */}
-            <div className="treasury-card">
-              <div className="treasury-card-info">
-                <h3 className="treasury-card-label">মোট সদস্য</h3>
-                <div className="treasury-card-value">
-                  {loading.members ? <LoadingSkeleton className="w-16 h-10" /> : monthlySummary.totalMembers}
+              <div className="flex-1 min-w-0">
+                {console.log('[CashierDashboard] responsive badge/layout enabled')}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg font-semibold truncate">
+                    {(currentUser && currentUser.name) || (authUser && authUser.name) || 'ক্যাশিয়ার'}
+                  </h2>
+                  {console.log('[CashierDashboard] rich badge applied')}
+                  <span className="cashier-badge badge-rich">
+                    <User className="h-3.5 w-3.5" />
+                    ক্যাশিয়ার
+                  </span>
                 </div>
-                <div className="treasury-card-subtitle">সক্রিয় সদস্য</div>
-              </div>
-              <div className="treasury-card-icon">
-                <Users className="w-5 h-5" />
-              </div>
-            </div>
 
-            {/* Monthly Collection */}
-            <div className="treasury-card">
-              <div className="treasury-card-info">
-                <h3 className="treasury-card-label">মাসিক সংগ্রহ</h3>
-                <div className="treasury-card-value">
-                  {loading.transactions ? <LoadingSkeleton className="w-24 h-10" /> : `৳ ${monthlySummary.totalCollected.toLocaleString()}`}
+                <div className="mt-1 text-sm text-gray-600 flex gap-4 flex-wrap">
+                  <span className="flex items-center gap-1">আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}</span>
                 </div>
-                <div className="treasury-card-subtitle">এই মাসে</div>
-              </div>
-              <div className="treasury-card-icon">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-            </div>
 
-            {/* Cashier Balance */}
-            <div className="treasury-card bg-transparent! shadow-none! border-2 border-dashed border-gray-300">
-              <div className="treasury-card-info">
-                <h3 className="treasury-card-label">ক্যাশিয়ার ব্যালেন্স</h3>
-                <div className="treasury-card-value">
-                  {loading.fundData ? <LoadingSkeleton className="w-24 h-10" /> : `৳ ${fundSummary.totalBalance.toLocaleString()}`}
+                {console.log('[CashierDashboard] render profile chips v3')}
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">আইডি: {somitiUserId || currentUser?.id || authUser?.uid || ''}</span>
+                  <span className="px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">{currentUser?.status || 'সক্রিয়'}</span>
                 </div>
-                <div className="treasury-card-subtitle">হাতে নগদ</div>
               </div>
-              <div className="treasury-card-icon">
-                <Wallet className="w-5 h-5" />
-              </div>
+
+              {console.log('[CashierDashboard] settings icon removed from header')}
             </div>
           </div>
-        </div>
+          <ProfilePhotoModal
+            isOpen={isPhotoModalOpen}
+            onClose={() => { console.log('[CashierDashboard] close photo modal'); setIsPhotoModalOpen(false); }}
+            userId={currentUser?.uid}
+            currentPhotoURL={photoURL}
+            onPhotoUpdate={(newPhotoURL) => { console.log('[CashierDashboard] photo updated', { newPhotoURL }); setPhotoURL(newPhotoURL); }}
+          />
 
-        {/* Payment Methods Card */}
-        <div className="treasury-card">
-          {/* Card Header */}
-          <div className="treasury-card-header">
-            <div className="treasury-card-title">
-              <div className="treasury-card-icon">
-                <Banknote className="w-5 h-5" />
-              </div>
-              <h3>পেমেন্ট পদ্ধতি</h3>
-            </div>
-            <button 
-              onClick={() => setPaymentMethodSortOrder(paymentMethodSortOrder === 'desc' ? 'asc' : 'desc')}
-              className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
-              title="পরিমাণ অনুযায়ী সাজান"
+          <div className="flex flex-col items-center gap-2 mb-3">
+            <button
+              onClick={refreshData}
+              disabled={loading.initial}
+              className={`icon-action-btn blue flex items-center gap-2 w-48 justify-center ${loading.initial ? 'opacity-75 cursor-not-allowed' : ''}`}
+              title={loading.initial ? "ডেটা লোড হচ্ছে..." : "সব ডেটা রিফ্রেশ করুন"}
             >
-              {paymentMethodSortOrder === 'desc' ? 
-                <SortDesc className="h-4 w-4" /> : 
-                <SortAsc className="h-4 w-4" />
-              }
+              <RefreshCw className={`h-4 w-4 ${loading.initial ? 'animate-spin' : ''}`} />
+              <span className="text-sm font-medium">
+                {loading.initial ? 'লোড হচ্ছে...' : 'রিফ্রেশ করুন'}
+              </span>
             </button>
           </div>
-          
-          {/* Payment Methods Grid */}
-          <div className="treasury-summary-grid">
-            {loading.fundData ? (
-              <>
-                <div className="treasury-card">
-                  <div className="treasury-card-content">
-                    <div className="treasury-card-info">
-                      <LoadingSkeleton className="w-16 h-4" />
-                      <LoadingSkeleton className="w-20 h-8" />
-                      <LoadingSkeleton className="w-12 h-3" />
-                    </div>
-                    <div className="treasury-card-icon">
-                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-                <div className="treasury-card">
-                  <div className="treasury-card-content">
-                    <div className="treasury-card-info">
-                      <LoadingSkeleton className="w-20 h-4" />
-                      <LoadingSkeleton className="w-24 h-8" />
-                      <LoadingSkeleton className="w-16 h-3" />
-                    </div>
-                    <div className="treasury-card-icon">
-                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-                <div className="treasury-card">
-                  <div className="treasury-card-content">
-                    <div className="treasury-card-info">
-                      <LoadingSkeleton className="w-18 h-4" />
-                      <LoadingSkeleton className="w-16 h-8" />
-                      <LoadingSkeleton className="w-14 h-3" />
-                    </div>
-                    <div className="treasury-card-icon">
-                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              sortedPaymentMethods.slice(0, 4).map((method, index) => {
-                // Get icon based on payment method
-                const getPaymentIcon = (methodName) => {
-                  if (methodName.includes('নগদ') || methodName.includes('ক্যাশ')) {
-                    return <Banknote className="h-5 w-5" />;
-                  } else if (methodName.includes('বিকাশ')) {
-                    return <Phone className="h-5 w-5" />;
-                  } else if (methodName.includes('ব্যাংক')) {
-                    return <Calculator className="h-5 w-5" />;
-                  } else {
-                    return <Wallet className="h-5 w-5" />;
-                  }
-                };
 
-                return (
-                  <div key={index} className="treasury-card treasury-card-compact">
-                    <div className="treasury-card-info">
-                      <h3 className="treasury-card-label">{method.method}</h3>
-                      <div className="treasury-card-value">
-                        ৳ {method.amount.toLocaleString()}
-                      </div>
-                      <div className="treasury-card-subtitle">
-                        {method.count} টি লেনদেন • {method.percentage}%
-                      </div>
-                    </div>
-                    <div className="treasury-card-icon">
-                      {getPaymentIcon(method.method)}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-          
-          {/* See All Payment Methods Button */}
-          {!loading.fundData && sortedPaymentMethods.length > 4 && (
-            <div className="mt-4 text-center">
-              <button 
-                onClick={() => navigate('/transactions')}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200"
-              >
-                আরও {sortedPaymentMethods.length - 4} টি পেমেন্ট পদ্ধতি দেখুন
-              </button>
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-3">
+              <div className="flex items-center">
+                <div className="shrink-0">
+                  <X className="h-5 w-5 text-red-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+                <div className="ml-auto pl-3">
+                  <button
+                    onClick={() => setError(null)}
+                    className="inline-flex text-red-400 hover:text-red-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Expense Tracking Card */}
-        <div className="treasury-card">
-          {/* Card Header */}
-          <div className="treasury-card-header">
-            <div className="treasury-card-title">
+          {/* Monthly Summary Card */}
+          <div className="treasury-card">
+            {/* Card Header */}
+            <div className="treasury-card-header">
+              <h3 className="treasury-card-title">মাসিক সারসংক্ষেপ</h3>
               <div className="treasury-card-icon">
-                <Receipt className="w-5 h-5" />
+                <DollarSign className="w-5 h-5" />
               </div>
-              <h3>খরচের রেকর্ড</h3>
+            </div>
+
+
+
+            {/* Summary Metrics Grid */}
+            <div className="treasury-summary-grid">
+              {/* Total Members */}
+              <div className="treasury-card">
+                <div className="treasury-card-info">
+                  <h3 className="treasury-card-label">মোট সদস্য</h3>
+                  <div className="treasury-card-value">
+                    {loading.members ? <LoadingSkeleton className="w-16 h-10" /> : monthlySummary.totalMembers}
+                  </div>
+                  <div className="treasury-card-subtitle">সক্রিয় সদস্য</div>
+                </div>
+                <div className="treasury-card-icon">
+                  <Users className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Monthly Collection */}
+              <div className="treasury-card">
+                <div className="treasury-card-info">
+                  <h3 className="treasury-card-label">মাসিক সংগ্রহ</h3>
+                  <div className="treasury-card-value">
+                    {loading.transactions ? <LoadingSkeleton className="w-24 h-10" /> : `৳ ${monthlySummary.totalCollected.toLocaleString()}`}
+                  </div>
+                  <div className="treasury-card-subtitle">এই মাসে</div>
+                </div>
+                <div className="treasury-card-icon">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Cashier Balance */}
+              <div className="treasury-card bg-transparent! shadow-none! border-2 border-dashed border-gray-300">
+                <div className="treasury-card-info">
+                  <h3 className="treasury-card-label">ক্যাশিয়ার ব্যালেন্স</h3>
+                  <div className="treasury-card-value">
+                    {loading.fundData ? <LoadingSkeleton className="w-24 h-10" /> : `৳ ${fundSummary.totalBalance.toLocaleString()}`}
+                  </div>
+                  <div className="treasury-card-subtitle">হাতে নগদ</div>
+                </div>
+                <div className="treasury-card-icon">
+                  <Wallet className="w-5 h-5" />
+                </div>
+              </div>
             </div>
           </div>
-          
-          {/* Expense Summary Grid */}
-          <div className="treasury-summary-grid">
-            {/* Total Expense */}
-            <div className="treasury-card">
-              <div className="treasury-card-info">
-                <h3 className="treasury-card-label">মোট খরচ</h3>
-                <div className="treasury-card-value">
-                  {loading.transactions ? (
-                    <LoadingSkeleton className="w-24 h-8" />
-                  ) : (
-                    `৳ ${expenseRecords.reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}`
-                  )}
+
+          {/* Payment Methods Card */}
+          <div className="treasury-card">
+            {/* Card Header */}
+            <div className="treasury-card-header">
+              <div className="treasury-card-title">
+                <div className="treasury-card-icon">
+                  <Banknote className="w-5 h-5" />
                 </div>
-                <div className="treasury-card-subtitle">এই মাসে</div>
+                <h3>পেমেন্ট পদ্ধতি</h3>
               </div>
-              <div className="treasury-card-icon">
-                <TrendingDown className="h-5 w-5" />
-              </div>
+              <button
+                onClick={() => setPaymentMethodSortOrder(paymentMethodSortOrder === 'desc' ? 'asc' : 'desc')}
+                className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                title="পরিমাণ অনুযায়ী সাজান"
+              >
+                {paymentMethodSortOrder === 'desc' ?
+                  <SortDesc className="h-4 w-4" /> :
+                  <SortAsc className="h-4 w-4" />
+                }
+              </button>
             </div>
 
-            {/* Recent Expenses */}
-            {loading.transactions ? (
-              <>
-                <div className="treasury-card">
-                  <div className="treasury-card-content">
-                    <div className="treasury-card-info">
-                      <LoadingSkeleton className="w-20 h-4" />
-                      <LoadingSkeleton className="w-16 h-8" />
-                      <LoadingSkeleton className="w-24 h-3" />
-                    </div>
-                    <div className="treasury-card-icon">
-                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-                <div className="treasury-card">
-                  <div className="treasury-card-content">
-                    <div className="treasury-card-info">
-                      <LoadingSkeleton className="w-18 h-4" />
-                      <LoadingSkeleton className="w-20 h-8" />
-                      <LoadingSkeleton className="w-16 h-3" />
-                    </div>
-                    <div className="treasury-card-icon">
-                      <LoadingSkeleton className="h-8 w-8 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              expenseRecords.slice(0, 2).map((expense) => {
-                // Get expense category icon
-                const getExpenseIcon = (type) => {
-                  if (type === 'expense') {
-                    return <Receipt className="h-5 w-5" />;
-                  } else if (type === 'loan_disbursement') {
-                    return <ArrowUpRight className="h-5 w-5" />;
-                  } else if (type === 'withdrawal') {
-                    return <ArrowDownRight className="h-5 w-5" />;
-                  } else {
-                    return <Receipt className="h-5 w-5" />;
-                  }
-                };
-
-                const getExpenseTypeLabel = (type) => {
-                  if (type === 'expense') return 'খরচ';
-                  if (type === 'loan_disbursement') return 'ঋণ প্রদান';
-                  if (type === 'withdrawal') return 'উত্তোলন';
-                  return 'অন্যান্য';
-                };
-
-                return (
-                  <div key={expense.id} className="treasury-card">
+            {/* Payment Methods Grid */}
+            <div className="treasury-summary-grid">
+              {loading.fundData ? (
+                <>
+                  <div className="treasury-card">
                     <div className="treasury-card-content">
                       <div className="treasury-card-info">
-                        <h3 className="treasury-card-label">{getExpenseTypeLabel(expense.type)}</h3>
+                        <LoadingSkeleton className="w-16 h-4" />
+                        <LoadingSkeleton className="w-20 h-8" />
+                        <LoadingSkeleton className="w-12 h-3" />
+                      </div>
+                      <div className="treasury-card-icon">
+                        <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="treasury-card">
+                    <div className="treasury-card-content">
+                      <div className="treasury-card-info">
+                        <LoadingSkeleton className="w-20 h-4" />
+                        <LoadingSkeleton className="w-24 h-8" />
+                        <LoadingSkeleton className="w-16 h-3" />
+                      </div>
+                      <div className="treasury-card-icon">
+                        <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="treasury-card">
+                    <div className="treasury-card-content">
+                      <div className="treasury-card-info">
+                        <LoadingSkeleton className="w-18 h-4" />
+                        <LoadingSkeleton className="w-16 h-8" />
+                        <LoadingSkeleton className="w-14 h-3" />
+                      </div>
+                      <div className="treasury-card-icon">
+                        <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                sortedPaymentMethods.slice(0, 4).map((method, index) => {
+                  // Get icon based on payment method
+                  const getPaymentIcon = (methodName) => {
+                    if (methodName.includes('নগদ') || methodName.includes('ক্যাশ')) {
+                      return <Banknote className="h-5 w-5" />;
+                    } else if (methodName.includes('বিকাশ')) {
+                      return <Phone className="h-5 w-5" />;
+                    } else if (methodName.includes('ব্যাংক')) {
+                      return <Calculator className="h-5 w-5" />;
+                    } else {
+                      return <Wallet className="h-5 w-5" />;
+                    }
+                  };
+
+                  return (
+                    <div key={index} className="treasury-card treasury-card-compact">
+                      <div className="treasury-card-info">
+                        <h3 className="treasury-card-label">{method.method}</h3>
                         <div className="treasury-card-value">
-                          ৳ {expense.amount.toLocaleString()}
+                          ৳ {method.amount.toLocaleString()}
                         </div>
                         <div className="treasury-card-subtitle">
-                          {expense.description}
+                          {method.count} টি লেনদেন • {method.percentage}%
                         </div>
                       </div>
                       <div className="treasury-card-icon">
-                        {getExpenseIcon(expense.type)}
+                        {getPaymentIcon(method.method)}
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })
+              )}
+            </div>
+
+            {/* See All Payment Methods Button */}
+            {!loading.fundData && sortedPaymentMethods.length > 4 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => navigate('/transactions')}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200"
+                >
+                  আরও {sortedPaymentMethods.length - 4} টি পেমেন্ট পদ্ধতি দেখুন
+                </button>
+              </div>
             )}
           </div>
 
-          {/* View All Link */}
-          {!loading.transactions && expenseRecords.length > 3 && (
-            <div className="mt-4 text-center">
-              <button 
-                onClick={() => navigate('/transactions')}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200"
-              >
-                আরও {expenseRecords.length - 3} টি খরচ দেখুন
-              </button>
+          {/* Expense Tracking Card */}
+          <div className="treasury-card">
+            {/* Card Header */}
+            <div className="treasury-card-header">
+              <div className="treasury-card-title">
+                <div className="treasury-card-icon">
+                  <Receipt className="w-5 h-5" />
+                </div>
+                <h3>খরচের রেকর্ড</h3>
+              </div>
+            </div>
+
+            {/* Expense Summary Grid */}
+            <div className="treasury-summary-grid">
+              {/* Total Expense */}
+              <div className="treasury-card">
+                <div className="treasury-card-info">
+                  <h3 className="treasury-card-label">মোট খরচ</h3>
+                  <div className="treasury-card-value">
+                    {loading.transactions ? (
+                      <LoadingSkeleton className="w-24 h-8" />
+                    ) : (
+                      `৳ ${expenseRecords.reduce((sum, expense) => sum + expense.amount, 0).toLocaleString()}`
+                    )}
+                  </div>
+                  <div className="treasury-card-subtitle">এই মাসে</div>
+                </div>
+                <div className="treasury-card-icon">
+                  <TrendingDown className="h-5 w-5" />
+                </div>
+              </div>
+
+              {/* Recent Expenses */}
+              {loading.transactions ? (
+                <>
+                  <div className="treasury-card">
+                    <div className="treasury-card-content">
+                      <div className="treasury-card-info">
+                        <LoadingSkeleton className="w-20 h-4" />
+                        <LoadingSkeleton className="w-16 h-8" />
+                        <LoadingSkeleton className="w-24 h-3" />
+                      </div>
+                      <div className="treasury-card-icon">
+                        <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="treasury-card">
+                    <div className="treasury-card-content">
+                      <div className="treasury-card-info">
+                        <LoadingSkeleton className="w-18 h-4" />
+                        <LoadingSkeleton className="w-20 h-8" />
+                        <LoadingSkeleton className="w-16 h-3" />
+                      </div>
+                      <div className="treasury-card-icon">
+                        <LoadingSkeleton className="h-8 w-8 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                expenseRecords.slice(0, 2).map((expense) => {
+                  // Get expense category icon
+                  const getExpenseIcon = (type) => {
+                    if (type === 'expense') {
+                      return <Receipt className="h-5 w-5" />;
+                    } else if (type === 'loan_disbursement') {
+                      return <ArrowUpRight className="h-5 w-5" />;
+                    } else if (type === 'withdrawal') {
+                      return <ArrowDownRight className="h-5 w-5" />;
+                    } else {
+                      return <Receipt className="h-5 w-5" />;
+                    }
+                  };
+
+                  const getExpenseTypeLabel = (type) => {
+                    if (type === 'expense') return 'খরচ';
+                    if (type === 'loan_disbursement') return 'ঋণ প্রদান';
+                    if (type === 'withdrawal') return 'উত্তোলন';
+                    return 'অন্যান্য';
+                  };
+
+                  return (
+                    <div key={expense.id} className="treasury-card">
+                      <div className="treasury-card-content">
+                        <div className="treasury-card-info">
+                          <h3 className="treasury-card-label">{getExpenseTypeLabel(expense.type)}</h3>
+                          <div className="treasury-card-value">
+                            ৳ {expense.amount.toLocaleString()}
+                          </div>
+                          <div className="treasury-card-subtitle">
+                            {expense.description}
+                          </div>
+                        </div>
+                        <div className="treasury-card-icon">
+                          {getExpenseIcon(expense.type)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* View All Link */}
+            {!loading.transactions && expenseRecords.length > 3 && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => navigate('/transactions')}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors duration-200"
+                >
+                  আরও {expenseRecords.length - 3} টি খরচ দেখুন
+                </button>
+              </div>
+            )}
+          </div>
+
+
+
+
+
+          {/* Add New Member Modal */}
+          {showAddMemberModal && (
+            <div className="modal-overlay">
+              <div className="modal-container">
+                <div className="modal-header">
+                  <h2 className="modal-title">
+                    <UserPlus size={20} />
+                    নতুন সদস্য যোগ করুন
+                  </h2>
+                  <button
+                    type="button"
+                    className="modal-close-btn"
+                    onClick={handleCloseModal}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="modal-body">
+                  <form onSubmit={handleSubmitNewMember} className="modal-form">
+                    {/* Basic Information */}
+                    <div className="form-section">
+                      <h3 className="form-section-title">
+                        <User size={18} />
+                        মূল তথ্য
+                      </h3>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label className="form-label">নাম *</label>
+                          <input
+                            type="text"
+                            className={`form-input ${memberFormErrors.name ? 'error' : ''}`}
+                            value={newMemberData.name}
+                            onChange={(e) => handleInputChange('name', e.target.value)}
+                            placeholder="সদস্যের নাম লিখুন"
+                          />
+                          {memberFormErrors.name && (
+                            <span className="error-message">{memberFormErrors.name}</span>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            <Phone size={16} />
+                            ফোন নম্বর (ঐচ্ছিক)
+                          </label>
+                          <input
+                            type="tel"
+                            className={`form-input ${memberFormErrors.phone ? 'error' : ''}`}
+                            value={newMemberData.phone}
+                            onChange={(e) => handleInputChange('phone', e.target.value)}
+                            placeholder="01XXXXXXXXX"
+                          />
+                          {memberFormErrors.phone && (
+                            <span className="error-message">{memberFormErrors.phone}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">
+                          <MapPin size={16} />
+                          ঠিকানা (ঐচ্ছিক)
+                        </label>
+                        <textarea
+                          className={`form-textarea ${memberFormErrors.address ? 'error' : ''}`}
+                          value={newMemberData.address}
+                          onChange={(e) => handleInputChange('address', e.target.value)}
+                          placeholder="সম্পূর্ণ ঠিকানা লিখুন"
+                          rows="2"
+                        />
+                        {memberFormErrors.address && (
+                          <span className="error-message">{memberFormErrors.address}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Share Information */}
+                    <div className="form-section">
+                      <h3 className="form-section-title">
+                        <DollarSign size={18} />
+                        শেয়ার তথ্য
+                      </h3>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label className="form-label">
+                            <DollarSign size={16} />
+                            শেয়ার সংখ্যা *
+                          </label>
+                          <input
+                            type="number"
+                            className={`form-input ${memberFormErrors.shareCount ? 'error' : ''}`}
+                            value={newMemberData.shareCount}
+                            onChange={(e) => handleInputChange('shareCount', e.target.value)}
+                            placeholder="কতটি শেয়ার কিনেছেন"
+                            min="1"
+                          />
+                          {memberFormErrors.shareCount && (
+                            <span className="error-message">{memberFormErrors.shareCount}</span>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">যোগদানের তারিখ</label>
+                          <input
+                            type="date"
+                            className="form-input"
+                            value={newMemberData.joiningDate}
+                            onChange={(e) => handleInputChange('joiningDate', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Nominee Information */}
+                    <div className="form-section">
+                      <h3 className="form-section-title">
+                        <Users size={18} />
+                        নমিনি তথ্য
+                      </h3>
+
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label className="form-label">
+                            <User size={16} />
+                            নমিনির নাম (ঐচ্ছিক)
+                          </label>
+                          <input
+                            type="text"
+                            className={`form-input ${memberFormErrors.nomineeName ? 'error' : ''}`}
+                            value={newMemberData.nomineeName}
+                            onChange={(e) => handleInputChange('nomineeName', e.target.value)}
+                            placeholder="নমিনির নাম লিখুন"
+                          />
+                          {memberFormErrors.nomineeName && (
+                            <span className="error-message">{memberFormErrors.nomineeName}</span>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            <Phone size={16} />
+                            নমিনির ফোন (ঐচ্ছিক)
+                          </label>
+                          <input
+                            type="tel"
+                            className={`form-input ${memberFormErrors.nomineePhone ? 'error' : ''}`}
+                            value={newMemberData.nomineePhone}
+                            onChange={(e) => handleInputChange('nomineePhone', e.target.value)}
+                            placeholder="01XXXXXXXXX"
+                          />
+                          {memberFormErrors.nomineePhone && (
+                            <span className="error-message">{memberFormErrors.nomineePhone}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label className="form-label">নমিনির সাথে সম্পর্ক (ঐচ্ছিক)</label>
+                        <select
+                          className={`form-select ${memberFormErrors.nomineeRelation ? 'error' : ''}`}
+                          value={newMemberData.nomineeRelation}
+                          onChange={(e) => handleInputChange('nomineeRelation', e.target.value)}
+                        >
+                          <option value="">সম্পর্ক নির্বাচন করুন</option>
+                          <option value="পিতা">পিতা</option>
+                          <option value="মাতা">মাতা</option>
+                          <option value="স্বামী">স্বামী</option>
+                          <option value="স্ত্রী">স্ত্রী</option>
+                          <option value="ভাই">ভাই</option>
+                          <option value="বোন">বোন</option>
+                          <option value="ছেলে">ছেলে</option>
+                          <option value="মেয়ে">মেয়ে</option>
+                          <option value="অন্যান্য">অন্যান্য</option>
+                        </select>
+                        {memberFormErrors.nomineeRelation && (
+                          <span className="error-message">{memberFormErrors.nomineeRelation}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Form Actions */}
+                    <div className="form-actions">
+                      <button
+                        type="button"
+                        className="form-btn form-btn-cancel"
+                        onClick={handleCloseModal}
+                      >
+                        <X size={16} />
+                        বাতিল
+                      </button>
+                      <button
+                        type="submit"
+                        className="form-btn form-btn-primary"
+                        disabled={saving}
+                      >
+                        {saving ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            সংরক্ষণ করা হচ্ছে...
+                          </>
+                        ) : (
+                          <>
+                            <Save size={16} />
+                            সংরক্ষণ করুন
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             </div>
           )}
         </div>
-
-        
-
-        
-
-        {/* Add New Member Modal */}
-        {showAddMemberModal && (
-          <div className="modal-overlay">
-            <div className="modal-container">
-              <div className="modal-header">
-                <h2 className="modal-title">
-                  <UserPlus size={20} />
-                  নতুন সদস্য যোগ করুন
-                </h2>
-                <button
-                  type="button"
-                  className="modal-close-btn"
-                  onClick={handleCloseModal}
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="modal-body">
-                <form onSubmit={handleSubmitNewMember} className="modal-form">
-                  {/* Basic Information */}
-                  <div className="form-section">
-                    <h3 className="form-section-title">
-                      <User size={18} />
-                      মূল তথ্য
-                    </h3>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">নাম *</label>
-                      <input
-                        type="text"
-                        className={`form-input ${memberFormErrors.name ? 'error' : ''}`}
-                        value={newMemberData.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
-                        placeholder="সদস্যের নাম লিখুন"
-                      />
-                      {memberFormErrors.name && (
-                        <span className="error-message">{memberFormErrors.name}</span>
-                      )}
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">
-                        <Phone size={16} />
-                        ফোন নম্বর (ঐচ্ছিক)
-                      </label>
-                      <input
-                        type="tel"
-                        className={`form-input ${memberFormErrors.phone ? 'error' : ''}`}
-                        value={newMemberData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        placeholder="01XXXXXXXXX"
-                      />
-                      {memberFormErrors.phone && (
-                        <span className="error-message">{memberFormErrors.phone}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      <MapPin size={16} />
-                      ঠিকানা (ঐচ্ছিক)
-                    </label>
-                    <textarea
-                      className={`form-textarea ${memberFormErrors.address ? 'error' : ''}`}
-                      value={newMemberData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      placeholder="সম্পূর্ণ ঠিকানা লিখুন"
-                      rows="2"
-                    />
-                    {memberFormErrors.address && (
-                      <span className="error-message">{memberFormErrors.address}</span>
-                    )}
-                  </div>
-                </div>
-
-                  {/* Share Information */}
-                  <div className="form-section">
-                    <h3 className="form-section-title">
-                      <DollarSign size={18} />
-                      শেয়ার তথ্য
-                    </h3>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">
-                        <DollarSign size={16} />
-                        শেয়ার সংখ্যা *
-                      </label>
-                      <input
-                        type="number"
-                        className={`form-input ${memberFormErrors.shareCount ? 'error' : ''}`}
-                        value={newMemberData.shareCount}
-                        onChange={(e) => handleInputChange('shareCount', e.target.value)}
-                        placeholder="কতটি শেয়ার কিনেছেন"
-                        min="1"
-                      />
-                      {memberFormErrors.shareCount && (
-                        <span className="error-message">{memberFormErrors.shareCount}</span>
-                      )}
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">যোগদানের তারিখ</label>
-                      <input
-                        type="date"
-                        className="form-input"
-                        value={newMemberData.joiningDate}
-                        onChange={(e) => handleInputChange('joiningDate', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                  {/* Nominee Information */}
-                  <div className="form-section">
-                    <h3 className="form-section-title">
-                      <Users size={18} />
-                      নমিনি তথ্য
-                    </h3>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label className="form-label">
-                        <User size={16} />
-                        নমিনির নাম (ঐচ্ছিক)
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-input ${memberFormErrors.nomineeName ? 'error' : ''}`}
-                        value={newMemberData.nomineeName}
-                        onChange={(e) => handleInputChange('nomineeName', e.target.value)}
-                        placeholder="নমিনির নাম লিখুন"
-                      />
-                      {memberFormErrors.nomineeName && (
-                        <span className="error-message">{memberFormErrors.nomineeName}</span>
-                      )}
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">
-                        <Phone size={16} />
-                        নমিনির ফোন (ঐচ্ছিক)
-                      </label>
-                      <input
-                        type="tel"
-                        className={`form-input ${memberFormErrors.nomineePhone ? 'error' : ''}`}
-                        value={newMemberData.nomineePhone}
-                        onChange={(e) => handleInputChange('nomineePhone', e.target.value)}
-                        placeholder="01XXXXXXXXX"
-                      />
-                      {memberFormErrors.nomineePhone && (
-                        <span className="error-message">{memberFormErrors.nomineePhone}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">নমিনির সাথে সম্পর্ক (ঐচ্ছিক)</label>
-                    <select
-                      className={`form-select ${memberFormErrors.nomineeRelation ? 'error' : ''}`}
-                      value={newMemberData.nomineeRelation}
-                      onChange={(e) => handleInputChange('nomineeRelation', e.target.value)}
-                    >
-                      <option value="">সম্পর্ক নির্বাচন করুন</option>
-                      <option value="পিতা">পিতা</option>
-                      <option value="মাতা">মাতা</option>
-                      <option value="স্বামী">স্বামী</option>
-                      <option value="স্ত্রী">স্ত্রী</option>
-                      <option value="ভাই">ভাই</option>
-                      <option value="বোন">বোন</option>
-                      <option value="ছেলে">ছেলে</option>
-                      <option value="মেয়ে">মেয়ে</option>
-                      <option value="অন্যান্য">অন্যান্য</option>
-                    </select>
-                    {memberFormErrors.nomineeRelation && (
-                      <span className="error-message">{memberFormErrors.nomineeRelation}</span>
-                    )}
-                  </div>
-                </div>
-
-                  {/* Form Actions */}
-                  <div className="form-actions">
-                    <button
-                      type="button"
-                      className="form-btn form-btn-cancel"
-                      onClick={handleCloseModal}
-                    >
-                      <X size={16} />
-                      বাতিল
-                    </button>
-                    <button
-                      type="submit"
-                      className="form-btn form-btn-primary"
-                      disabled={saving}
-                    >
-                      {saving ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                          সংরক্ষণ করা হচ্ছে...
-                        </>
-                      ) : (
-                        <>
-                          <Save size={16} />
-                          সংরক্ষণ করুন
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
       </div>
 
       {/* Transaction Details Card */}
       <TransactionDetailsCard
-          transaction={selectedTransaction}
-          isVisible={showTransactionCard}
-          onClose={closeTransactionCard}
-          position={cardPosition}
-        />
+        transaction={selectedTransaction}
+        isVisible={showTransactionCard}
+        onClose={closeTransactionCard}
+        position={cardPosition}
+      />
 
       {console.log('[CashierDashboard] render floating add button')}
       <button
@@ -1652,7 +1677,7 @@ const CashierDashboard = () => {
         <Plus className="h-6 w-6 text-white cashier-fab-icon" />
       </button>
 
-      
+
     </>
   );
 };

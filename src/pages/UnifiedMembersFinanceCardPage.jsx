@@ -3,6 +3,8 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config.js';
 import LoadingAnimation from '../components/common/LoadingAnimation';
 import '../styles/components/UnifiedMembersFinanceCard.css';
+import { useMode } from '../contexts/ModeContext';
+import { demoMembers, demoTransactions } from '../utils/demoData';
 
 console.log('[UnifiedMembersFinanceCardPage] file loaded');
 
@@ -27,6 +29,7 @@ const toDateSafe = (val) => {
 const UnifiedMembersFinanceCardPage = () => {
   console.log('[UnifiedMembersFinanceCardPage] render start');
 
+  const { isDemo } = useMode();
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -37,6 +40,21 @@ const UnifiedMembersFinanceCardPage = () => {
   useEffect(() => {
     console.log('[UnifiedMembersFinanceCardPage] subscribing to members and transactions');
 
+    // Check if in demo mode
+    if (isDemo()) {
+      console.log('[UnifiedMembersFinanceCardPage] Using demo data');
+      setMembers(demoMembers);
+      setTransactions(demoTransactions.map(t => ({
+        ...t,
+        memberId: t.memberId || t.userId,
+        date: new Date(t.date),
+        month: new Date(t.date).getMonth()
+      })));
+      setLoading(false);
+      return;
+    }
+
+    // Production mode - subscribe to Firebase
     const unsubMembers = onSnapshot(collection(db, 'members'), (snap) => {
       const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       console.log('[UnifiedMembersFinanceCardPage] members updated', list.length);
@@ -60,7 +78,7 @@ const UnifiedMembersFinanceCardPage = () => {
       unsubMembers && unsubMembers();
       unsubTx && unsubTx();
     };
-  }, []);
+  }, [isDemo]);
 
   const availableYears = useMemo(() => {
     const years = new Set();

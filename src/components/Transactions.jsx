@@ -5,9 +5,12 @@ import { TransactionService } from '../firebase/transactionService';
 import LoadingAnimation from './common/LoadingAnimation';
 import TransactionDetailsCard from './common/TransactionDetailsCard';
 import '../styles/components/transactions.css';
+import { useMode } from '../contexts/ModeContext';
+import { demoTransactions } from '../utils/demoData';
 
 const Transactions = () => {
   const navigate = useNavigate();
+  const { isDemo } = useMode();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all'); // all, income, expense
@@ -30,6 +33,27 @@ const Transactions = () => {
     const fetchTransactions = async () => {
       setLoading(true);
       try {
+        // Check if in demo mode
+        if (isDemo()) {
+          console.log('[Transactions] Using demo data');
+          const formattedTransactions = demoTransactions.map(transaction => {
+            const baseDate = new Date(transaction.date);
+            return {
+              id: transaction.id,
+              type: transaction.type === 'deposit' ? 'income' : 'expense',
+              amount: transaction.amount || 0,
+              method: transaction.paymentMethod || 'নগদ',
+              description: transaction.description || '',
+              member: transaction.memberName || 'অজানা',
+              date: formatListDate(baseDate)
+            };
+          });
+          setTransactions(formattedTransactions);
+          setLoading(false);
+          return;
+        }
+
+        // Production mode - fetch from Firebase
         const result = await TransactionService.getAllTransactions();
         if (result.success) {
           // Format the data to match our component structure
@@ -62,7 +86,7 @@ const Transactions = () => {
     };
 
     fetchTransactions();
-  }, []);
+  }, [isDemo]);
 
   // Get payment method icon
   const getPaymentIcon = (method) => {
@@ -80,13 +104,13 @@ const Transactions = () => {
   // Filter transactions
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.member.toLowerCase().includes(searchTerm.toLowerCase());
+      transaction.member.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || transaction.type === filterType;
-    const matchesMethod = filterMethod === 'all' || 
-                         (filterMethod === 'cash' && transaction.method.includes('নগদ')) ||
-                         (filterMethod === 'bkash' && transaction.method.includes('বিকাশ')) ||
-                         (filterMethod === 'bank' && transaction.method.includes('ব্যাংক'));
-    
+    const matchesMethod = filterMethod === 'all' ||
+      (filterMethod === 'cash' && transaction.method.includes('নগদ')) ||
+      (filterMethod === 'bkash' && transaction.method.includes('বিকাশ')) ||
+      (filterMethod === 'bank' && transaction.method.includes('ব্যাংক'));
+
     return matchesSearch && matchesType && matchesMethod;
   });
 
@@ -199,9 +223,8 @@ const Transactions = () => {
               >
                 <div className="item-row">
                   <div className="item-left">
-                    <div className={`transaction-icon ${
-                      transaction.type === 'income' ? 'income' : 'expense'
-                    }`}>
+                    <div className={`transaction-icon ${transaction.type === 'income' ? 'income' : 'expense'
+                      }`}>
                       {transaction.type === 'income' ? (
                         <TrendingUp className={`h-4 w-4 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`} />
                       ) : (
@@ -217,7 +240,7 @@ const Transactions = () => {
                           <span>{transaction.method}</span>
                         </div>
                         <div className="chip">{transaction.date}</div>
-                        
+
                       </div>
                     </div>
                   </div>
