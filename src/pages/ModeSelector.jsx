@@ -39,11 +39,21 @@ const ModeSelector = () => {
                 window.location.reload();
             }, 300);
         } else {
-            // Production mode - redirect to login
+            // Production mode - CRITICAL: Clear demo credentials first!
+            console.log('[ModeSelector] Production mode selected, clearing all credentials');
+
+            // Clear ALL localStorage to remove demo credentials
+            localStorage.removeItem('somiti_token');
+            localStorage.removeItem('somiti_uid');
+            localStorage.removeItem('somiti_role');
+
+            // Switch to production mode
             switchMode('production');
+
+            // Navigate to login
             setTimeout(() => {
                 navigate('/login', { replace: true });
-            }, 500);
+            }, 300);
         }
     };
 
