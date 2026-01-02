@@ -1,0 +1,26 @@
+import { jsxs, jsx } from "react/jsx-runtime";
+import { useEffect } from "react";
+function MapBlock() {
+  useEffect(() => {
+    console.log("[MapBlock] mounted");
+  }, []);
+  return /* @__PURE__ */ jsxs("div", { className: "map-block", children: [
+    /* @__PURE__ */ jsx(
+      "iframe",
+      {
+        title: "Map of Fulmuri",
+        src: "https://maps.google.com/maps?q=Fulmuri%20Munshirhat%20Chauddagram%20Comilla&t=&z=15&ie=UTF8&iwloc=&output=embed",
+        width: "100%",
+        height: "350",
+        style: { border: 0, borderRadius: "var(--radius-lg)" },
+        allowFullScreen: "",
+        loading: "lazy",
+        referrerPolicy: "no-referrer-when-downgrade"
+      }
+    ),
+    /* @__PURE__ */ jsx("div", { className: "map-actions", children: /* @__PURE__ */ jsx("a", { href: "https://maps.google.com/?q=Fulmuri,+Cumilla", target: "_blank", rel: "noopener noreferrer", className: "btn-secondary", children: "গুগল ম্যাপে দেখুন" }) })
+  ] });
+}
+export {
+  MapBlock as default
+};
