@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, Suspense, useMemo } from 'react';
+﻿import React, { useEffect, useRef, useState, Suspense, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Users, ShieldCheck, Megaphone, MapPin, BookOpen, Sprout, Landmark, Sun, CloudRain, Wifi, HeartPulse, Monitor, Globe, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -1045,7 +1045,7 @@ export default function LandingPage() {
         <footer className="landing-footer">
           <div className="footer-bottom">
             <img src="/ফুলমুড়ী_গ্রাম.svg" alt="ফুলমুড়ী গ্রাম লোগো" className="footer-logo" onClick={() => console.log('[LandingPage] footer logo click')} />
-            <div className="footer-copy">© 2025 ফুলমুড়ী গ্রাম</div>
+            <div className="footer-copy">© 2026 ফুলমুড়ী গ্রাম</div>
             <div className="footer-meta">স্মার্ট গ্রাম | কমিউনিটি পোর্টাল</div>
           </div>
         </footer>
